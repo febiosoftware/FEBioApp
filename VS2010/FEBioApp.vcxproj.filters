@@ -41,15 +41,15 @@
     <ClInclude Include="..\FEBioApp\targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\FEBioApp\QPlotWidget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\FEBioApp\QGLView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\FEBioApp\MyDialog.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\FEBioApp\QPlotWidget.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>

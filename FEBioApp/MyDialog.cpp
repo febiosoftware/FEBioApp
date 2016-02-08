@@ -207,18 +207,7 @@ bool MyDialog::parseTags(XMLTag& tag, QBoxLayout* playout)
 	++tag;
 	do
 	{
-		if (tag == "group")
-		{
-			const char* sztype = tag.AttributeValue("type");
-
-			QBoxLayout* pl = 0;
-			if      (strcmp(sztype, "vertical"  ) == 0) pl = new QVBoxLayout;
-			else if (strcmp(sztype, "horizontal") == 0) pl = new QHBoxLayout;
-			playout->addLayout(pl);
-
-			parseTags(tag, pl);
-			++tag;
-		}
+		if (tag == "group") parseGroup(tag, playout);
 		else if (tag == "stretch")
 		{
 			playout->addStretch();
@@ -281,45 +270,7 @@ bool MyDialog::parseTags(XMLTag& tag, QBoxLayout* playout)
 
 			++tag;
 		}
-		else if (tag == "input")
-		{
-			strcpy(sz, tag.AttributeValue("title"));
-
-			double* pv = 0;
-			if (!tag.isempty())
-			{
-				++tag;
-				do
-				{
-					if (tag == "param")
-					{
-						pv = m_fem.FindParameter(tag.szvalue());
-						if (pv == 0) 
-						{
-							printf("ERROR: Failed finding parameter %s\n", tag.szvalue());
-						}
-						++tag;
-					}
-					else xml.SkipTag(tag);
-				}
-				while (!tag.isend());
-			}
-
-			QHBoxLayout* pl = new QHBoxLayout;
-
-			QLabel* plabel = new QLabel(sz);
-			CParamInput* pi = new CParamInput;
-			if (pv) pi->SetParameter(pv);
-
-			playout->addLayout(pl);
-			pl->addWidget(plabel);
-			pl->addStretch();
-			pl->addWidget(pi);
-
-			m_in.push_back(pi);
-					
-			++tag;
-		}
+		else if (tag == "input") parseInput(tag, playout);
 		else if (tag == "graph")
 		{
 			strcpy(sz, tag.AttributeValue("title"));
@@ -368,6 +319,121 @@ bool MyDialog::parseTags(XMLTag& tag, QBoxLayout* playout)
 	while (!tag.isend());
 
 	return true;
+}
+
+void MyDialog::parseGroup(XMLTag& tag, QBoxLayout* playout)
+{
+	const char* sztype = tag.AttributeValue("type");
+
+	QBoxLayout* pl = 0;
+	if      (strcmp(sztype, "vertical"  ) == 0) pl = new QVBoxLayout;
+	else if (strcmp(sztype, "horizontal") == 0) pl = new QHBoxLayout;
+	playout->addLayout(pl);
+
+	parseTags(tag, pl);
+	++tag;
+}
+
+void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
+{
+	char sz[256] = {0};
+	strcpy(sz, tag.AttributeValue("title"));
+
+	int nalign = CParamInput::ALIGN_LEFT;
+	const char* szalign = tag.AttributeValue("align", true);
+	if (szalign)
+	{
+		if      (strcmp(szalign, "left"       ) == 0) nalign = CParamInput::ALIGN_LEFT;
+		else if (strcmp(szalign, "right"      ) == 0) nalign = CParamInput::ALIGN_RIGHT;
+		else if (strcmp(szalign, "top"        ) == 0) nalign = CParamInput::ALIGN_TOP;
+		else if (strcmp(szalign, "bottom"     ) == 0) nalign = CParamInput::ALIGN_BOTTOM;
+		else if (strcmp(szalign, "topleft"    ) == 0) nalign = CParamInput::ALIGN_TOP_LEFT;
+		else if (strcmp(szalign, "topright"   ) == 0) nalign = CParamInput::ALIGN_TOP_RIGHT;
+		else if (strcmp(szalign, "bottomleft" ) == 0) nalign = CParamInput::ALIGN_BOTTOM_LEFT;
+		else if (strcmp(szalign, "bottomright") == 0) nalign = CParamInput::ALIGN_BOTTOM_RIGHT;
+		else printf("WARNING: Unknown align value %s\n", szalign);
+	}
+
+	XMLReader& xml = *tag.m_preader;
+
+	double* pv = 0;
+	if (!tag.isempty())
+	{
+		++tag;
+		do
+		{
+			if (tag == "param")
+			{
+				pv = m_fem.FindParameter(tag.szvalue());
+				if (pv == 0) 
+				{
+					printf("ERROR: Failed finding parameter %s\n", tag.szvalue());
+				}
+				++tag;
+			}
+			else xml.SkipTag(tag);
+		}
+		while (!tag.isend());
+	}
+
+	QBoxLayout* pl = 0;
+
+	if ((nalign==CParamInput::ALIGN_LEFT)||(nalign==CParamInput::ALIGN_RIGHT)) pl = new QHBoxLayout;
+	else pl = new QVBoxLayout;
+
+	QLabel* plabel = new QLabel(sz);
+	CParamInput* pi = new CParamInput;
+	if (pv) pi->SetParameter(pv);
+
+	playout->addLayout(pl);
+
+	switch (nalign)
+	{
+	case CParamInput::ALIGN_LEFT:
+		pl->addWidget(plabel);
+		pl->addStretch();
+		pl->addWidget(pi);
+		break;
+	case CParamInput::ALIGN_RIGHT:
+		pl->addWidget(pi);
+		pl->addStretch();
+		pl->addWidget(plabel);
+		break;
+	case CParamInput::ALIGN_TOP:
+		plabel->setAlignment(Qt::AlignHCenter);
+		pl->addWidget(plabel);
+		pl->addWidget(pi);
+		break;
+	case CParamInput::ALIGN_BOTTOM:
+		pl->addWidget(pi);
+		plabel->setAlignment(Qt::AlignHCenter);
+		pl->addWidget(plabel);
+		break;
+	case CParamInput::ALIGN_TOP_LEFT:
+		pl->addWidget(plabel);
+		pl->addWidget(pi);
+		break;
+	case CParamInput::ALIGN_TOP_RIGHT:
+		plabel->setAlignment(Qt::AlignRight);
+		pl->addWidget(plabel);
+		pl->addWidget(pi);
+		break;
+	case CParamInput::ALIGN_BOTTOM_LEFT:
+		pl->addWidget(pi);
+		pl->addWidget(plabel);
+		break;
+	case CParamInput::ALIGN_BOTTOM_RIGHT:
+		plabel->setAlignment(Qt::AlignRight);
+		pl->addWidget(pi);
+		pl->addWidget(plabel);
+		break;
+	default:
+		assert(false);
+	}
+
+	m_in.push_back(pi);
+					
+	++tag;
 }
 
 // Include the MOC stuff

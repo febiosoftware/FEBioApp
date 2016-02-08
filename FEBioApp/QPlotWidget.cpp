@@ -3,6 +3,25 @@
 #include <QPainter>
 #include <QFontDatabase>
 #include <QMouseEvent>
+#include <QAction>
+#include <QMessageBox>
+#include <QMenu>
+
+//-----------------------------------------------------------------------------
+double findScale(double fmin, double fmax)
+{
+	double dx = fmax - fmin;
+	double p = floor(log10(dx));
+	double f = pow(10.0, p - 1);
+	double m = floor(dx / f);
+
+	double dd = f;
+	if      (m > 75) dd = 10*f;
+	else if (m > 30) dd = 5*f;
+	else if (m > 15) dd = 2*f;
+
+	return dd;
+}
 
 //-----------------------------------------------------------------------------
 QPlotData::QPlotData()
@@ -55,9 +74,40 @@ void QPlotData::addPoint(double x, double y)
 QPlotWidget::QPlotWidget(QWidget* parent) : QWidget(parent)
 {
 	m_viewRect = QRectF(-0.1, -0.1, 2.5, 2.5);
+	m_xscale = findScale(m_viewRect.left(), m_viewRect.right());
+	m_yscale = findScale(m_viewRect.top(), m_viewRect.bottom());
 
 	QPlotData d1;
 	m_data.push_back(d1);
+
+	m_pZoomToFit = new QAction(tr("Zoom to fit"), this);
+	connect(m_pZoomToFit, SIGNAL(triggered()), this, SLOT(OnZoomToFit()));
+
+	m_pShowProps = new QAction(tr("Properties"), this);
+	connect(m_pShowProps, SIGNAL(triggered()), this, SLOT(OnShowProps()));
+}
+
+//-----------------------------------------------------------------------------
+void QPlotWidget::contextMenuEvent(QContextMenuEvent* ev)
+{
+	QMenu menu(this);
+	menu.addAction(m_pZoomToFit);
+	menu.addSeparator();
+	menu.addAction(m_pShowProps);
+	menu.exec(ev->globalPos());
+}
+
+//-----------------------------------------------------------------------------
+void QPlotWidget::OnZoomToFit()
+{
+	fitToData();
+	repaint();
+}
+
+//-----------------------------------------------------------------------------
+void QPlotWidget::OnShowProps()
+{
+
 }
 
 //-----------------------------------------------------------------------------
@@ -89,6 +139,9 @@ void QPlotWidget::fitToData()
 	double dx = 0.05*m_viewRect.width();
 	double dy = 0.05*m_viewRect.height();
 	m_viewRect.adjust(-dx, -dy, dx, dy);
+
+	m_xscale = findScale(m_viewRect.left(), m_viewRect.right());
+	m_yscale = findScale(m_viewRect.top(), m_viewRect.bottom());
 }
 
 //-----------------------------------------------------------------------------
@@ -194,10 +247,8 @@ void QPlotWidget::drawGrid(QPainter& p)
 	int y0 = m_screenRect.top();
 	int y1 = m_screenRect.bottom();
 
-	double xscale = 0.5;
-	double yscale = 0.5;
-
-	p.setPen(QPen(Qt::black, 0.25));
+	double xscale = m_xscale;
+	double yscale = m_yscale;
 
 	// determine the y-scale
 	double gy = 1;
@@ -219,32 +270,10 @@ void QPlotWidget::drawGrid(QPainter& p)
 		p.drawText(x1+5, y1, QString(sz));
 	}
 
-	// draw the y-grid lines
-	double fy = yscale*(int)(m_viewRect.top()/yscale);
-	while (fy < m_viewRect.bottom())
-	{
-		int iy = ViewToScreen(QPointF(0.0, fy)).y();
-		QPainterPath path;
-		path.moveTo(x0, iy);
-		path.lineTo(x1-1, iy);
-		p.drawPath(path);
-		fy += yscale;
-	}
-
-	// draw the x-grid lines
-	double fx = xscale*(int)(m_viewRect.left()/xscale);
-	while (fx < m_viewRect.right())
-	{
-		int ix = ViewToScreen(QPointF(fx, 0.0)).x();
-		QPainterPath path;
-		path.moveTo(ix, y0);
-		path.lineTo(ix, y1-1);
-		p.drawPath(path);
-		fx += xscale;
-	}
+	p.setPen(QPen(Qt::black, 1));
 
 	// draw the y-labels
-	fy = yscale*(int)(m_viewRect.top()/yscale);
+	double fy = yscale*(int)(m_viewRect.top()/yscale);
 	while (fy < m_viewRect.bottom())
 	{
 		int iy = ViewToScreen(QPointF(0.0, fy)).y();
@@ -262,7 +291,7 @@ void QPlotWidget::drawGrid(QPainter& p)
 	}
 
 	// draw the x-labels
-	fx = xscale*(int)(m_viewRect.left()/xscale);
+	double fx = xscale*(int)(m_viewRect.left()/xscale);
 	while (fx < m_viewRect.right())
 	{
 		int ix = ViewToScreen(QPointF(fx, 0.0)).x();
@@ -278,6 +307,41 @@ void QPlotWidget::drawGrid(QPainter& p)
 		}
 		fx += xscale;
 	}
+
+	p.setPen(QPen(Qt::lightGray, 1));
+	p.setRenderHint(QPainter::Antialiasing, false);
+
+	// draw the y-grid lines
+	fy = yscale*(int)(m_viewRect.top()/yscale);
+	while (fy < m_viewRect.bottom())
+	{
+		int iy = ViewToScreen(QPointF(0.0, fy)).y();
+		if (iy < y1)
+		{
+			QPainterPath path;
+			path.moveTo(x0, iy);
+			path.lineTo(x1-1, iy);
+			p.drawPath(path);
+		}
+		fy += yscale;
+	}
+
+	// draw the x-grid lines
+	fx = xscale*(int)(m_viewRect.left()/xscale);
+	while (fx < m_viewRect.right())
+	{
+		int ix = ViewToScreen(QPointF(fx, 0.0)).x();
+		if (ix > x0)
+		{
+			QPainterPath path;
+			path.moveTo(ix, y0);
+			path.lineTo(ix, y1-1);
+			p.drawPath(path);
+		}
+		fx += xscale;
+	}
+
+	p.setRenderHint(QPainter::Antialiasing, true);
 }
 
 //-----------------------------------------------------------------------------
@@ -285,6 +349,7 @@ void QPlotWidget::drawAxes(QPainter& p)
 {
 	// get the center in screen coordinates
 	QPoint c = ViewToScreen(QPointF(0.0, 0.0));
+	p.setPen(QPen(Qt::black, 2));
 
 	// render the X-axis
 	if ((c.y() > m_screenRect.top   ()) &&
@@ -350,3 +415,5 @@ void QPlotWidget::drawData(QPainter& p, QPlotData& d)
 		p.drawRect(r);
 	}
 }
+
+#include "moc_qplotwidget.cpp"

@@ -14,6 +14,18 @@ class QBoxLayout;
 class CParamInput : public QLineEdit
 {
 public:
+	enum {
+		ALIGN_LEFT,
+		ALIGN_RIGHT,
+		ALIGN_TOP,
+		ALIGN_BOTTOM,
+		ALIGN_TOP_LEFT,
+		ALIGN_TOP_RIGHT,
+		ALIGN_BOTTOM_LEFT,
+		ALIGN_BOTTOM_RIGHT
+	};
+
+public:
 	CParamInput(QWidget* parent = 0);
 
 	void SetParameter(double* pv);
@@ -63,6 +75,8 @@ private: // helper functions for parsing app file
 	bool parseModel(XMLTag& tag);
 	bool parseGUI  (XMLTag& tag);
 	bool parseTags (XMLTag& tag, QBoxLayout* playout);
+	void parseGroup(XMLTag& tag, QBoxLayout* playout);
+	void parseInput(XMLTag& tag, QBoxLayout* playout);
 
 private:
 	char		m_szfile[512];	//!< FE model input file name

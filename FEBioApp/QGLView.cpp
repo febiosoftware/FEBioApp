@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "QGLView.h"
 #include <FECore/FEModel.h>
+#include <FECore/FEBox.h>
 #include <FECore/FEElemElemList.h>
 #include <gl/GLU.h>
 #include <QMouseEvent>
@@ -10,6 +11,7 @@ QGLView::QGLView(QWidget* parent) : QOpenGLWidget(parent)
 {
 	m_psurf = 0;
 	m_yangle = 0.0;
+	m_dist = 0.0;
 }
 
 //-----------------------------------------------------------------------------
@@ -17,62 +19,15 @@ void QGLView::Update()
 {
 	if ((m_psurf==0) && (m_pfem))
 	{
-		FEMesh& mesh = m_pfem->GetMesh();
-
-		FEElemElemList EEL;
-		EEL.Create(&mesh);
-
-		FESurface* ps = new FESurface(&mesh);
-		m_psurf = ps;
-
-		int NF = 0;
-		int NE = mesh.Elements();
-		for (int i=0; i<NE; ++i)
-		{
-			FEElement& el = mesh.Domain(0).ElementRef(i);
-			int nf = mesh.Faces(el);
-			for (int j=0; j<nf; ++j)
-			{
-				if (EEL.Neighbor(i, j) == 0) NF++;
-			}
-		}
-
-		ps->create(NF);
-		NF = 0;
-		for (int i=0; i<NE; ++i)
-		{
-			FEElement& el = mesh.Domain(0).ElementRef(i);
-			int nf = mesh.Faces(el);
-			for (int j=0; j<nf; ++j)
-			{
-				if (EEL.Neighbor(i, j) == 0)
-				{
-					FESurfaceElement& se = ps->Element(NF++);
-					se.SetType(FE_QUAD4G4);
-					int nf[4];
-					mesh.GetFace(el, j, nf);
-
-					se.m_node[0] = nf[0];
-					se.m_node[1] = nf[1];
-					se.m_node[2] = nf[2];
-					se.m_node[3] = nf[3];
-				}
-			}
-		}
-
-		ps->Init();
+		m_psurf = m_pfem->GetMesh().ElementBoundarySurface();
 	}
 
 	// find the center of the box
 	if (m_psurf)
 	{
-		vec3d c = m_psurf->Node(0).m_rt;
-		for (int i=1; i<m_psurf->Nodes(); ++i)
-		{
-			c += m_psurf->Node(i).m_rt;
-		}
-		c /= (double) m_psurf->Nodes();
-		m_center = c;
+		FEBox box(*m_psurf);
+		m_center = box.center();
+		m_dist = box.maxsize()*2;
 	}
 }
 
@@ -133,7 +88,7 @@ void QGLView::paintGL()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	glTranslated(0.0, 0.0, -3.0);
+	glTranslated(0.0, 0.0, -m_dist);
 	glRotatef(m_yangle, 1.f, 1.f, 0.f);
 	glTranslated(-m_center.x, -m_center.y, -m_center.z);
 

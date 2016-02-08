@@ -36,6 +36,7 @@ private:
 	FEModel*	m_pfem;
 	FESurface*	m_psurf;
 	vec3d		m_center;
+	double		m_dist;
 	QPoint		m_mousePos;
 	double		m_yangle;
 };

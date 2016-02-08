@@ -219,6 +219,11 @@ bool MyDialog::parseTags(XMLTag& tag, QBoxLayout* playout)
 			parseTags(tag, pl);
 			++tag;
 		}
+		else if (tag == "stretch")
+		{
+			playout->addStretch();
+			++tag;
+		}
 		else if (tag == "button")
 		{
 			int nact = -1;

@@ -2,14 +2,18 @@
 #include <QDialog>
 #include <QLineEdit>
 #include <FEBioLib/FEBioModel.h>
+#include "QPlotWidget.h"
+#include "QGLView.h"
 
-class QPlotWidget;
 class XMLTag;
+class FEModel;
 
-class QParamInput : public QLineEdit
+//-----------------------------------------------------------------------------
+//! This class connects an FE model parameter to an input field.
+class CParamInput : public QLineEdit
 {
 public:
-	QParamInput(QWidget* parent = 0);
+	CParamInput(QWidget* parent = 0);
 
 	void SetParameter(double* pv);
 
@@ -19,6 +23,20 @@ private:
 	double*	m_pv;	// pointer to parameter
 };
 
+//-----------------------------------------------------------------------------
+//! Class for plotting data
+class CDataPlot : public QPlotWidget
+{
+public:
+	CDataPlot(QWidget* parent = 0) : QPlotWidget(parent)
+	{
+	}
+
+	void Update(FEModel& fem);
+};
+
+//-----------------------------------------------------------------------------
+//! This class represents the GUI
 class MyDialog : public QDialog
 {
 	Q_OBJECT
@@ -47,6 +65,7 @@ private: // helper functions for parsing app file
 private:
 	char		m_szfile[512];	//!< FE model input file name
 	FEBioModel	m_fem;			//!< The FE model
-	vector<QPlotWidget*>	m_plot;
-	vector<QParamInput*>	m_in;
+	vector<QGLView*>		m_gl;
+	vector<CDataPlot*>		m_plot;
+	vector<CParamInput*>	m_in;
 };

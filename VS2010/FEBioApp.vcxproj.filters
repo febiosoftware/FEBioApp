@@ -30,6 +30,9 @@
     <ClCompile Include="..\FEBioApp\QPlotWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\FEBioApp\QGLView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\FEBioApp\stdafx.h">
@@ -39,6 +42,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\FEBioApp\QPlotWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FEBioApp\QGLView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

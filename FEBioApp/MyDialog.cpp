@@ -8,6 +8,7 @@
 #include <FEBioXML/XMLReader.h>
 #include <FEBioMech/FEElasticMaterial.h>
 #include "QPlotWidget.h"
+#include "QGLView.h"
 
 void qt_error(const char* sz)
 {
@@ -26,18 +27,18 @@ void qt_info(const char* sz)
 }
 
 //-----------------------------------------------------------------------------
-QParamInput::QParamInput(QWidget* parent) : QLineEdit(parent)
+CParamInput::CParamInput(QWidget* parent) : QLineEdit(parent)
 {
 	m_pv = 0;
 }
 
-void QParamInput::SetParameter(double* pv)
+void CParamInput::SetParameter(double* pv)
 {
 	m_pv = pv;
 	if (pv) setText(QString::number(*pv));
 }
 
-void QParamInput::UpdateParameter()
+void CParamInput::UpdateParameter()
 {
 	QString s = text();
 	double f = s.toDouble();
@@ -46,6 +47,25 @@ void QParamInput::UpdateParameter()
 		printf("Setting paramter to %lg\n", f);
 		*m_pv = f;
 	}
+}
+
+//-----------------------------------------------------------------------------
+void CDataPlot::Update(FEModel& fem)
+{
+	double t = fem.m_ftime;
+	FEMesh& mesh = fem.GetMesh();
+	FEElement& el = mesh.Domain(0).ElementRef(0);
+
+	FEMaterialPoint& mp = *el.GetMaterialPoint(0);
+	FEElasticMaterialPoint& ep = *mp.ExtractData<FEElasticMaterialPoint>();
+
+	mat3ds C = ep.RightCauchyGreen();
+	mat3ds s = ep.m_s;
+
+	mat3dd I(1.0);
+	mat3ds E = (C - I)*0.5;
+
+	m_data[0].addPoint(E.xx(), s.xx());
 }
 
 //-----------------------------------------------------------------------------
@@ -60,21 +80,8 @@ bool MyDialog::FECallback(FEModel& fem, unsigned int nwhen)
 {
 	if ((nwhen == CB_MAJOR_ITERS) || (nwhen == CB_INIT))
 	{
-		double t = fem.m_ftime;
-		FEMesh& mesh = fem.GetMesh();
-		FEElement& el = mesh.Domain(0).ElementRef(0);
-
-		FEMaterialPoint& mp = *el.GetMaterialPoint(0);
-		FEElasticMaterialPoint& ep = *mp.ExtractData<FEElasticMaterialPoint>();
-
-		mat3ds C = ep.RightCauchyGreen();
-		mat3ds s = ep.m_s;
-
-		mat3dd I(1.0);
-		mat3ds E = (C - I)*0.5;
-		
-		QPlotWidget* pw = m_plot[0];
-		pw->m_data[0].addPoint(E.xx(), s.xx());
+		// update the plots
+		for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->Update(fem);
 	}
 	return true;
 }
@@ -112,8 +119,11 @@ void MyDialog::Run()
 		qt_error("ERROR TERMINATION\n");
 	}
 
-	// resize all plots
+	// resize all graphs
 	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->fitToData();
+
+	// update all 3D plots
+	for (int i=0; i<(int) m_gl.size(); ++i) m_gl[i]->Update();
 
 	// update GUI
 	repaint();
@@ -274,7 +284,7 @@ bool MyDialog::parseGUI(XMLTag& tag)
 			QHBoxLayout* pl = new QHBoxLayout;
 
 			QLabel* plabel = new QLabel(sz);
-			QParamInput* pi = new QParamInput;
+			CParamInput* pi = new CParamInput;
 			if (pv) pi->SetParameter(pv);
 
 			playout->addLayout(pl);
@@ -290,7 +300,7 @@ bool MyDialog::parseGUI(XMLTag& tag)
 		{
 			strcpy(sz, tag.AttributeValue("title"));
 
-			if (!tag.isempty())
+			if (!tag.isleaf())
 			{
 				++tag;
 				do
@@ -300,10 +310,32 @@ bool MyDialog::parseGUI(XMLTag& tag)
 				while (!tag.isend());
 			}
 
-			QPlotWidget* pg = new QPlotWidget;
+			CDataPlot* pg = new CDataPlot;
 			pg->setTitle(QString(sz));
 			playout->addWidget(pg);
 			m_plot.push_back(pg);
+
+			++tag;
+		}
+		else if (tag == "plot3d")
+		{
+			strcpy(sz, tag.AttributeValue("title"));
+
+			if (!tag.isleaf())
+			{
+				++tag;
+				do
+				{
+					xml.SkipTag(tag);
+				}
+				while (!tag.isend());
+			}
+
+			QGLView* pgl = new QGLView;
+			playout->addWidget(pgl);
+
+			pgl->SetFEModel(&m_fem);
+			m_gl.push_back(pgl);
 
 			++tag;
 		}

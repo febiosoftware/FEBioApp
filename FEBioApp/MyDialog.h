@@ -7,6 +7,7 @@
 
 class XMLTag;
 class FEModel;
+class QBoxLayout;
 
 //-----------------------------------------------------------------------------
 //! This class connects an FE model parameter to an input field.
@@ -61,6 +62,7 @@ private:
 private: // helper functions for parsing app file
 	bool parseModel(XMLTag& tag);
 	bool parseGUI  (XMLTag& tag);
+	bool parseTags (XMLTag& tag, QBoxLayout* playout);
 
 private:
 	char		m_szfile[512];	//!< FE model input file name

@@ -184,23 +184,42 @@ bool MyDialog::parseGUI(XMLTag& tag)
 {
 	QBoxLayout* playout = dynamic_cast<QBoxLayout*>(layout());
 
-	// buffer for reading strings
-	char sz[256] = {0};
-
 	// read the window title
+	char sz[256] = {0};
 	strcpy(sz, tag.AttributeValue("title"));
 
 	if (strcmp(sz, "$(filename)") == 0) strcmp(sz, m_szfile);
 	else setWindowTitle(sz);
 
+
+	return parseTags(tag, playout);
+}
+
+bool MyDialog::parseTags(XMLTag& tag, QBoxLayout* playout)
+{
 	// get the file reader
 	XMLReader& xml = *tag.m_preader;
+
+	// buffer for reading strings
+	char sz[256] = {0};
 
 	// loop over all tags
 	++tag;
 	do
 	{
-		if (tag == "button")
+		if (tag == "group")
+		{
+			const char* sztype = tag.AttributeValue("type");
+
+			QBoxLayout* pl = 0;
+			if      (strcmp(sztype, "vertical"  ) == 0) pl = new QVBoxLayout;
+			else if (strcmp(sztype, "horizontal") == 0) pl = new QHBoxLayout;
+			playout->addLayout(pl);
+
+			parseTags(tag, pl);
+			++tag;
+		}
+		else if (tag == "button")
 		{
 			int nact = -1;
 			strcpy(sz, tag.AttributeValue("title"));

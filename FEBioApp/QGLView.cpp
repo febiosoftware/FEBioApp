@@ -134,8 +134,8 @@ void QGLView::paintGL()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	glTranslated(0.0, 0.0, -3.0);
-	glTranslated(-m_center.x, -m_center.y, -m_center.z);
 	glRotatef(m_yangle, 1.f, 1.f, 0.f);
+	glTranslated(-m_center.x, -m_center.y, -m_center.z);
 
 	if (m_psurf==0) return;
 	FESurface& s = *m_psurf;

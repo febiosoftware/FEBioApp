@@ -1,6 +1,7 @@
 #pragma once
 #include <QDialog>
 #include <QLineEdit>
+#include <QCheckBox>
 #include <FEBioLib/FEBioModel.h>
 #include "QPlotWidget.h"
 #include "QGLView.h"
@@ -11,7 +12,7 @@ class QBoxLayout;
 
 //-----------------------------------------------------------------------------
 //! This class connects an FE model parameter to an input field.
-class CParamInput : public QLineEdit
+class CParamInput
 {
 public:
 	enum {
@@ -26,13 +27,19 @@ public:
 	};
 
 public:
-	CParamInput(QWidget* parent = 0);
+	CParamInput();
+
+	void SetWidget(QLineEdit* pw) { m_pedit = pw; }
+	void SetWidget(QCheckBox* pw) { m_pcheck = pw; }
 
 	void SetParameter(FEParam* pv);
 
 	void UpdateParameter();
 
 private:
+	QLineEdit*	m_pedit;
+	QCheckBox*	m_pcheck;
+
 	FEParam*	m_pv;	// pointer to parameter
 };
 
@@ -74,9 +81,14 @@ private:
 private: // helper functions for parsing app file
 	bool parseModel(XMLTag& tag);
 	bool parseGUI  (XMLTag& tag);
-	bool parseTags (XMLTag& tag, QBoxLayout* playout);
-	void parseGroup(XMLTag& tag, QBoxLayout* playout);
-	void parseInput(XMLTag& tag, QBoxLayout* playout);
+	bool parseTags   (XMLTag& tag, QBoxLayout* playout);
+	void parseGroup  (XMLTag& tag, QBoxLayout* playout);
+	void parseInput  (XMLTag& tag, QBoxLayout* playout);
+	void parseStretch(XMLTag& tag, QBoxLayout* playout);
+	void parseButton (XMLTag& tag, QBoxLayout* playout);
+	void parseLabel  (XMLTag& tag, QBoxLayout* playout);
+	void parseGraph  (XMLTag& tag, QBoxLayout* playout);
+	void parsePlot3d (XMLTag& tag, QBoxLayout* playout);
 
 	FEParam* findParameter(const char* sz);
 

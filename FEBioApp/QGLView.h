@@ -15,7 +15,7 @@ class QGLView : public QOpenGLWidget//, public QOpenGLFunctions
 public:
 	QGLView(QWidget* parent = 0);
 
-	QSize minimumSizeHint() const { return QSize(300, 300); }
+	QSize minimumSizeHint() const { return QSize(400, 400); }
 	QSize sizeHint() const { return minimumSizeHint(); }
 
 	void SetFEModel(FEModel* pfem);

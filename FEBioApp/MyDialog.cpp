@@ -28,25 +28,46 @@ void qt_info(const char* sz)
 }
 
 //-----------------------------------------------------------------------------
-CParamInput::CParamInput(QWidget* parent) : QLineEdit(parent)
+CParamInput::CParamInput()
 {
+	m_pedit = 0;
+	m_pcheck = 0;
 	m_pv = 0;
 }
 
 void CParamInput::SetParameter(FEParam* pv)
 {
 	m_pv = pv;
-	if (pv) setText(QString::number(pv->value<double>()));
+	if (pv) 
+	{
+		if (pv->m_itype == FE_PARAM_DOUBLE)
+		{
+			if (m_pedit) m_pedit->setText(QString::number(pv->value<double>()));
+		}
+		if (pv->m_itype == FE_PARAM_BOOL)
+		{
+			if (m_pcheck) m_pcheck->setChecked(pv->value<bool>());
+		}
+	}
 }
 
 void CParamInput::UpdateParameter()
 {
-	QString s = text();
-	double f = s.toDouble();
 	if (m_pv) 
 	{
-		printf("Setting parameter %s to %lg\n", m_pv->name(), f);
-		m_pv->setvalue(f);
+		if ((m_pv->m_itype == FE_PARAM_DOUBLE) && m_pedit)
+		{
+			QString s = m_pedit->text();
+			double f = s.toDouble();
+			printf("Setting parameter %s to %lg\n", m_pv->name(), f);
+			m_pv->setvalue(f);
+		}
+		else if ((m_pv->m_itype == FE_PARAM_BOOL) && m_pcheck)
+		{
+			bool b = m_pcheck->isChecked();
+			m_pv->value<bool>() = b;
+			printf("Setting parameter %s to %s\n", m_pv->name(), (b ? "true" : "false"));
+		}
 	}
 }
 
@@ -201,125 +222,28 @@ bool MyDialog::parseTags(XMLTag& tag, QBoxLayout* playout)
 	// get the file reader
 	XMLReader& xml = *tag.m_preader;
 
-	// buffer for reading strings
-	char sz[256] = {0};
-
 	// loop over all tags
 	++tag;
 	do
 	{
-		if (tag == "group") parseGroup(tag, playout);
-		else if (tag == "stretch")
-		{
-			playout->addStretch();
-			++tag;
-		}
-		else if (tag == "button")
-		{
-			int nact = -1;
-			strcpy(sz, tag.AttributeValue("title"));
-
-			if (!tag.isempty())
-			{
-				++tag;
-				do
-				{
-					if (tag == "action")
-					{
-						const char* sza = tag.szvalue();
-						if      (strcmp(sza, "fem.solve()") == 0) nact = 0;
-						else if (strcmp(sza, "app.quit()" ) == 0) nact = 1;
-						else printf("ERROR: Do not understand action\n");
-
-						++tag;
-					}
-					else xml.SkipTag(tag);
-				}
-				while (!tag.isend());
-			}
-
-			QHBoxLayout* pl = new QHBoxLayout;
-			QPushButton* pb = new QPushButton(sz);
-
-			playout->addLayout(pl);
-			pl->addStretch();
-			pl->addWidget(pb);
-
-			if      (nact == 0) connect(pb, SIGNAL(clicked()), this, SLOT(Run()));
-			else if (nact == 1) connect(pb, SIGNAL(clicked()), this, SLOT(accept()));
-
-			++tag;
-		}
-		else if (tag == "label")
-		{
-			strcpy(sz, tag.AttributeValue("title"));
-
-			if (!tag.isempty())
-			{
-				++tag;
-				do
-				{
-					xml.SkipTag(tag);
-				}
-				while (!tag.isend());
-			}
-
-			QLabel* plabel = new QLabel(sz);
-			QFont f("Times", 14, QFont::Bold);
-			plabel->setFont(f);
-			playout->addWidget(plabel);
-
-			++tag;
-		}
-		else if (tag == "input") parseInput(tag, playout);
-		else if (tag == "graph")
-		{
-			strcpy(sz, tag.AttributeValue("title"));
-
-			if (!tag.isleaf())
-			{
-				++tag;
-				do
-				{
-					xml.SkipTag(tag);
-				}
-				while (!tag.isend());
-			}
-
-			CDataPlot* pg = new CDataPlot;
-			pg->setTitle(QString(sz));
-			playout->addWidget(pg);
-			m_plot.push_back(pg);
-
-			++tag;
-		}
-		else if (tag == "plot3d")
-		{
-			strcpy(sz, tag.AttributeValue("title"));
-
-			if (!tag.isleaf())
-			{
-				++tag;
-				do
-				{
-					xml.SkipTag(tag);
-				}
-				while (!tag.isend());
-			}
-
-			QGLView* pgl = new QGLView;
-			playout->addWidget(pgl);
-
-			pgl->SetFEModel(&m_fem);
-			m_gl.push_back(pgl);
-
-			++tag;
-		}
+		if      (tag == "group"  ) parseGroup  (tag, playout);
+		else if (tag == "stretch") parseStretch(tag, playout);
+		else if (tag == "button" ) parseButton (tag, playout);
+		else if (tag == "label"  ) parseLabel  (tag, playout);
+		else if (tag == "input"  ) parseInput  (tag, playout);
+		else if (tag == "graph"  ) parseGraph  (tag, playout);
+		else if (tag == "plot3d" ) parsePlot3d (tag, playout);
 		else xml.SkipTag(tag);
 	}
 	while (!tag.isend());
 
 	return true;
+}
+
+void MyDialog::parseStretch(XMLTag& tag, QBoxLayout* playout)
+{
+	playout->addStretch();
+	++tag;
 }
 
 void MyDialog::parseGroup(XMLTag& tag, QBoxLayout* playout)
@@ -342,6 +266,121 @@ void MyDialog::parseGroup(XMLTag& tag, QBoxLayout* playout)
 		playout->addWidget(pg); 
 	}
 	else playout->addLayout(pl);
+
+	++tag;
+}
+
+void MyDialog::parseButton(XMLTag& tag, QBoxLayout* playout)
+{
+	int nact = -1;
+	char sz[256] = {0};
+	strcpy(sz, tag.AttributeValue("title"));
+
+	XMLReader& xml = *tag.m_preader;
+
+	if (!tag.isempty())
+	{
+		++tag;
+		do
+		{
+			if (tag == "action")
+			{
+				const char* sza = tag.szvalue();
+				if      (strcmp(sza, "fem.solve()") == 0) nact = 0;
+				else if (strcmp(sza, "app.quit()" ) == 0) nact = 1;
+				else printf("ERROR: Do not understand action\n");
+
+				++tag;
+			}
+			else xml.SkipTag(tag);
+		}
+		while (!tag.isend());
+	}
+
+	QHBoxLayout* pl = new QHBoxLayout;
+	QPushButton* pb = new QPushButton(sz);
+
+	playout->addLayout(pl);
+	pl->addStretch();
+	pl->addWidget(pb);
+
+	if      (nact == 0) connect(pb, SIGNAL(clicked()), this, SLOT(Run()));
+	else if (nact == 1) connect(pb, SIGNAL(clicked()), this, SLOT(accept()));
+
+	++tag;
+}
+
+void MyDialog::parseLabel(XMLTag& tag, QBoxLayout* playout)
+{
+	char sz[256] = {0};
+	strcpy(sz, tag.AttributeValue("title"));
+
+	XMLReader& xml = *tag.m_preader;
+
+	if (!tag.isempty())
+	{
+		++tag;
+		do
+		{
+			xml.SkipTag(tag);
+		}
+		while (!tag.isend());
+	}
+
+	QLabel* plabel = new QLabel(sz);
+	QFont f("Times", 14, QFont::Bold);
+	plabel->setFont(f);
+	playout->addWidget(plabel);
+
+	++tag;
+}
+
+void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
+{
+	char sz[256] = {0};
+	strcpy(sz, tag.AttributeValue("title"));
+
+	XMLReader& xml = *tag.m_preader;
+
+	if (!tag.isleaf())
+	{
+		++tag;
+		do
+		{
+			xml.SkipTag(tag);
+		}
+		while (!tag.isend());
+	}
+
+	CDataPlot* pg = new CDataPlot;
+	pg->setTitle(QString(sz));
+	playout->addWidget(pg);
+	m_plot.push_back(pg);
+
+	++tag;
+}
+
+void MyDialog::parsePlot3d (XMLTag& tag, QBoxLayout* playout)
+{
+	char sz[256] = {0};
+	strcpy(sz, tag.AttributeValue("title"));
+
+	XMLReader& xml = *tag.m_preader;
+	if (!tag.isleaf())
+	{
+		++tag;
+		do
+		{
+			xml.SkipTag(tag);
+		}
+		while (!tag.isend());
+	}
+
+	QGLView* pgl = new QGLView;
+	playout->addWidget(pgl);
+
+	pgl->SetFEModel(&m_fem);
+	m_gl.push_back(pgl);
 
 	++tag;
 }
@@ -395,7 +434,12 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 
 	QLabel* plabel = new QLabel(sz);
 	CParamInput* pi = new CParamInput;
+	QWidget* pw = 0;
+	QLineEdit* pedit; QCheckBox* pcheck;
+	if (pv->m_itype == FE_PARAM_DOUBLE) { pi->SetWidget(pedit  = new QLineEdit); pw = pedit; }
+	if (pv->m_itype == FE_PARAM_BOOL  ) { pi->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
 	if (pv) pi->SetParameter(pv);
+	assert(pw);
 
 	playout->addLayout(pl);
 
@@ -404,39 +448,39 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 	case CParamInput::ALIGN_LEFT:
 		pl->addWidget(plabel);
 		pl->addStretch();
-		pl->addWidget(pi);
+		pl->addWidget(pw);
 		break;
 	case CParamInput::ALIGN_RIGHT:
-		pl->addWidget(pi);
+		pl->addWidget(pw);
 		pl->addStretch();
 		pl->addWidget(plabel);
 		break;
 	case CParamInput::ALIGN_TOP:
 		plabel->setAlignment(Qt::AlignHCenter);
 		pl->addWidget(plabel);
-		pl->addWidget(pi);
+		pl->addWidget(pw);
 		break;
 	case CParamInput::ALIGN_BOTTOM:
-		pl->addWidget(pi);
+		pl->addWidget(pw);
 		plabel->setAlignment(Qt::AlignHCenter);
 		pl->addWidget(plabel);
 		break;
 	case CParamInput::ALIGN_TOP_LEFT:
 		pl->addWidget(plabel);
-		pl->addWidget(pi);
+		pl->addWidget(pw);
 		break;
 	case CParamInput::ALIGN_TOP_RIGHT:
 		plabel->setAlignment(Qt::AlignRight);
 		pl->addWidget(plabel);
-		pl->addWidget(pi);
+		pl->addWidget(pw);
 		break;
 	case CParamInput::ALIGN_BOTTOM_LEFT:
-		pl->addWidget(pi);
+		pl->addWidget(pw);
 		pl->addWidget(plabel);
 		break;
 	case CParamInput::ALIGN_BOTTOM_RIGHT:
 		plabel->setAlignment(Qt::AlignRight);
-		pl->addWidget(pi);
+		pl->addWidget(pw);
 		pl->addWidget(plabel);
 		break;
 	default:

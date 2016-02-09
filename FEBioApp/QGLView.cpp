@@ -104,7 +104,7 @@ void QGLView::paintGL()
 	if (m_psurf==0) return;
 	FESurface& s = *m_psurf;
 
-	glColor3ub(255,0,0);
+	glColor3ub(196, 186, 176);
 	vec3d r[FEElement::MAX_NODES];
 	glBegin(GL_QUADS);
 	{

@@ -71,11 +71,15 @@ void QPlotData::addPoint(double x, double y)
 }
 
 //-----------------------------------------------------------------------------
-QPlotWidget::QPlotWidget(QWidget* parent) : QWidget(parent)
+QPlotWidget::QPlotWidget(QWidget* parent, int w, int h) : QWidget(parent)
 {
 	m_viewRect = QRectF(-0.1, -0.1, 2.5, 2.5);
 	m_xscale = findScale(m_viewRect.left(), m_viewRect.right());
 	m_yscale = findScale(m_viewRect.top(), m_viewRect.bottom());
+
+	if (w < 200) w = 200;
+	if (h < 200) h = 200;
+	m_sizeHint = QSize(w, h);
 
 	QPlotData d1;
 	m_data.push_back(d1);

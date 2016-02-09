@@ -7,12 +7,15 @@
 #include <QMouseEvent>
 
 //-----------------------------------------------------------------------------
-QGLView::QGLView(QWidget* parent) : QOpenGLWidget(parent)
+QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 {
 	m_psurf = 0;
 	m_xangle = 0.0;
 	m_zangle = 0.0;
 	m_dist = 0.0;
+	if (w < 200) w = 200;
+	if (h < 200) h = 200;
+	m_sizeHint = QSize(w, h);
 }
 
 //-----------------------------------------------------------------------------

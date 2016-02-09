@@ -340,6 +340,9 @@ void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
 	char sz[256] = {0};
 	strcpy(sz, tag.AttributeValue("title"));
 
+	// size of graph
+	int size[2] = {400, 400};
+
 	XMLReader& xml = *tag.m_preader;
 
 	if (!tag.isleaf())
@@ -347,12 +350,23 @@ void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
 		++tag;
 		do
 		{
-			xml.SkipTag(tag);
+			if (tag == "size")
+			{
+				int user_size[2];
+				int nread = tag.value(user_size, 2);
+				if (nread == 2)
+				{
+					if (user_size[0] > 100) size[0] = user_size[0];
+					if (user_size[1] > 100) size[1] = user_size[1];
+				}
+				++tag;
+			}
+			else xml.SkipTag(tag);
 		}
 		while (!tag.isend());
 	}
 
-	CDataPlot* pg = new CDataPlot;
+	CDataPlot* pg = new CDataPlot(0, size[0], size[1]);
 	pg->setTitle(QString(sz));
 	playout->addWidget(pg);
 	m_plot.push_back(pg);
@@ -365,18 +379,32 @@ void MyDialog::parsePlot3d (XMLTag& tag, QBoxLayout* playout)
 	char sz[256] = {0};
 	strcpy(sz, tag.AttributeValue("title"));
 
+	// size of plot view
+	int size[2] = {400, 400};
+
 	XMLReader& xml = *tag.m_preader;
 	if (!tag.isleaf())
 	{
 		++tag;
 		do
 		{
-			xml.SkipTag(tag);
+			if (tag == "size")
+			{
+				int user_size[2];
+				int nread = tag.value(user_size, 2);
+				if (nread == 2)
+				{
+					if (user_size[0] > 100) size[0] = user_size[0];
+					if (user_size[1] > 100) size[1] = user_size[1];
+				}
+				++tag;
+			}
+			else xml.SkipTag(tag);
 		}
 		while (!tag.isend());
 	}
 
-	QGLView* pgl = new QGLView;
+	QGLView* pgl = new QGLView(0, size[0], size[1]);
 	playout->addWidget(pgl);
 
 	pgl->SetFEModel(&m_fem);

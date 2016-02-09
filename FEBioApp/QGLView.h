@@ -13,10 +13,10 @@ class QGLView : public QOpenGLWidget//, public QOpenGLFunctions
 //	Q_OBJECT
 
 public:
-	QGLView(QWidget* parent = 0);
+	QGLView(QWidget* parent = 0, int w = 0, int h = 0);
 
-	QSize minimumSizeHint() const { return QSize(400, 400); }
-	QSize sizeHint() const { return minimumSizeHint(); }
+	QSize minimumSizeHint() const { return QSize(200, 200); }
+	QSize sizeHint() const { return m_sizeHint; }
 
 	void SetFEModel(FEModel* pfem);
 
@@ -39,4 +39,5 @@ private:
 	double		m_dist;
 	QPoint		m_mousePos;
 	double		m_xangle, m_zangle;
+	QSize		m_sizeHint;
 };

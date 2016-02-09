@@ -43,13 +43,13 @@ class QPlotWidget : public QWidget
 
 public:
 	//! constructor
-	QPlotWidget(QWidget* parent = 0);
+	QPlotWidget(QWidget* parent = 0, int w = 0, int h = 0);
 
 	//! Set the plot title
 	void setTitle(const QString& s);
 
 	// size hint
-	QSize sizeHint() const { return QSize(400, 300); }
+	QSize sizeHint() const { return m_sizeHint; }
 	QSize minimumSizeHint() const { return QSize(200, 200); }
 
 	// clear plot data
@@ -93,4 +93,5 @@ private: // drawing helper functions
 private:
 	QAction*	m_pZoomToFit;
 	QAction*	m_pShowProps;
+	QSize		m_sizeHint;
 };

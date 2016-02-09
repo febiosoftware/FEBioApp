@@ -48,7 +48,7 @@ private:
 class CDataPlot : public QPlotWidget
 {
 public:
-	CDataPlot(QWidget* parent = 0) : QPlotWidget(parent)
+	CDataPlot(QWidget* parent = 0, int w = 0, int h = 0) : QPlotWidget(parent, w, h)
 	{
 	}
 

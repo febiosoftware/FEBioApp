@@ -18,7 +18,7 @@ public:
 	QSize minimumSizeHint() const { return QSize(300, 300); }
 	QSize sizeHint() const { return minimumSizeHint(); }
 
-	void SetFEModel(FEModel* pfem) { m_pfem = pfem; }
+	void SetFEModel(FEModel* pfem);
 
 	void Update();
 
@@ -38,5 +38,5 @@ private:
 	vec3d		m_center;
 	double		m_dist;
 	QPoint		m_mousePos;
-	double		m_yangle;
+	double		m_xangle, m_zangle;
 };

@@ -10,24 +10,30 @@
 QGLView::QGLView(QWidget* parent) : QOpenGLWidget(parent)
 {
 	m_psurf = 0;
-	m_yangle = 0.0;
+	m_xangle = 0.0;
+	m_zangle = 0.0;
 	m_dist = 0.0;
+}
+
+//-----------------------------------------------------------------------------
+void QGLView::SetFEModel(FEModel* pfem)
+{
+	m_pfem = pfem;
+
+	if (m_psurf) delete m_psurf;
+	m_psurf = m_pfem->GetMesh().ElementBoundarySurface();
+	Update();
 }
 
 //-----------------------------------------------------------------------------
 void QGLView::Update()
 {
-	if ((m_psurf==0) && (m_pfem))
-	{
-		m_psurf = m_pfem->GetMesh().ElementBoundarySurface();
-	}
-
 	// find the center of the box
 	if (m_psurf)
 	{
 		FEBox box(*m_psurf);
 		m_center = box.center();
-		m_dist = box.maxsize()*2;
+		m_dist = box.maxsize()*1.5;
 	}
 }
 
@@ -42,8 +48,10 @@ void QGLView::mouseMoveEvent(QMouseEvent* ev)
 {
 	QPoint p = ev->pos();
 	int dx = p.x() - m_mousePos.x();
+	int dy = p.y() - m_mousePos.y();
 
-	m_yangle += dx*1.0;
+	m_xangle += dy*1.0;
+	m_zangle += dx*1.0;
 
 	m_mousePos = p;
 	repaint();
@@ -89,7 +97,8 @@ void QGLView::paintGL()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	glTranslated(0.0, 0.0, -m_dist);
-	glRotatef(m_yangle, 1.f, 1.f, 0.f);
+	glRotatef(m_xangle, 1.f, 0.f, 0.f);
+	glRotatef(m_zangle, 0.f, 0.f, 1.f);
 	glTranslated(-m_center.x, -m_center.y, -m_center.z);
 
 	if (m_psurf==0) return;

@@ -32,10 +32,10 @@ CParamInput::CParamInput(QWidget* parent) : QLineEdit(parent)
 	m_pv = 0;
 }
 
-void CParamInput::SetParameter(double* pv)
+void CParamInput::SetParameter(FEParam* pv)
 {
 	m_pv = pv;
-	if (pv) setText(QString::number(*pv));
+	if (pv) setText(QString::number(pv->value<double>()));
 }
 
 void CParamInput::UpdateParameter()
@@ -44,8 +44,8 @@ void CParamInput::UpdateParameter()
 	double f = s.toDouble();
 	if (m_pv) 
 	{
-		printf("Setting paramter to %lg\n", f);
-		*m_pv = f;
+		printf("Setting parameter %s to %lg\n", m_pv->name(), f);
+		m_pv->setvalue(f);
 	}
 }
 
@@ -356,7 +356,7 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 
 	XMLReader& xml = *tag.m_preader;
 
-	double* pv = 0;
+	FEParam* pv = 0;
 	if (!tag.isempty())
 	{
 		++tag;
@@ -364,7 +364,7 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 		{
 			if (tag == "param")
 			{
-				pv = m_fem.FindParameter(tag.szvalue());
+				pv = findParameter(tag.szvalue());
 				if (pv == 0) 
 				{
 					printf("ERROR: Failed finding parameter %s\n", tag.szvalue());
@@ -434,6 +434,64 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 	m_in.push_back(pi);
 					
 	++tag;
+}
+
+FEParam* MyDialog::findParameter(const char* sz)
+{
+	ParamString s(sz);
+	if (strcmp(s.c_str(), "fem") == 0)
+	{
+		s = s.next();
+		char szbuf[256] = {0}, *szindex = 0;
+		int nindex = -1;
+		strcpy(szbuf, s.c_str());
+		char* ch = strchr(szbuf, '(');
+		if (ch)
+		{
+			*ch++ = 0;
+			szindex = ch;
+			ch = strchr(ch, ')');
+			if (ch == 0) return 0;
+			*ch=0;
+
+			if (szindex[0] == '"')
+			{
+				ch = strchr(++szindex, '"');
+				if (ch==0) return 0;
+				*ch = 0;
+			}
+			else
+			{
+				nindex = atoi(szindex);
+				szindex = 0;
+			}
+		}
+
+		if (strcmp(szbuf, "material") == 0)
+		{
+			// get the material
+			FEMaterial* pmat = 0;
+			if (szindex) pmat = m_fem.FindMaterial(szindex);
+			else pmat = m_fem.FindMaterial(nindex);
+			if (pmat == 0) return 0;
+
+			s = s.next();
+			FEParam* pp = pmat->GetParameter(s);
+			return pp;
+		}
+		else if (strcmp(szbuf, "surfaceLoad") == 0)
+		{
+			// get the surface load
+			FESurfaceLoad* psl = 0;
+			if (szindex) psl = m_fem.FindSurfaceLoad(szindex);
+			if (psl == 0) return 0;
+
+			s = s.next();
+			FEParam* pp = psl->GetParameter(s);
+			return pp;
+		}
+	}
+	return 0;
 }
 
 // Include the MOC stuff

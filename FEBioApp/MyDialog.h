@@ -28,12 +28,12 @@ public:
 public:
 	CParamInput(QWidget* parent = 0);
 
-	void SetParameter(double* pv);
+	void SetParameter(FEParam* pv);
 
 	void UpdateParameter();
 
 private:
-	double*	m_pv;	// pointer to parameter
+	FEParam*	m_pv;	// pointer to parameter
 };
 
 //-----------------------------------------------------------------------------
@@ -77,6 +77,8 @@ private: // helper functions for parsing app file
 	bool parseTags (XMLTag& tag, QBoxLayout* playout);
 	void parseGroup(XMLTag& tag, QBoxLayout* playout);
 	void parseInput(XMLTag& tag, QBoxLayout* playout);
+
+	FEParam* findParameter(const char* sz);
 
 private:
 	char		m_szfile[512];	//!< FE model input file name

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "MyDialog.h"
 #include <QVBoxLayout>
+#include <QGroupBox>
 #include <QPushButton>
 #include <QLineEdit>
 #include <QLabel>
@@ -324,13 +325,24 @@ bool MyDialog::parseTags(XMLTag& tag, QBoxLayout* playout)
 void MyDialog::parseGroup(XMLTag& tag, QBoxLayout* playout)
 {
 	const char* sztype = tag.AttributeValue("type");
+	const char* szname = tag.AttributeValue("title", true);
+
+	QGroupBox* pg = 0;
+	if (szname) pg = new QGroupBox(szname);
 
 	QBoxLayout* pl = 0;
 	if      (strcmp(sztype, "vertical"  ) == 0) pl = new QVBoxLayout;
 	else if (strcmp(sztype, "horizontal") == 0) pl = new QHBoxLayout;
-	playout->addLayout(pl);
 
 	parseTags(tag, pl);
+
+	if (pg) 
+	{ 
+		pg->setLayout(pl); 
+		playout->addWidget(pg); 
+	}
+	else playout->addLayout(pl);
+
 	++tag;
 }
 

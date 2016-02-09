@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "MyDialog.h"
 #include <QVBoxLayout>
+#include <QFormLayout>
 #include <QGroupBox>
 #include <QPushButton>
 #include <QLineEdit>
@@ -226,13 +227,16 @@ bool MyDialog::parseTags(XMLTag& tag, QBoxLayout* playout)
 	++tag;
 	do
 	{
-		if      (tag == "group"  ) parseGroup  (tag, playout);
-		else if (tag == "stretch") parseStretch(tag, playout);
-		else if (tag == "button" ) parseButton (tag, playout);
-		else if (tag == "label"  ) parseLabel  (tag, playout);
-		else if (tag == "input"  ) parseInput  (tag, playout);
-		else if (tag == "graph"  ) parseGraph  (tag, playout);
-		else if (tag == "plot3d" ) parsePlot3d (tag, playout);
+		if      (tag == "group"     ) parseGroup    (tag, playout);
+		else if (tag == "vgroup"    ) parseVGroup   (tag, playout);
+		else if (tag == "hgroup"    ) parseHGroup   (tag, playout);
+		else if (tag == "stretch"   ) parseStretch  (tag, playout);
+		else if (tag == "button"    ) parseButton   (tag, playout);
+		else if (tag == "label"     ) parseLabel    (tag, playout);
+		else if (tag == "input"     ) parseInput    (tag, playout);
+		else if (tag == "input_list") parseInputList(tag, playout);
+		else if (tag == "graph"     ) parseGraph    (tag, playout);
+		else if (tag == "plot3d"    ) parsePlot3d   (tag, playout);
 		else xml.SkipTag(tag);
 	}
 	while (!tag.isend());
@@ -248,16 +252,56 @@ void MyDialog::parseStretch(XMLTag& tag, QBoxLayout* playout)
 
 void MyDialog::parseGroup(XMLTag& tag, QBoxLayout* playout)
 {
-	const char* sztype = tag.AttributeValue("type");
+	const char* szalign = tag.AttributeValue("align");
 	const char* szname = tag.AttributeValue("title", true);
 
 	QGroupBox* pg = 0;
 	if (szname) pg = new QGroupBox(szname);
 
 	QBoxLayout* pl = 0;
-	if      (strcmp(sztype, "vertical"  ) == 0) pl = new QVBoxLayout;
-	else if (strcmp(sztype, "horizontal") == 0) pl = new QHBoxLayout;
+	if      (strcmp(szalign, "vertical"  ) == 0) pl = new QVBoxLayout;
+	else if (strcmp(szalign, "horizontal") == 0) pl = new QHBoxLayout;
 
+	parseTags(tag, pl);
+
+	if (pg) 
+	{ 
+		pg->setLayout(pl); 
+		playout->addWidget(pg); 
+	}
+	else playout->addLayout(pl);
+
+	++tag;
+}
+
+void MyDialog::parseVGroup(XMLTag& tag, QBoxLayout* playout)
+{
+	const char* szname = tag.AttributeValue("title", true);
+
+	QGroupBox* pg = 0;
+	if (szname) pg = new QGroupBox(szname);
+
+	QBoxLayout* pl = new QVBoxLayout;
+	parseTags(tag, pl);
+
+	if (pg) 
+	{ 
+		pg->setLayout(pl); 
+		playout->addWidget(pg); 
+	}
+	else playout->addLayout(pl);
+
+	++tag;
+}
+
+void MyDialog::parseHGroup(XMLTag& tag, QBoxLayout* playout)
+{
+	const char* szname = tag.AttributeValue("title", true);
+
+	QGroupBox* pg = 0;
+	if (szname) pg = new QGroupBox(szname);
+
+	QBoxLayout* pl = new QHBoxLayout;
 	parseTags(tag, pl);
 
 	if (pg) 
@@ -410,6 +454,44 @@ void MyDialog::parsePlot3d (XMLTag& tag, QBoxLayout* playout)
 	pgl->SetFEModel(&m_fem);
 	m_gl.push_back(pgl);
 
+	++tag;
+}
+
+void MyDialog::parseInputList(XMLTag& tag, QBoxLayout* playout)
+{
+	const char* sztitle = tag.AttributeValue("title", true);
+
+	FECoreBase* pc = findComponent(tag.szvalue());
+	if (pc)
+	{
+		QGroupBox* pg = 0;
+		if (sztitle) pg = new QGroupBox(sztitle);
+
+		QFormLayout* pf = new QFormLayout;
+		FEParameterList& pl = pc->GetParameterList();
+		int n = pl.Parameters();
+		list<FEParam>::iterator it = pl.first();
+		for (int i=0; i<n; ++i, ++it)
+		{
+			FEParam& pi = *it;
+
+			CParamInput* pin = new CParamInput;
+			QWidget* pw = 0;
+			QLineEdit* pedit; QCheckBox* pcheck;
+			if (pi.m_itype == FE_PARAM_DOUBLE) { pin->SetWidget(pedit  = new QLineEdit); pw = pedit;  }
+			if (pi.m_itype == FE_PARAM_BOOL  ) { pin->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
+			pin->SetParameter(&pi);
+			assert(pw);
+
+			// add it to the row
+			pf->addRow(pi.name(), pw);
+
+			m_in.push_back(pin);
+		}
+
+		if (pg) { pg->setLayout(pf); playout->addWidget(pg); }
+		else playout->addLayout(pf);
+	}
 	++tag;
 }
 
@@ -573,6 +655,87 @@ FEParam* MyDialog::findParameter(const char* sz)
 			s = s.next();
 			FEParam* pp = psl->GetParameter(s);
 			return pp;
+		}
+	}
+	return 0;
+}
+
+char* processComponent(char* szbuf, int& nindex)
+{
+	char* szindex = 0;
+	char* ch = strchr(szbuf, '(');
+	if (ch)
+	{
+		*ch++ = 0;
+		szindex = ch;
+		ch = strchr(ch, ')');
+		if (ch == 0) return 0;
+		*ch=0;
+
+		if (szindex[0] == '"')
+		{
+			ch = strchr(++szindex, '"');
+			if (ch==0) return 0;
+			*ch = 0;
+			nindex = -1;
+		}
+		else
+		{
+			nindex = atoi(szindex);
+			szindex = 0;
+		}
+	}
+	return szindex;
+}
+
+FECoreBase* MyDialog::findComponent(const char* sz)
+{
+	ParamString s(sz);
+	if (strcmp(s.c_str(), "fem") == 0)
+	{
+		s = s.next();
+		char szbuf[256] = {0};
+		strcpy(szbuf, s.c_str());
+
+		int nindex = -1;
+		char* szindex = processComponent(szbuf, nindex);
+
+		if (strcmp(szbuf, "material") == 0)
+		{
+			// get the material
+			FEMaterial* pmat = 0;
+			if (szindex) pmat = m_fem.FindMaterial(szindex);
+			else pmat = m_fem.FindMaterial(nindex);
+			if (pmat == 0) return 0;
+
+			s = s.next();
+			if (s.count() == 0) return pmat;
+
+			strcpy(szbuf, s.c_str());
+			int nindex = -1;
+			char* szindex = processComponent(szbuf, nindex);
+
+			FEProperty* pp = pmat->FindProperty(szbuf);
+			if (pp)
+			{
+				FECoreBase* pc = 0;
+				if (szindex)
+				{
+					int np = pp->size();
+					for (int i=0; i<np; ++i)
+					{
+						FECoreBase* pci = pp->get(i);
+						if (pci && (strcmp(pci->GetName(), szindex)==0) )
+						{
+							pc = pci;
+							break;
+						}
+					}
+				}
+				else if (nindex >= 0) pc = pp->get(nindex);
+				else pc = pp->get(0);
+				return pc;
+			}
 		}
 	}
 	return 0;

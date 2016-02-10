@@ -73,16 +73,17 @@ void QPlotData::addPoint(double x, double y)
 //-----------------------------------------------------------------------------
 QPlotWidget::QPlotWidget(QWidget* parent, int w, int h) : QWidget(parent)
 {
-	m_viewRect = QRectF(-0.1, -0.1, 2.5, 2.5);
+	static int n = 0;
+
+	m_ncol = 13 + n++;
+
+	m_viewRect = QRectF(0.0, 0.0, 1.0, 1.0);
 	m_xscale = findScale(m_viewRect.left(), m_viewRect.right());
 	m_yscale = findScale(m_viewRect.top(), m_viewRect.bottom());
 
 	if (w < 200) w = 200;
 	if (h < 200) h = 200;
 	m_sizeHint = QSize(w, h);
-
-	QPlotData d1;
-	m_data.push_back(d1);
 
 	m_pZoomToFit = new QAction(tr("Zoom to fit"), this);
 	connect(m_pZoomToFit, SIGNAL(triggered()), this, SLOT(OnZoomToFit()));
@@ -121,9 +122,15 @@ void QPlotWidget::setTitle(const QString& t)
 }
 
 //-----------------------------------------------------------------------------
-void QPlotWidget::clear()
+void QPlotWidget::clearData()
 {
 	for (int i=0; i<(int) m_data.size(); ++i) m_data[i].clear();
+}
+
+//-----------------------------------------------------------------------------
+void QPlotWidget::addPlotData(const QPlotData& p)
+{
+	m_data.push_back(p);
 }
 
 //-----------------------------------------------------------------------------
@@ -142,7 +149,7 @@ void QPlotWidget::fitToData()
 
 	double dx = 0.05*m_viewRect.width();
 	double dy = 0.05*m_viewRect.height();
-	m_viewRect.adjust(-dx, -dy, dx, dy);
+	m_viewRect.adjust(0.0, 0.0, dx, dy);
 
 	m_xscale = findScale(m_viewRect.left(), m_viewRect.right());
 	m_yscale = findScale(m_viewRect.top(), m_viewRect.bottom());
@@ -384,7 +391,7 @@ void QPlotWidget::drawAllData(QPainter& p)
 	int N = m_data.size();
 	for (int i=0; i<N; ++i)
 	{
-		QColor col(colorNames[(i+13)%colorNames.count()]);
+		QColor col(colorNames[(i+m_ncol)%colorNames.count()]);
 		QPen pen(col, 2);
 		p.setPen(pen);
 		p.setBrush(col);

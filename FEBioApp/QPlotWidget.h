@@ -53,10 +53,17 @@ public:
 	QSize minimumSizeHint() const { return QSize(200, 200); }
 
 	// clear plot data
-	void clear();
+	void clearData();
 
 	// change the view so that it fits the data
 	void fitToData();
+
+	// add a data field
+	void addPlotData(const QPlotData& p);
+
+	// get a data field
+	int plots() { return (int) m_data.size(); }
+	QPlotData& getPlotData(int i) { return m_data[i]; }
 
 protected:
 	void mousePressEvent  (QMouseEvent* ev);
@@ -66,7 +73,6 @@ protected:
 
 public:
 	QString	m_title;
-	vector<QPlotData>	m_data;
 	QRectF	m_viewRect;
 	QRect	m_screenRect;
 	QPoint	m_mousePos;
@@ -89,6 +95,10 @@ private: // drawing helper functions
 	void drawData(QPainter& p, QPlotData& data);
 	void drawGrid(QPainter& p);
 	void drawTitle(QPainter& p);
+
+private:
+	vector<QPlotData>	m_data;
+	int			m_ncol;
 
 private:
 	QAction*	m_pZoomToFit;

@@ -85,6 +85,7 @@ private: // helper functions for parsing app file
 	void parseGroup    (XMLTag& tag, QBoxLayout* playout);
 	void parseVGroup   (XMLTag& tag, QBoxLayout* playout);
 	void parseHGroup   (XMLTag& tag, QBoxLayout* playout);
+	void parseTabGroup (XMLTag& tag, QBoxLayout* playout);
 	void parseInput    (XMLTag& tag, QBoxLayout* playout);
 	void parseStretch  (XMLTag& tag, QBoxLayout* playout);
 	void parseButton   (XMLTag& tag, QBoxLayout* playout);

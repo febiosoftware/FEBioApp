@@ -7,6 +7,7 @@
 #include <QLineEdit>
 #include <QLabel>
 #include <QMessageBox>
+#include <QTabWidget>
 #include <FEBioXML/XMLReader.h>
 #include <FEBioMech/FEElasticMaterial.h>
 #include "QPlotWidget.h"
@@ -88,7 +89,11 @@ void CDataPlot::Update(FEModel& fem)
 	mat3dd I(1.0);
 	mat3ds E = (C - I)*0.5;
 
-	m_data[0].addPoint(E.xx(), s.xx());
+	if (plots() > 0)
+	{
+		QPlotData& data = getPlotData(0);
+		data.addPoint(E.xx(), s.xx());
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -120,7 +125,7 @@ void MyDialog::Run()
 	}
 
 	// clear all plots
-	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->clear();
+	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->clearData();
 
 	// do initialization
 	if (bfirst)
@@ -230,6 +235,7 @@ bool MyDialog::parseTags(XMLTag& tag, QBoxLayout* playout)
 		if      (tag == "group"     ) parseGroup    (tag, playout);
 		else if (tag == "vgroup"    ) parseVGroup   (tag, playout);
 		else if (tag == "hgroup"    ) parseHGroup   (tag, playout);
+		else if (tag == "tab_group" ) parseTabGroup (tag, playout);
 		else if (tag == "stretch"   ) parseStretch  (tag, playout);
 		else if (tag == "button"    ) parseButton   (tag, playout);
 		else if (tag == "label"     ) parseLabel    (tag, playout);
@@ -314,6 +320,36 @@ void MyDialog::parseHGroup(XMLTag& tag, QBoxLayout* playout)
 	++tag;
 }
 
+void MyDialog::parseTabGroup(XMLTag& tag, QBoxLayout* playout)
+{
+	QTabWidget* ptab = new QTabWidget();
+
+	XMLReader& xml = *tag.m_preader;
+
+	++tag;
+	do
+	{
+		if (tag=="tab")
+		{
+			QString s(tag.AttributeValue("title"));
+
+			QWidget* pw = new QWidget;
+			QVBoxLayout* pl = new QVBoxLayout;
+			parseTags(tag, pl);
+			pw->setLayout(pl);
+			ptab->addTab(pw, s);
+
+			++tag;
+		}
+		else xml.SkipTag(tag);
+	}
+	while (!tag.isend());
+
+	playout->addWidget(ptab);
+
+	++tag;
+}
+
 void MyDialog::parseButton(XMLTag& tag, QBoxLayout* playout)
 {
 	int nact = -1;
@@ -389,6 +425,8 @@ void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
 
 	XMLReader& xml = *tag.m_preader;
 
+	int nplt = 0;
+
 	if (!tag.isleaf())
 	{
 		++tag;
@@ -405,6 +443,12 @@ void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
 				}
 				++tag;
 			}
+			else if (tag == "data")
+			{
+				nplt++;
+
+				xml.SkipTag(tag);
+			}
 			else xml.SkipTag(tag);
 		}
 		while (!tag.isend());
@@ -412,6 +456,13 @@ void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
 
 	CDataPlot* pg = new CDataPlot(0, size[0], size[1]);
 	pg->setTitle(QString(sz));
+
+	for (int i=0; i<nplt; ++i)
+	{
+		QPlotData d;
+		pg->addPlotData(d);
+	}
+
 	playout->addWidget(pg);
 	m_plot.push_back(pg);
 
@@ -518,7 +569,11 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 	XMLReader& xml = *tag.m_preader;
 
 	FEParam* pv = 0;
-	if (!tag.isempty())
+	if (tag.isleaf())
+	{
+		pv = findParameter(tag.szvalue());
+	}
+	else
 	{
 		++tag;
 		do
@@ -526,15 +581,16 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 			if (tag == "param")
 			{
 				pv = findParameter(tag.szvalue());
-				if (pv == 0) 
-				{
-					printf("ERROR: Failed finding parameter %s\n", tag.szvalue());
-				}
 				++tag;
 			}
 			else xml.SkipTag(tag);
 		}
 		while (!tag.isend());
+	}
+	if (pv == 0) 
+	{
+		printf("ERROR: Failed finding parameter %s\n", tag.szvalue());
+		return;
 	}
 
 	QBoxLayout* pl = 0;
@@ -711,31 +767,39 @@ FECoreBase* MyDialog::findComponent(const char* sz)
 			s = s.next();
 			if (s.count() == 0) return pmat;
 
-			strcpy(szbuf, s.c_str());
-			int nindex = -1;
-			char* szindex = processComponent(szbuf, nindex);
-
-			FEProperty* pp = pmat->FindProperty(szbuf);
-			if (pp)
+			while (s.count())
 			{
-				FECoreBase* pc = 0;
-				if (szindex)
+				strcpy(szbuf, s.c_str());
+				int nindex = -1;
+				char* szindex = processComponent(szbuf, nindex);
+
+				FEProperty* pp = pmat->FindProperty(szbuf);
+				if (pp)
 				{
-					int np = pp->size();
-					for (int i=0; i<np; ++i)
+					FECoreBase* pc = 0;
+					if (szindex)
 					{
-						FECoreBase* pci = pp->get(i);
-						if (pci && (strcmp(pci->GetName(), szindex)==0) )
+						int np = pp->size();
+						for (int i=0; i<np; ++i)
 						{
-							pc = pci;
-							break;
+							FECoreBase* pci = pp->get(i);
+							if (pci && (strcmp(pci->GetName(), szindex)==0) )
+							{
+								pc = pci;
+								break;
+							}
 						}
 					}
+					else if (nindex >= 0) pc = pp->get(nindex);
+					else pc = pp->get(0);
+
+					pmat = dynamic_cast<FEMaterial*>(pc);
+					if (pmat == 0) return 0;
+
+					s = s.next();
 				}
-				else if (nindex >= 0) pc = pp->get(nindex);
-				else pc = pp->get(0);
-				return pc;
 			}
+			return pmat;
 		}
 	}
 	return 0;

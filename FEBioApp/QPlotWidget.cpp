@@ -6,6 +6,8 @@
 #include <QAction>
 #include <QMessageBox>
 #include <QMenu>
+#include <QApplication>
+#include <QClipBoard>
 
 //-----------------------------------------------------------------------------
 double findScale(double fmin, double fmax)
@@ -90,6 +92,9 @@ QPlotWidget::QPlotWidget(QWidget* parent, int w, int h) : QWidget(parent)
 
 	m_pShowProps = new QAction(tr("Properties"), this);
 	connect(m_pShowProps, SIGNAL(triggered()), this, SLOT(OnShowProps()));
+
+	m_pCopyToClip = new QAction(tr("Copy to clipboard"), this);
+	connect(m_pCopyToClip, SIGNAL(triggered()), this, SLOT(OnCopyToClipboard()));
 }
 
 //-----------------------------------------------------------------------------
@@ -97,6 +102,7 @@ void QPlotWidget::contextMenuEvent(QContextMenuEvent* ev)
 {
 	QMenu menu(this);
 	menu.addAction(m_pZoomToFit);
+	menu.addAction(m_pCopyToClip);
 	menu.addSeparator();
 	menu.addAction(m_pShowProps);
 	menu.exec(ev->globalPos());
@@ -112,7 +118,31 @@ void QPlotWidget::OnZoomToFit()
 //-----------------------------------------------------------------------------
 void QPlotWidget::OnShowProps()
 {
+	QMessageBox b;
+	b.setText("Comgin soon!");
+	b.setIcon(QMessageBox::Information);
+	b.exec();
+}
 
+//-----------------------------------------------------------------------------
+void QPlotWidget::OnCopyToClipboard()
+{
+	QClipboard* clipboard = QApplication::clipboard();
+
+	if (plots() > 0)
+	{
+		QPlotData& d = m_data[0];
+		if (d.size() > 0)
+		{
+			QString s("x\ty\n");
+			for (int i=0; i<d.size(); ++i)
+			{
+				QPointF& pi = d.Point(i);
+				s.append(QString::asprintf("%lg\t%lg\n", pi.x(), pi.y()));
+			}
+			clipboard->setText(s);
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------

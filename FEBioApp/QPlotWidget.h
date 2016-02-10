@@ -88,6 +88,7 @@ private:
 public slots:
 	void OnZoomToFit();
 	void OnShowProps();
+	void OnCopyToClipboard();
 
 private: // drawing helper functions
 	void drawAxes(QPainter& p);
@@ -103,5 +104,6 @@ private:
 private:
 	QAction*	m_pZoomToFit;
 	QAction*	m_pShowProps;
+	QAction*	m_pCopyToClip;
 	QSize		m_sizeHint;
 };

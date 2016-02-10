@@ -39,13 +39,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(QTDIR)include\QtWidgets;$(QTDIR)include\;$(QTDIR)include\QtGui;$(FEBioDir);$(SolutionDir)..\FEBioApp;$(IncludePath)</IncludePath>
-    <LibraryPath>$(QTDir)lib;$(FEBioDir)VS2010\Debug;$(MKLDir)\ia32\lib;$(LMDir)\lib;$(ZLibDir)\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(QTDIR)include\QtWidgets;$(QTDIR)include\;$(QTDIR)include\QtGui;$(FEBioDir);$(SolutionDir)..\FEBioApp;$(GLEWDIR)\include\GL;$(IncludePath)</IncludePath>
+    <LibraryPath>$(QTDir)lib;$(FEBioDir)VS2010\Debug;$(MKLDir)\ia32\lib;$(LMDir)\lib;$(ZLibDir)\lib;$(GLEWDIR)\lib\Release\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(QTDIR)include\QtWidgets;$(QTDIR)include\;$(QTDIR)include\QtGui;$(FEBioDir);$(SolutionDir)..\FEBioApp;$(IncludePath)</IncludePath>
-    <LibraryPath>$(QTDir)lib;$(FEBioDir)VS2010\Release;$(MKLDir)\ia32\lib;$(LMDir)\lib;$(ZLibDir)\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(QTDIR)include\QtWidgets;$(QTDIR)include\;$(QTDIR)include\QtGui;$(FEBioDir);$(SolutionDir)..\FEBioApp;$(GLEWDIR)\include\GL;$(IncludePath)</IncludePath>
+    <LibraryPath>$(QTDir)lib;$(FEBioDir)VS2010\Release;$(MKLDir)\ia32\lib;$(LMDir)\lib;$(ZLibDir)\lib;$(GLEWDIR)\lib\Release\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -58,7 +58,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;fecored.lib;numcored.lib;febiolibd.lib;febiomechd.lib;febioheatd.lib;febiomixd.lib;febiofluidd.lib;febiooptd.lib;febioplotd.lib;febioxmld.lib;febiotestd.lib;mkl_intel_c.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5mt.lib;levmard.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;fecored.lib;numcored.lib;febiolibd.lib;febiomechd.lib;febioheatd.lib;febiomixd.lib;febiofluidd.lib;febiooptd.lib;febioplotd.lib;febioxmld.lib;febiotestd.lib;mkl_intel_c.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5mt.lib;levmard.lib;opengl32.lib;glu32.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -75,7 +75,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;fecore.lib;numcore.lib;febiolib.lib;febiomech.lib;febioheat.lib;febiomix.lib;febiofluid.lib;febioopt.lib;febioplot.lib;febioxml.lib;febiotest.lib;mkl_intel_c.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5mt.lib;levmar.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;fecore.lib;numcore.lib;febiolib.lib;febiomech.lib;febioheat.lib;febiomix.lib;febiofluid.lib;febioopt.lib;febioplot.lib;febioxml.lib;febiotest.lib;mkl_intel_c.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5mt.lib;levmar.lib;opengl32.lib;glu32.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

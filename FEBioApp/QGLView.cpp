@@ -1,9 +1,11 @@
 #include "stdafx.h"
+#include <glew.h>
 #include "QGLView.h"
+#include <gl/GL.h>
+#include <gl/GLU.h>
 #include <FECore/FEModel.h>
 #include <FECore/FEBox.h>
 #include <FECore/FEElemElemList.h>
-#include <gl/GLU.h>
 #include <QMouseEvent>
 
 //-----------------------------------------------------------------------------
@@ -16,6 +18,23 @@ QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 	if (w < 200) w = 200;
 	if (h < 200) h = 200;
 	m_sizeHint = QSize(w, h);
+
+	myVertexShader = 0;
+	myFragmentShader = 0;
+	myProgram = 0;
+}
+
+//-----------------------------------------------------------------------------
+QGLView::~QGLView()
+{
+	makeCurrent();
+
+	// Clean up
+	if (myProgram != 0) { glUseProgram(0); glDeleteProgram(myProgram); }
+	if (myVertexShader != 0) glDeleteShader(myFragmentShader);
+	if (myFragmentShader != 0) glDeleteShader(myVertexShader);
+
+	doneCurrent();
 }
 
 //-----------------------------------------------------------------------------
@@ -66,10 +85,39 @@ void QGLView::mouseReleaseEvent(QMouseEvent* ev)
 
 }
 
+char vertex_shader_source[] =
+	"void main(void)"
+	"{"
+	"	vec4 pos = gl_ModelViewProjectionMatrix * gl_Vertex;"
+	"	gl_Position = pos;"
+	"	vec3 N = normalize(gl_NormalMatrix * gl_Normal);"
+	"	vec4 V = gl_ModelViewMatrix * gl_Vertex;"
+	"	vec3 L = normalize(gl_LightSource[0].position - V.xyz);"
+	"	vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));"
+	"	const float specularExp = 128.0;"
+	"	float f = dot(N, L);"
+	"	vec4 diffuse = gl_Color * vec4(max(0.0, f));"
+	"	float h = max(0.0, dot(N, H));"
+	"	vec4 spec = vec4(0.0);"
+	"	if (f > 0.0)"
+	"		spec = vec4(pow(h, specularExp));"
+	"	gl_FrontColor = diffuse + spec;"
+	"	vec3 ndc = pos.xyz / pos.w;"
+	"	gl_FrontSecondaryColor = vec4((ndc*0.5) + 0.5, 1.0);"
+	"}";
+
+char fragment_shader_source[] =
+	"void main(void)"
+	"{"
+	"	gl_FragColor = mix(gl_Color, vec4(vec3(gl_SecondaryColor), 1.0), 0.5);"    
+	"}";
+
 //-----------------------------------------------------------------------------
 void QGLView::initializeGL()
 {
 //	initializeOpenGLFunctions();
+	glewInit();
+
     glClearColor(1.f, 1.f, 1.f, 1.0f);
 
     glEnable(GL_DEPTH_TEST);
@@ -83,6 +131,71 @@ void QGLView::initializeGL()
 
     static GLfloat lightPosition[4] = { 0, 0, 10, 1.0 };
     glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+
+	// create the shader objects
+	GLuint myVertexShader = glCreateShader(GL_VERTEX_SHADER);
+	if (myVertexShader==0) printf("ERRORL: Failed creating vertex shader\n");
+	GLuint myFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	if (myFragmentShader==0) printf("ERRORL: Failed creating fragment shader\n");
+
+	// set the shader source code
+	GLchar* myStringPtrs[1];
+	myStringPtrs[0] = vertex_shader_source;
+	glShaderSource(myVertexShader, 1, myStringPtrs, NULL);
+	myStringPtrs[0] = fragment_shader_source;
+	glShaderSource(myFragmentShader, 1, myStringPtrs, NULL);
+
+	// compile the shaders
+	GLint success;
+	glCompileShader(myVertexShader);
+	glGetShaderiv(myVertexShader, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		GLchar infoLog[512];
+		glGetShaderInfoLog(myVertexShader, 512, NULL, infoLog);
+		fprintf(stderr, "ERROR in vertex shader compilation!\n");
+		fprintf(stderr, "Info log: %s\n", infoLog);
+	}
+
+	glCompileShader(myFragmentShader);
+	glGetShaderiv(myFragmentShader, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		GLchar infoLog[512];
+		glGetShaderInfoLog(myFragmentShader, 512, NULL, infoLog);
+		fprintf(stderr, "ERROR in vertex shader compilation!\n");
+		fprintf(stderr, "Info log: %s\n", infoLog);
+	}
+
+	// Create the program and attach the shaders
+	GLuint myProgram = glCreateProgram();
+	glAttachShader(myProgram, myVertexShader);
+	glAttachShader(myProgram, myFragmentShader);
+
+	// link the program
+	glLinkProgram(myProgram);
+	glGetProgramiv(myProgram, GL_LINK_STATUS, &success);
+	if (!success)
+	{
+		GLchar infoLog[512];
+		glGetProgramInfoLog(myProgram, 512, NULL, infoLog);
+		fprintf(stderr, "ERROR in program linkage!\n");
+		fprintf(stderr, "Info log: %s\n", infoLog);
+	}
+
+	// validate the program
+	glValidateProgram(myProgram);
+	glGetProgramiv(myProgram, GL_VALIDATE_STATUS, &success);
+	if (!success)
+	{
+		GLchar infoLog[512];
+		glGetProgramInfoLog(myProgram, 512, NULL, infoLog);
+		fprintf(stderr, "ERROR in program validation!\n");
+		fprintf(stderr, "Info log: %s\n", infoLog);
+	}
+
+	// use the shader
+	glUseProgram(myProgram);
 }
 
 //-----------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 #pragma once
 #include <QOpenGLWidget>
 #include <FECore/vec3d.h>
+#include "GLMesh.h"
 
 //-----------------------------------------------------------------------------
 class FEModel;
@@ -35,6 +36,7 @@ protected:
 private:
 	FEModel*	m_pfem;
 	FESurface*	m_psurf;
+	GLMesh		m_glmesh;
 	vec3d		m_center;
 	double		m_dist;
 	QPoint		m_mousePos;

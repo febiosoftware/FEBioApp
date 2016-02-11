@@ -46,8 +46,45 @@ void QGLView::SetFEModel(FEModel* pfem)
 {
 	m_pfem = pfem;
 
+	// rebuild the FE surface
 	if (m_psurf) delete m_psurf;
 	m_psurf = m_pfem->GetMesh().ElementBoundarySurface();
+
+	// Create the GL mesh
+	int NN = m_psurf->Nodes();
+	int NE = m_psurf->Elements();
+	m_glmesh.Create(NN, 2*NE);
+
+	// copy initial nodal coordinates
+	assert(NN == m_glmesh.Nodes());
+	for (int i=0; i<NN; ++i)
+	{
+		FENode& ni = m_psurf->Node(i);
+		GLMesh::NODE& vi = m_glmesh.Node(i);
+		vi.pos = ni.m_r0;
+	}
+	
+	// create the connectivity
+	for (int i=0; i<NE; ++i)
+	{
+		FESurfaceElement& el = m_psurf->Element(i);
+		GLMesh::FACE& f1 = m_glmesh.Face(2*i);
+		f1.node[0] = el.m_lnode[0];
+		f1.node[1] = el.m_lnode[1];
+		f1.node[2] = el.m_lnode[2];
+
+		GLMesh::FACE& f2 = m_glmesh.Face(2*i+1);
+		f2.node[0] = el.m_lnode[2];
+		f2.node[1] = el.m_lnode[3];
+		f2.node[2] = el.m_lnode[0];
+	}
+
+	// find the face neighbors
+	m_glmesh.UpdateFaces();
+
+	// partition the surface
+	m_glmesh.PartitionFaces();
+
 	Update();
 }
 
@@ -60,6 +97,19 @@ void QGLView::Update()
 		FEBox box(*m_psurf);
 		m_center = box.center();
 		m_dist = box.maxsize()*1.5;
+
+		// copy nodal coordinates
+		int NN = m_psurf->Nodes();
+		assert(NN == m_glmesh.Nodes());
+		for (int i=0; i<NN; ++i)
+		{
+			FENode& ni = m_psurf->Node(i);
+			GLMesh::NODE& vi = m_glmesh.Node(i);
+			vi.pos = ni.m_rt;
+		}
+
+		// recalculate normals
+		m_glmesh.UpdateNormals();
 	}
 }
 
@@ -89,29 +139,6 @@ void QGLView::mouseReleaseEvent(QMouseEvent* ev)
 
 }
 
-/*
-char vertex_shader_source[] =
-	"void main(void)"
-	"{"
-	"	vec4 pos = gl_ModelViewProjectionMatrix * gl_Vertex;"
-	"	gl_Position = pos;"
-	"	vec3 N = normalize(gl_NormalMatrix * gl_Normal);"
-	"	vec4 V = gl_ModelViewMatrix * gl_Vertex;"
-	"	vec3 L = normalize(gl_LightSource[0].position - V.xyz);"
-	"	vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));"
-	"	const float specularExp = 128.0;"
-	"	float f = dot(N, L);"
-	"	vec4 diffuse = gl_Color * vec4(max(0.0, f));"
-	"	float h = max(0.0, dot(N, H));"
-	"	vec4 spec = vec4(0.0);"
-	"	if (f > 0.0)"
-	"		spec = vec4(pow(h, specularExp));"
-	"	gl_FrontColor = diffuse + spec;"
-	"	vec3 ndc = pos.xyz / pos.w;"
-	"	gl_FrontSecondaryColor = vec4((ndc*0.5) + 0.5, 1.0);"
-	"}";
-*/
-
 char vertex_shader_source[] =
 "void main(void)												\n"
 "{																\n"
@@ -138,7 +165,7 @@ char vertex_shader_source[] =
 char fragment_shader_source[] =
 	"void main(void)"
 	"{"
-	"	gl_FragColor = gl_Color + gl_SecondaryColor;"
+	"	gl_FragColor = vec4(0.1) + gl_Color + gl_SecondaryColor;"
 	"}";
 
 //-----------------------------------------------------------------------------
@@ -250,32 +277,5 @@ void QGLView::paintGL()
 	FESurface& s = *m_psurf;
 
 	glColor3ub(196, 186, 186);
-	vec3d r[FEElement::MAX_NODES];
-	glBegin(GL_TRIANGLES);
-	{
-		int NF = s.Elements();
-		for (int i=0; i<NF; ++i)
-		{
-			FESurfaceElement& el = s.Element(i);
-			int nf = el.Nodes();
-			for (int j=0; j<nf; ++j) r[j] = s.Node(el.m_lnode[j]).m_rt;
-
-			vec3d nu = (r[1] - r[0])^(r[3] - r[0]);
-			nu.unit();
-
-			glNormal3d(nu.x, nu.y, nu.z);
-			glVertex3d(r[0].x, r[0].y, r[0].z);
-			glVertex3d(r[1].x, r[1].y, r[1].z);
-			glVertex3d(r[3].x, r[3].y, r[3].z);
-
-			nu = (r[3] - r[2])^(r[1] - r[2]);
-			nu.unit();
-
-			glNormal3d(nu.x, nu.y, nu.z);
-			glVertex3d(r[1].x, r[1].y, r[1].z);
-			glVertex3d(r[2].x, r[2].y, r[2].z);
-			glVertex3d(r[3].x, r[3].y, r[3].z);
-		}
-	}
-	glEnd();
+	m_glmesh.Render();
 }

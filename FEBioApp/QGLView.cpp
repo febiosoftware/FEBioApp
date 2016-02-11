@@ -19,6 +19,10 @@ QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 	if (h < 200) h = 200;
 	m_sizeHint = QSize(w, h);
 
+	QSurfaceFormat f = format();
+	f.setSamples(4);
+	setFormat(f);
+
 	myVertexShader = 0;
 	myFragmentShader = 0;
 	myProgram = 0;
@@ -85,6 +89,7 @@ void QGLView::mouseReleaseEvent(QMouseEvent* ev)
 
 }
 
+/*
 char vertex_shader_source[] =
 	"void main(void)"
 	"{"
@@ -92,7 +97,7 @@ char vertex_shader_source[] =
 	"	gl_Position = pos;"
 	"	vec3 N = normalize(gl_NormalMatrix * gl_Normal);"
 	"	vec4 V = gl_ModelViewMatrix * gl_Vertex;"
-	"	vec3 L = normalize(gl_LightSource[0].position.xyz - V.xyz);"
+	"	vec3 L = normalize(gl_LightSource[0].position - V.xyz);"
 	"	vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));"
 	"	const float specularExp = 128.0;"
 	"	float f = dot(N, L);"
@@ -105,11 +110,35 @@ char vertex_shader_source[] =
 	"	vec3 ndc = pos.xyz / pos.w;"
 	"	gl_FrontSecondaryColor = vec4((ndc*0.5) + 0.5, 1.0);"
 	"}";
+*/
+
+char vertex_shader_source[] =
+"void main(void)												\n"
+"{																\n"
+"	vec4 vpos = gl_Vertex;\n"
+"	gl_Position = gl_ModelViewProjectionMatrix * vpos;		\n"
+"																\n"
+"	vec3 N = normalize(gl_NormalMatrix * gl_Normal);			\n"
+"	vec4 V = gl_ModelViewMatrix * gl_Vertex;					\n"
+"	vec3 L = normalize(gl_LightSource[0].position.xyz - V.xyz);\n"
+"	vec3 H = normalize(L + vec3(0,0,1));					   \n"
+"															   \n"
+"	float NdotL = dot(N, L);								   \n"
+"	float NdotH = 0.99*max(0.0, dot(N, H));								   \n"
+"															   \n"
+"	const float specExp = 128.0;							   \n"
+"															   \n"
+"	vec4 spec = vec4(0.0);									   \n"
+"	if (NdotL > 0) spec = gl_Color*vec4(pow(NdotH, specExp));		   \n"
+"															   \n"
+"	gl_FrontColor = gl_Color*vec4(max(0.0,NdotL));			   \n"
+"	gl_FrontSecondaryColor = spec;							   \n"
+"}															   \n";
 
 char fragment_shader_source[] =
 	"void main(void)"
 	"{"
-	"	gl_FragColor = mix(gl_Color, vec4(vec3(gl_SecondaryColor), 1.0), 0.5);"    
+	"	gl_FragColor = gl_Color + gl_SecondaryColor;"
 	"}";
 
 //-----------------------------------------------------------------------------
@@ -118,7 +147,7 @@ void QGLView::initializeGL()
 //	initializeOpenGLFunctions();
 	glewInit();
 
-    glClearColor(1.f, 1.f, 1.f, 1.0f);
+    glClearColor(0.8f, 0.8f, 1.0f, 1.0f);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -220,9 +249,9 @@ void QGLView::paintGL()
 	if (m_psurf==0) return;
 	FESurface& s = *m_psurf;
 
-	glColor3ub(196, 186, 176);
+	glColor3ub(196, 186, 186);
 	vec3d r[FEElement::MAX_NODES];
-	glBegin(GL_QUADS);
+	glBegin(GL_TRIANGLES);
 	{
 		int NF = s.Elements();
 		for (int i=0; i<NF; ++i)
@@ -231,11 +260,18 @@ void QGLView::paintGL()
 			int nf = el.Nodes();
 			for (int j=0; j<nf; ++j) r[j] = s.Node(el.m_lnode[j]).m_rt;
 
-			vec3d nu = (r[1] - r[0])^(r[2] - r[0]);
+			vec3d nu = (r[1] - r[0])^(r[3] - r[0]);
 			nu.unit();
 
 			glNormal3d(nu.x, nu.y, nu.z);
 			glVertex3d(r[0].x, r[0].y, r[0].z);
+			glVertex3d(r[1].x, r[1].y, r[1].z);
+			glVertex3d(r[3].x, r[3].y, r[3].z);
+
+			nu = (r[3] - r[2])^(r[1] - r[2]);
+			nu.unit();
+
+			glNormal3d(nu.x, nu.y, nu.z);
 			glVertex3d(r[1].x, r[1].y, r[1].z);
 			glVertex3d(r[2].x, r[2].y, r[2].z);
 			glVertex3d(r[3].x, r[3].y, r[3].z);

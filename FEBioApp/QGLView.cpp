@@ -15,12 +15,14 @@ QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 	m_xangle = 0.0;
 	m_zangle = 0.0;
 	m_dist = 0.0;
+	m_zmin = 0.01;
+	m_zmax = 100.0;
 	if (w < 200) w = 200;
 	if (h < 200) h = 200;
 	m_sizeHint = QSize(w, h);
 
 	QSurfaceFormat f = format();
-	f.setSamples(4);
+	f.setSamples(8);
 	setFormat(f);
 
 	myVertexShader = 0;
@@ -53,30 +55,42 @@ void QGLView::SetFEModel(FEModel* pfem)
 	// Create the GL mesh
 	int NN = m_psurf->Nodes();
 	int NE = m_psurf->Elements();
-	m_glmesh.Create(NN, 2*NE);
 
-	// copy initial nodal coordinates
-	assert(NN == m_glmesh.Nodes());
-	for (int i=0; i<NN; ++i)
-	{
-		FENode& ni = m_psurf->Node(i);
-		GLMesh::NODE& vi = m_glmesh.Node(i);
-		vi.pos = ni.m_r0;
-	}
-	
-	// create the connectivity
+	int NF = 0;
 	for (int i=0; i<NE; ++i)
 	{
 		FESurfaceElement& el = m_psurf->Element(i);
-		GLMesh::FACE& f1 = m_glmesh.Face(2*i);
-		f1.node[0] = el.m_lnode[0];
-		f1.node[1] = el.m_lnode[1];
-		f1.node[2] = el.m_lnode[2];
+		if (el.Nodes() == 3) NF++; 
+		else if (el.Nodes() == 4) NF += 2;
+	}
+	m_glmesh.Create(NF);
 
-		GLMesh::FACE& f2 = m_glmesh.Face(2*i+1);
-		f2.node[0] = el.m_lnode[2];
-		f2.node[1] = el.m_lnode[3];
-		f2.node[2] = el.m_lnode[0];
+	// create the connectivity
+	NF = 0;
+	for (int i=0; i<NE; ++i)
+	{
+		FESurfaceElement& el = m_psurf->Element(i);
+		GLMesh::FACE& f1 = m_glmesh.Face(NF++);
+		f1.nid[0] = el.m_lnode[0];
+		f1.nid[1] = el.m_lnode[1];
+		f1.nid[2] = el.m_lnode[2];
+
+		if (el.Nodes() == 4)
+		{
+			GLMesh::FACE& f2 = m_glmesh.Face(NF++);
+			f2.nid[0] = el.m_lnode[2];
+			f2.nid[1] = el.m_lnode[3];
+			f2.nid[2] = el.m_lnode[0];
+		}
+	}
+
+	// copy initial nodal coordinates
+	for (int i=0; i<NF; ++i)
+	{
+		GLMesh::FACE& f = m_glmesh.Face(i);
+		m_glmesh.nodePosition(f.lnode[0]) = m_psurf->Node(f.nid[0]).m_rt;
+		m_glmesh.nodePosition(f.lnode[1]) = m_psurf->Node(f.nid[1]).m_rt;
+		m_glmesh.nodePosition(f.lnode[2]) = m_psurf->Node(f.nid[2]).m_rt;
 	}
 
 	// find the face neighbors
@@ -97,15 +111,17 @@ void QGLView::Update()
 		FEBox box(*m_psurf);
 		m_center = box.center();
 		m_dist = box.maxsize()*1.5;
+		m_zmax = 2*m_dist;
+		m_zmin = 1e-4*m_zmax;
 
 		// copy nodal coordinates
-		int NN = m_psurf->Nodes();
-		assert(NN == m_glmesh.Nodes());
-		for (int i=0; i<NN; ++i)
+		int NF = m_glmesh.Faces();
+		for (int i=0; i<NF; ++i)
 		{
-			FENode& ni = m_psurf->Node(i);
-			GLMesh::NODE& vi = m_glmesh.Node(i);
-			vi.pos = ni.m_rt;
+			GLMesh::FACE& f = m_glmesh.Face(i);
+			m_glmesh.nodePosition(f.lnode[0]) = m_psurf->Node(f.nid[0]).m_rt;
+			m_glmesh.nodePosition(f.lnode[1]) = m_psurf->Node(f.nid[1]).m_rt;
+			m_glmesh.nodePosition(f.lnode[2]) = m_psurf->Node(f.nid[2]).m_rt;
 		}
 
 		// recalculate normals
@@ -157,15 +173,18 @@ char vertex_shader_source[] =
 "															   \n"
 "	vec4 spec = vec4(0.0);									   \n"
 "	if (NdotL > 0) spec = gl_Color*vec4(pow(NdotH, specExp));		   \n"
-"															   \n"
-"	gl_FrontColor = gl_Color*vec4(max(0.0,NdotL));			   \n"
+"	         \n"
+"   vec4 diff = gl_Color*vec4(max(0.0,NdotL));                 \n"
+"   vec4 backLight = vec4(0.0);"
+"   if (NdotL > 0) backLight = vec4(.3,.3,.4,1.)*vec4(1.0 - NdotL); \n"
+"	gl_FrontColor = backLight + diff;		                       \n"
 "	gl_FrontSecondaryColor = spec;							   \n"
 "}															   \n";
 
 char fragment_shader_source[] =
 	"void main(void)"
 	"{"
-	"	gl_FragColor = vec4(0.1) + gl_Color + gl_SecondaryColor;"
+	"	gl_FragColor = gl_Color + gl_SecondaryColor;"
 	"}";
 
 //-----------------------------------------------------------------------------
@@ -188,6 +207,14 @@ void QGLView::initializeGL()
     static GLfloat lightPosition[4] = { 0, 0, 10, 1.0 };
     glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 
+	initShaders();
+
+	Update();
+}
+
+//-----------------------------------------------------------------------------
+void QGLView::initShaders()
+{
 	// create the shader objects
 	GLuint myVertexShader = glCreateShader(GL_VERTEX_SHADER);
 	if (myVertexShader==0) printf("ERRORL: Failed creating vertex shader\n");
@@ -260,7 +287,7 @@ void QGLView::resizeGL(int w, int h)
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, w / (float) h, 0.01, 100.0);
+    gluPerspective(45.0, w / (float) h, m_zmin, m_zmax);
     glMatrixMode(GL_MODELVIEW);
 }
 
@@ -274,7 +301,6 @@ void QGLView::paintGL()
 	glTranslated(-m_center.x, -m_center.y, -m_center.z);
 
 	if (m_psurf==0) return;
-	FESurface& s = *m_psurf;
 
 	glColor3ub(196, 186, 186);
 	m_glmesh.Render();

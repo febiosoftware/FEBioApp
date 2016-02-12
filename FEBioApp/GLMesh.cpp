@@ -10,14 +10,26 @@ GLMesh::GLMesh()
 
 void GLMesh::Clear()
 {
-	m_Node.clear();
 	m_Face.clear();
 }
 
-void GLMesh::Create(int nodes, int faces)
+void GLMesh::Create(int faces)
 {
-	if (nodes > 0) m_Node.resize(nodes);
-	if (faces > 0) m_Face.resize(faces);
+	if (faces > 0) 
+	{
+		int nodes = faces*3;
+		m_Node.resize(nodes);
+		m_Norm.resize(nodes);
+
+		m_Face.resize(faces);
+		for (int i=0; i<faces; ++i)
+		{
+			FACE& f = m_Face[i];
+			f.lnode[0] = 3*i  ;
+			f.lnode[1] = 3*i+1;
+			f.lnode[2] = 3*i+2;
+		}
+	}
 }
 
 void GLMesh::Render()
@@ -25,32 +37,21 @@ void GLMesh::Render()
 	int NF = Faces();
 	if (NF > 0)
 	{
-		glBegin(GL_TRIANGLES);
-		{
-			for (int i=0; i<NF; ++i)
-			{
-				FACE& f = Face(i);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
 
-				vec3d& n0 = f.norm[0];
-				vec3d& n1 = f.norm[1];
-				vec3d& n2 = f.norm[2];
-			
-				vec3d& r0 = Node(f.node[0]).pos;
-				vec3d& r1 = Node(f.node[1]).pos;
-				vec3d& r2 = Node(f.node[2]).pos;
+		glVertexPointer(3, GL_DOUBLE, 0, &m_Node[0]);
+		glNormalPointer(GL_DOUBLE   , 0, &m_Norm[0]);
 
-				glNormal3d(n0.x, n0.y, n0.z); glVertex3d(r0.x, r0.y, r0.z);
-				glNormal3d(n1.x, n1.y, n1.z); glVertex3d(r1.x, r1.y, r1.z);
-				glNormal3d(n2.x, n2.y, n2.z); glVertex3d(r2.x, r2.y, r2.z);
-			}
-		}
-		glEnd();
+		glDrawArrays(GL_TRIANGLES, 0, m_Node.size());
+
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 }
 
 void GLMesh::UpdateFaces()
 {
-	const int NN = Nodes();
 	const int NF = Faces();
 
 	// clear all neighbors
@@ -60,28 +61,39 @@ void GLMesh::UpdateFaces()
 		f.nbr[0] = f.nbr[1] = f.nbr[2] = -1;
 	}
 
+	// let's find out how many nodes we have
+	int NN = 0;
+	for (int i=0; i<NF; ++i)
+	{
+		FACE& f = Face(i);
+		if (f.nid[0] > NN) NN++;
+		if (f.nid[1] > NN) NN++;
+		if (f.nid[2] > NN) NN++;
+	}
+	NN++;
+
 	// build the node-face list
 	vector< vector<int> > NFL; NFL.resize(NN);
 	for (int i=0; i<NF; ++i)
 	{
 		FACE& f = Face(i);
-		NFL[f.node[0]].push_back(i);
-		NFL[f.node[1]].push_back(i);
-		NFL[f.node[2]].push_back(i);
+		NFL[f.nid[0]].push_back(i);
+		NFL[f.nid[1]].push_back(i);
+		NFL[f.nid[2]].push_back(i);
 	}
 
 	// find all neighbors
 	for (int i=0; i<NF; ++i)
 	{
 		FACE& fi = Face(i);
-		int* ni = fi.node;
 
 		for (int k=0; k<3; ++k)
 		{
 			if (fi.nbr[k] == -1)
 			{
-				int n0 = ni[k];
-				int n1 = ni[(k+1)%3];
+				int n0 = fi.nid[k      ];
+				int n1 = fi.nid[(k+1)%3];
+
 				vector<int>& FL = NFL[n0];
 				int nval = FL.size();
 				for (int j=0; j<nval; ++j)
@@ -89,11 +101,10 @@ void GLMesh::UpdateFaces()
 					if (FL[j] != i)
 					{
 						FACE& fj = Face(FL[j]);
-						int* nj = fj.node;
 						for (int l=0; l<3; ++l)
 						{
-							int m0 = nj[l];
-							int m1 = nj[(l+1)%3];
+							int m0 = fj.nid[l      ];
+							int m1 = fj.nid[(l+1)%3];
 
 							if (((n0==m0)&&(n1==m1))||
 								((n0==m1)&&(n1==m0)))
@@ -125,9 +136,9 @@ void GLMesh::PartitionFaces(double wAngle)
 	{
 		FACE& f = Face(i);
 
-		vec3d& r0 = Node(f.node[0]).pos;
-		vec3d& r1 = Node(f.node[1]).pos;
-		vec3d& r2 = Node(f.node[2]).pos;
+		vec3d& r0 = m_Node[f.lnode[0]];
+		vec3d& r1 = m_Node[f.lnode[1]];
+		vec3d& r2 = m_Node[f.lnode[2]];
 
 		vec3d faceNorm = (r1 - r0) ^ (r2 - r0);
 		faceNorm.unit();
@@ -186,7 +197,6 @@ void GLMesh::PartitionFaces(double wAngle)
 
 void GLMesh::UpdateNormals()
 {
-	const int NN = Nodes();
 	const int NF = Faces();
 
 	// update face normals first
@@ -194,9 +204,9 @@ void GLMesh::UpdateNormals()
 	{
 		FACE& f = Face(i);
 
-		vec3d& r0 = Node(f.node[0]).pos;
-		vec3d& r1 = Node(f.node[1]).pos;
-		vec3d& r2 = Node(f.node[2]).pos;
+		vec3d& r0 = m_Node[f.lnode[0]];
+		vec3d& r1 = m_Node[f.lnode[1]];
+		vec3d& r2 = m_Node[f.lnode[2]];
 
 		vec3d faceNorm = (r1 - r0) ^ (r2 - r0);
 		faceNorm.unit();
@@ -205,11 +215,8 @@ void GLMesh::UpdateNormals()
 	}
 
 	// clear all node normals
-	for (int i=0; i<NF; ++i)
-	{
-		FACE& f = Face(i);
-		f.norm[0] = f.norm[1] = f.norm[2] = vec3d(0,0,0);
-	}
+	const int NN = m_Norm.size();
+	for (int i=0; i<NN; ++i) m_Norm[i] = vec3d(0,0,0);
 
 	// assign node normals
 	stack<FACE*> faceStack;
@@ -219,7 +226,7 @@ void GLMesh::UpdateNormals()
 	vector<vec3d> norm;
 	while (faceIndex < NF)
 	{
-		norm.assign(NN, vec3d(0,0,0));
+		norm.assign(3*NF, vec3d(0,0,0));
 		tag.assign(NF, 0);
 		FACE* pf = &Face(faceIndex);
 		tag[faceIndex] = 1;
@@ -229,9 +236,9 @@ void GLMesh::UpdateNormals()
 			pf = faceStack.top(); faceStack.pop();
 			vec3d& ni = pf->fnorm;
 
-			norm[pf->node[0]] += ni;
-			norm[pf->node[1]] += ni;
-			norm[pf->node[2]] += ni;
+			norm[pf->nid[0]] += ni;
+			norm[pf->nid[1]] += ni;
+			norm[pf->nid[2]] += ni;
 
 			// push neighbors
 			for (int i=0; i<3; ++i)
@@ -254,9 +261,9 @@ void GLMesh::UpdateNormals()
 			if (tag[i] == 1)
 			{
 				FACE& fi = Face(i);
-				fi.norm[0] = norm[fi.node[0]];
-				fi.norm[1] = norm[fi.node[1]];
-				fi.norm[2] = norm[fi.node[2]];
+				m_Norm[fi.lnode[0]] = norm[fi.nid[0]];
+				m_Norm[fi.lnode[1]] = norm[fi.nid[1]];
+				m_Norm[fi.lnode[2]] = norm[fi.nid[2]];
 			}
 		}
 
@@ -268,11 +275,5 @@ void GLMesh::UpdateNormals()
 	}
 
 	// normalize node normals
-	for (int i=0; i<NF; ++i)
-	{
-		FACE& f = Face(i);
-		f.norm[0].unit();
-		f.norm[1].unit();
-		f.norm[2].unit();
-	}
+	for (int i=0; i<NN; ++i) m_Norm[i].unit();
 }

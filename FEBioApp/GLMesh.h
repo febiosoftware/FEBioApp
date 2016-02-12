@@ -9,15 +9,10 @@ public:
 	struct FACE
 	{
 		int		pid;		// parition number (used for smoothing)
-		int		node[3];	// node indices
 		vec3d	fnorm;		// face normal
-		vec3d	norm[3];	// node normals
 		int		nbr[3];		// indices to neighbors (or -1 if no neighbor)
-	};
-
-	struct NODE
-	{
-		vec3d	pos;	//!< node position
+		int		nid[3];		// node IDs
+		int		lnode[3];	// (local) node indices (into m_Node, m_Norm arrays)
 	};
 
 public:
@@ -25,24 +20,30 @@ public:
 
 	void Clear();
 
-	void Create(int nodes, int faces);
+	void Create(int faces);
 
 	void Render();
 
+public:
+
+	// find the face neighbors
 	void UpdateFaces();
 
-	void UpdateNormals();
-
+	// partition the faces
 	void PartitionFaces(double wAngle = 60.0);
 
+	// update face normals
+	void UpdateNormals();
+
 public:
-	int Nodes() { return (int) m_Node.size(); }
 	int Faces() { return (int) m_Face.size(); }
 
-	NODE& Node(int i) { return m_Node[i]; }
 	FACE& Face(int i) { return m_Face[i]; }
 
+	vec3d& nodePosition(int i) { return m_Node[i]; }
+
 private:
-	vector<NODE>	m_Node;
 	vector<FACE>	m_Face;
+	vector<vec3d>	m_Node;	// node positions
+	vector<vec3d>	m_Norm;	// node normals
 };

@@ -34,6 +34,10 @@ protected:
 	void paintGL();
 
 private:
+	void initShaders();
+	void drawMesh();
+
+private:
 	FEModel*	m_pfem;
 	FESurface*	m_psurf;
 	GLMesh		m_glmesh;
@@ -41,6 +45,7 @@ private:
 	double		m_dist;
 	QPoint		m_mousePos;
 	double		m_xangle, m_zangle;
+	double		m_zmin, m_zmax;
 	QSize		m_sizeHint;
 
 	GLuint	myVertexShader;

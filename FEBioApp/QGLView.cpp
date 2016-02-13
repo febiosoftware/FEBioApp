@@ -7,6 +7,8 @@
 #include <FECore/FEBox.h>
 #include <FECore/FEElemElemList.h>
 #include <QMouseEvent>
+#include <QMessageBox>
+#include <QMenu>
 
 //-----------------------------------------------------------------------------
 QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
@@ -28,6 +30,10 @@ QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 	myVertexShader = 0;
 	myFragmentShader = 0;
 	myProgram = 0;
+	m_bshader = true;
+
+	m_pShader = new QAction("Activate shader", this);
+	connect(m_pShader, SIGNAL(triggered()), this, SLOT(OnActivateShader()));
 }
 
 //-----------------------------------------------------------------------------
@@ -124,6 +130,25 @@ void QGLView::Update()
 			m_glmesh.nodePosition(f.lnode[2]) = m_psurf->Node(f.nid[2]).m_rt;
 		}
 
+		// assign texture coordinates
+		// first we need to find the largest displacement
+		double Dmax = 0.0;
+		for (int i=0; i<m_psurf->Nodes(); ++i)
+		{
+			FENode& ni = m_psurf->Node(i);
+			double D = (ni.m_rt - ni.m_r0).norm();
+			if (D > Dmax) Dmax = D;
+		}
+
+		// then, assign texture coordinates
+		for (int i=0; i<NF; ++i)
+		{
+			GLMesh::FACE& f = m_glmesh.Face(i);
+			m_glmesh.nodeTexCoord1D(f.lnode[0]) = (m_psurf->Node(f.nid[0]).m_rt - m_psurf->Node(f.nid[0]).m_r0).norm() / Dmax;
+			m_glmesh.nodeTexCoord1D(f.lnode[1]) = (m_psurf->Node(f.nid[1]).m_rt - m_psurf->Node(f.nid[1]).m_r0).norm() / Dmax;
+			m_glmesh.nodeTexCoord1D(f.lnode[2]) = (m_psurf->Node(f.nid[2]).m_rt - m_psurf->Node(f.nid[2]).m_r0).norm() / Dmax;
+		}
+
 		// recalculate normals
 		m_glmesh.UpdateNormals();
 	}
@@ -209,7 +234,28 @@ void QGLView::initializeGL()
 
 	initShaders();
 
+	initTextures();
+
 	Update();
+}
+
+//-----------------------------------------------------------------------------
+void QGLView::initTextures()
+{
+	GLubyte toonTable[3][3] = {
+		{  0,   0, 255},
+		{  0, 255,   0},
+		{255,   0,   0},
+	};
+
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 3, 0, GL_RGB, GL_UNSIGNED_BYTE, toonTable);
+
+	glEnable(GL_TEXTURE_1D);
 }
 
 //-----------------------------------------------------------------------------
@@ -251,7 +297,7 @@ void QGLView::initShaders()
 	}
 
 	// Create the program and attach the shaders
-	GLuint myProgram = glCreateProgram();
+	myProgram = glCreateProgram();
 	glAttachShader(myProgram, myVertexShader);
 	glAttachShader(myProgram, myFragmentShader);
 
@@ -302,6 +348,29 @@ void QGLView::paintGL()
 
 	if (m_psurf==0) return;
 
-	glColor3ub(196, 186, 186);
+	glColor3ub(255, 255, 255);
 	m_glmesh.Render();
 }
+
+//-----------------------------------------------------------------------------
+void QGLView::contextMenuEvent(QContextMenuEvent* ev)
+{
+	QMenu menu;
+	menu.addAction(m_pShader);
+	menu.exec(ev->globalPos());
+}
+
+//-----------------------------------------------------------------------------
+void QGLView::OnActivateShader()
+{
+	makeCurrent();
+	if (m_bshader) glUseProgram(0);
+	else glUseProgram(myProgram);
+	GLenum err = glGetError();
+	fprintf(stderr, "glUseProgram error code: %d\n", err);
+	m_bshader = !m_bshader;
+	doneCurrent();
+	repaint();
+}
+
+#include "moc_qglview.cpp"

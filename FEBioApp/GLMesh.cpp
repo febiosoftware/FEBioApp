@@ -20,6 +20,9 @@ void GLMesh::Create(int faces)
 		int nodes = faces*3;
 		m_Node.resize(nodes);
 		m_Norm.resize(nodes);
+		
+		m_Tex.resize(nodes);
+		for (size_t i=0; i<m_Tex.size(); ++i) m_Tex[i] = 0.0;
 
 		m_Face.resize(faces);
 		for (int i=0; i<faces; ++i)
@@ -39,12 +42,15 @@ void GLMesh::Render()
 	{
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 		glVertexPointer(3, GL_DOUBLE, 0, &m_Node[0]);
 		glNormalPointer(GL_DOUBLE   , 0, &m_Norm[0]);
+		glTexCoordPointer(1, GL_DOUBLE, 0, &m_Tex[0]);
 
 		glDrawArrays(GL_TRIANGLES, 0, m_Node.size());
 
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glDisableClientState(GL_NORMAL_ARRAY);
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}

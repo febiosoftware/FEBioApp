@@ -41,9 +41,12 @@ public:
 	FACE& Face(int i) { return m_Face[i]; }
 
 	vec3d& nodePosition(int i) { return m_Node[i]; }
+	vec3d& nodeNormal(int i) { return m_Norm[i]; }
+	double& nodeTexCoord1D(int i) { return m_Tex[i]; }
 
 private:
 	vector<FACE>	m_Face;
 	vector<vec3d>	m_Node;	// node positions
 	vector<vec3d>	m_Norm;	// node normals
+	vector<double>	m_Tex;	// node texture coordinates
 };

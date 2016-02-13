@@ -44,9 +44,6 @@
     <ClInclude Include="..\FEBioApp\targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\FEBioApp\QGLView.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\FEBioApp\GLMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -56,6 +53,9 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="..\FEBioApp\QPlotWidget.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\FEBioApp\QGLView.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>

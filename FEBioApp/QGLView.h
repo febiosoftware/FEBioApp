@@ -1,6 +1,7 @@
 #pragma once
 #include <QOpenGLWidget>
 #include <FECore/vec3d.h>
+#include <QAction>
 #include "GLMesh.h"
 
 //-----------------------------------------------------------------------------
@@ -10,7 +11,7 @@ class FESurface;
 //-----------------------------------------------------------------------------
 class QGLView : public QOpenGLWidget
 {
-//	Q_OBJECT
+	Q_OBJECT
 
 public:
 	QGLView(QWidget* parent = 0, int w = 0, int h = 0);
@@ -27,6 +28,10 @@ protected:
 	void mousePressEvent  (QMouseEvent* ev);
 	void mouseMoveEvent   (QMouseEvent* ev);
 	void mouseReleaseEvent(QMouseEvent* ev);
+	void contextMenuEvent (QContextMenuEvent* ev);
+
+public slots:
+	void OnActivateShader();
 
 protected:
 	void initializeGL();
@@ -35,6 +40,7 @@ protected:
 
 private:
 	void initShaders();
+	void initTextures();
 	void drawMesh();
 
 private:
@@ -51,4 +57,7 @@ private:
 	GLuint	myVertexShader;
 	GLuint	myFragmentShader;
 	GLuint	myProgram;
+	bool	m_bshader;
+
+	QAction*	m_pShader;
 };

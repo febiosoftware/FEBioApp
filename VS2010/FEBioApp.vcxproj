@@ -84,7 +84,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\FEBioApp\FEBioApp.cpp" />
+    <ClCompile Include="..\FEBioApp\GLCamera.cpp" />
     <ClCompile Include="..\FEBioApp\GLMesh.cpp" />
+    <ClCompile Include="..\FEBioApp\Interpolator.cpp" />
     <ClCompile Include="..\FEBioApp\MyDialog.cpp" />
     <ClCompile Include="..\FEBioApp\QGLView.cpp" />
     <ClCompile Include="..\FEBioApp\QPlotWidget.cpp" />
@@ -96,6 +98,7 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compiling %(Filename).%(Extension) using MOC</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)moc_%(Filename).cpp</Outputs>
     </CustomBuild>
+    <ClInclude Include="..\FEBioApp\GLCamera.h" />
     <ClInclude Include="..\FEBioApp\GLMesh.h" />
     <CustomBuild Include="..\FEBioApp\QGLView.h">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)bin/moc.exe "%(FullPath)" -o "%(RootDir)%(Directory)moc_%(Filename).cpp"</Command>
@@ -107,6 +110,7 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compiling %(Filename).%(Extension) using MOC</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)moc_%(Filename).cpp</Outputs>
     </CustomBuild>
+    <ClInclude Include="..\FEBioApp\Interpolator.h" />
     <ClInclude Include="..\FEBioApp\stdafx.h" />
     <ClInclude Include="..\FEBioApp\targetver.h" />
   </ItemGroup>

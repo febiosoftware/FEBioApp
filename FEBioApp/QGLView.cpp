@@ -9,19 +9,19 @@
 #include <QMouseEvent>
 #include <QMessageBox>
 #include <QMenu>
+#include <QPainter>
 
 //-----------------------------------------------------------------------------
 QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 {
 	m_psurf = 0;
-	m_xangle = 0.0;
-	m_zangle = 0.0;
-	m_dist = 0.0;
-	m_zmin = 0.01;
-	m_zmax = 100.0;
 	if (w < 200) w = 200;
 	if (h < 200) h = 200;
 	m_sizeHint = QSize(w, h);
+
+	m_cam.SetTargetDistance(5.f);
+	m_cam.GetOrientation() = quatd(-1, vec3d(1,0,0));
+	m_cam.Update(true);
 
 	QSurfaceFormat f = format();
 	f.setSamples(8);
@@ -115,10 +115,11 @@ void QGLView::Update()
 	if (m_psurf)
 	{
 		FEBox box(*m_psurf);
-		m_center = box.center();
-		m_dist = box.maxsize()*1.5;
-		m_zmax = 2*m_dist;
-		m_zmin = 1e-4*m_zmax;
+		m_cam.SetTarget(box.center());
+		double D = box.maxsize()*1.5;
+		m_cam.SetTargetDistance(D);
+		m_zmax = 2*D;
+		m_zmin = 1e-4*D;
 
 		// copy nodal coordinates
 		int NF = m_glmesh.Faces();
@@ -158,26 +159,83 @@ void QGLView::Update()
 void QGLView::mousePressEvent(QMouseEvent* ev)
 {
 	m_mousePos = ev->pos();
+	ev->accept();
 }
 
 //-----------------------------------------------------------------------------
 void QGLView::mouseMoveEvent(QMouseEvent* ev)
 {
-	QPoint p = ev->pos();
-	int dx = p.x() - m_mousePos.x();
-	int dy = p.y() - m_mousePos.y();
+	int x = ev->x();
+	int y = ev->y();
 
-	m_xangle += dy*1.0;
-	m_zangle += dx*1.0;
+	int xp = m_mousePos.x();
+	int yp = m_mousePos.y();
 
-	m_mousePos = p;
-	repaint();
+	Qt::KeyboardModifiers key = ev->modifiers();
+	Qt::MouseButtons buttons = ev->buttons();
+	bool but1 = (buttons & Qt::LeftButton);
+	bool but2 = (buttons & Qt::MiddleButton);
+	bool but3 = (buttons & Qt::RightButton);
+	bool balt   = (key & Qt::AltModifier);
+	bool bshift = (key & Qt::ShiftModifier);
+
+	if (but1)
+	{
+		// see if alt-button is pressed
+		if (balt)
+		{
+			// rotate in-plane
+			quatd qz = quatd((y - yp)*0.01, vec3d(0, 0, 1));
+			m_cam.Orbit(qz);
+		}
+		else
+		{
+			quatd qx = quatd((y - yp)*0.01, vec3d(1, 0, 0));
+			quatd qy = quatd((x - xp)*0.01, vec3d(0, 1, 0));
+			m_cam.Orbit(qx);
+			m_cam.Orbit(qy);
+		}
+		repaint();
+	}
+	else if ((but2) || (but3 && balt))
+	{
+		vec3d r = vec3d(-(float)(x - xp), (float)(y - yp), 0.f);
+
+		double h = (double) height(); if (h==0) h = 1;
+		double w = (double) width();
+		double ar = w/h;
+		double hf = 2.0*m_zmin*tan(3.1415926/180.0*60.0*0.5);
+		double wf = ar*hf;
+
+		double sx = wf/width();
+		double sy = hf/height();
+		double sz = m_cam.GetTargetDistance()/m_zmin;
+
+		r.x *= (float)(sz*sx);
+		r.y *= (float)(sz*sy);
+		
+		m_cam.Truck(r);
+		repaint();
+	}
+	else if (but3)
+	{
+		if (yp > y) m_cam.Zoom(0.95f);
+		if (yp < y) m_cam.Zoom(1.0f/0.95f);
+	
+//		if (m_zoom > 8) m_zoom = 8;
+//		if (m_zoom < 1) m_zoom = 1;
+
+		repaint();
+	}
+	// store mouse position
+	m_mousePos = ev->pos();
+	m_cam.Update(true);
 }
 
 //-----------------------------------------------------------------------------
 void QGLView::mouseReleaseEvent(QMouseEvent* ev)
 {
-
+	ev->accept();
 }
 
 char vertex_shader_source[] =
@@ -333,31 +391,41 @@ void QGLView::resizeGL(int w, int h)
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, w / (float) h, m_zmin, m_zmax);
+
+	if (h==0) h = 1;
+	double ar = (double) w / (double) h;
+
+	gluPerspective(60.0, ar, m_zmin, m_zmax);
     glMatrixMode(GL_MODELVIEW);
 }
 
 void QGLView::paintGL()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
-	glTranslated(0.0, 0.0, -m_dist);
-	glRotatef(m_xangle, 1.f, 0.f, 0.f);
-	glRotatef(m_zangle, 0.f, 0.f, 1.f);
-	glTranslated(-m_center.x, -m_center.y, -m_center.z);
+
+	m_cam.Transform();
 
 	if (m_psurf==0) return;
 
-	glColor3ub(255, 255, 255);
+	glColor3ub(236, 212, 212);
 	m_glmesh.Render();
+/*
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	QPainter painter(this);
+	painter.setPen(Qt::black);
+	painter.setFont(QFont("Arial", 12));
+	painter.drawText(10, 50, "Hello");
+	painter.end();
+*/
 }
 
 //-----------------------------------------------------------------------------
 void QGLView::contextMenuEvent(QContextMenuEvent* ev)
 {
-	QMenu menu;
+/*	QMenu menu;
 	menu.addAction(m_pShader);
 	menu.exec(ev->globalPos());
+*/
 }
 
 //-----------------------------------------------------------------------------
@@ -371,6 +439,38 @@ void QGLView::OnActivateShader()
 	m_bshader = !m_bshader;
 	doneCurrent();
 	repaint();
+}
+
+//-----------------------------------------------------------------------------
+bool QGLView::event(QEvent* event)
+{
+	switch (event->type())
+	{
+	case QEvent::TouchBegin:
+	case QEvent::TouchCancel:
+	case QEvent::TouchEnd:
+	case QEvent::TouchUpdate:
+		event->accept();
+		{
+			QTouchEvent* te = static_cast<QTouchEvent*>(event);
+			QList<QTouchEvent::TouchPoint> points = te->touchPoints();
+			if (points.count() == 2)
+			{
+				QTouchEvent::TouchPoint p0 = points.first();
+				QTouchEvent::TouchPoint p1 = points.last();
+				QLineF line1(p0.startPos(), p1.startPos());
+				QLineF line2(p0.pos(), p1.pos());
+				double scale = line2.length() / line1.length();
+
+				if (scale > 1.0) m_cam.Zoom(0.95f);
+				else m_cam.Zoom(1.0f/0.95f);
+
+				repaint();
+			}
+		}
+		return true;
+	}
+	return QOpenGLWidget::event(event);
 }
 
 #include "moc_qglview.cpp"

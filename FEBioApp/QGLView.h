@@ -3,6 +3,7 @@
 #include <FECore/vec3d.h>
 #include <QAction>
 #include "GLMesh.h"
+#include "GLCamera.h"
 
 //-----------------------------------------------------------------------------
 class FEModel;
@@ -29,6 +30,7 @@ protected:
 	void mouseMoveEvent   (QMouseEvent* ev);
 	void mouseReleaseEvent(QMouseEvent* ev);
 	void contextMenuEvent (QContextMenuEvent* ev);
+	bool event(QEvent* event);
 
 public slots:
 	void OnActivateShader();
@@ -47,12 +49,12 @@ private:
 	FEModel*	m_pfem;
 	FESurface*	m_psurf;
 	GLMesh		m_glmesh;
-	vec3d		m_center;
-	double		m_dist;
 	QPoint		m_mousePos;
-	double		m_xangle, m_zangle;
+
 	double		m_zmin, m_zmax;
 	QSize		m_sizeHint;
+
+	CGLCamera	m_cam;
 
 	GLuint	myVertexShader;
 	GLuint	myFragmentShader;

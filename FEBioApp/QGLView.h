@@ -43,7 +43,7 @@ protected:
 private:
 	void initShaders();
 	void initTextures();
-	void drawMesh();
+	void drawTriad();
 
 private:
 	FEModel*	m_pfem;

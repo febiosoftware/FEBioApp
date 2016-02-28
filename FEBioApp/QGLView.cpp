@@ -288,7 +288,7 @@ void QGLView::initializeGL()
 	glEnable(GL_COLOR_MATERIAL);
 
     static GLfloat lightPosition[4] = { 0, 0, 10, 1.0 };
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+//    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 
 	initShaders();
 
@@ -306,14 +306,13 @@ void QGLView::initTextures()
 		{255,   0,   0},
 	};
 
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+/*	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 3, 0, GL_RGB, GL_UNSIGNED_BYTE, toonTable);
-
-	glEnable(GL_TEXTURE_1D);
+//	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 3, 0, GL_RGB, GL_UNSIGNED_BYTE, toonTable);
+*/
 }
 
 //-----------------------------------------------------------------------------
@@ -408,7 +407,12 @@ void QGLView::paintGL()
 	if (m_psurf==0) return;
 
 	glColor3ub(236, 212, 212);
+	glEnable(GL_TEXTURE_1D);
 	m_glmesh.Render();
+
+	glUseProgram(0);
+	drawTriad();
+	if (m_bshader) glUseProgram(myProgram);
 /*
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 	QPainter painter(this);
@@ -417,6 +421,153 @@ void QGLView::paintGL()
 	painter.drawText(10, 50, "Hello");
 	painter.end();
 */
+}
+
+//-----------------------------------------------------------------------------
+// Draws the coordinate axes triad.
+void QGLView::drawTriad()
+{
+	QPainter painter(this);
+	painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
+	painter.beginNativePainting();
+
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	GLfloat ones[] = {1.f, 1.f, 1.f, 1.f};
+	GLfloat ambient[] = {0.0f,0.0f,0.0f,1.f};
+	GLfloat specular[] = {0.5f,0.5f,0.5f,1};
+	GLfloat emission[] = {0,0,0,1};
+	GLfloat	light[] = {0, 0, -1, 0};
+
+	// get the viewport so that we may restore it later
+	int view[4];
+	glGetIntegerv(GL_VIEWPORT, view);
+
+	// set the new viewport in the lower-left corner
+	const int w = 100;
+	const int h = 100;
+	int x0 = 0;
+	int y0 = 0;
+	int x1 = x0 + w;
+	int y1 = y0 + h;
+	if (x1 < x0) { x0 ^= x1; x1 ^= x0; x0 ^= x1; }
+	if (y1 < y0) { y0 ^= y1; y1 ^= y0; y0 ^= y1; }
+	glViewport(x0, y0, x1-x0, y1-y0);
+
+	// setup the projection mode
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	float d = 1.2f;
+	float ar = 1.f;
+	if (h != 0) ar = fabs((float) w / (float) h);
+	if (ar >= 1.f)	glOrtho(-d*ar, d*ar, -d, d, -2, 2); else glOrtho(-d, d, -d/ar, d/ar, -2, 2);
+
+	// reset the modelview matrix
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+	// clear depth buffer
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	// store attributes
+	glDisable(GL_TEXTURE_1D);
+	glDisable(GL_CULL_FACE);
+	glFrontFace(GL_CW);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	
+/*
+	glLightfv(GL_LIGHT0, GL_POSITION, light);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ones);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, ones);
+
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, emission);
+	glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, 32);
+*/
+	quatd q = m_cam.GetOrientation();
+	vec3d r = q.GetVector();
+	float a = 180*q.GetAngle()/3.1415926;
+
+	if ((a > 0) && (r.norm() > 0))
+		glRotatef(a, r.x, r.y, r.z);	
+
+	// create the cylinder object
+//	glEnable(GL_LIGHTING);
+	GLUquadricObj* pcyl = gluNewQuadric();
+
+	const GLdouble r0 = .05;
+	const GLdouble r1 = .15;
+
+	// draw x-axis
+	glPushMatrix();
+	glRotatef(90, 0, 1, 0);
+	glColor3ub(255, 0, 0);
+	gluCylinder(pcyl, r0, r0, .9, 5, 1);
+	glTranslatef(0,0,.8f);
+	gluCylinder(pcyl, r1, 0, 0.2, 10, 1);
+	glPopMatrix();
+
+	// draw y-axis
+	glPushMatrix();
+	glRotatef(-90, 1, 0, 0);
+	glColor3ub(0, 255, 0);
+	gluCylinder(pcyl, r0, r0, .9, 5, 1);
+	glTranslatef(0,0,.8f);
+	gluCylinder(pcyl, r1, 0, 0.2, 10, 1);
+	glPopMatrix();
+
+	// draw z-axis
+	glPushMatrix();
+	glColor3ub(0, 0, 255);
+	gluCylinder(pcyl, r0, r0, .9, 5, 1);
+	glTranslatef(0,0,.8f);
+	gluCylinder(pcyl, r1, 0, 0.2, 10, 1);
+	glPopMatrix();
+
+	// cleanup
+	gluDeleteQuadric(pcyl);
+
+	// restore project matrix
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+
+	// restore modelview matrix
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+
+	// restore viewport
+	glViewport(view[0], view[1], view[2], view[3]);
+
+	// restore attributes
+	glPopAttrib();
+
+	painter.endNativePainting();
+
+	// draw the coordinate labels
+	painter.setPen(Qt::black);
+	painter.setFont(QFont("Helvetica", 12));
+	vec3d ex(1.0, 0.0, 0.0);
+	vec3d ey(0.0, 1.0, 0.0);
+	vec3d ez(0.0, 0.0, 1.0);
+	q.RotateVector(ex);
+	q.RotateVector(ey);
+	q.RotateVector(ez);
+
+	y0 = view[3] - y0;
+	y1 = view[3] - y1;
+
+	ex.x = x0 + (x1 - x0)*(ex.x + 1)*0.5; ex.y = y0 + (y1 - y0)*(ex.y + 1)*0.5;
+	ey.x = x0 + (x1 - x0)*(ey.x + 1)*0.5; ey.y = y0 + (y1 - y0)*(ey.y + 1)*0.5;
+	ez.x = x0 + (x1 - x0)*(ez.x + 1)*0.5; ez.y = y0 + (y1 - y0)*(ez.y + 1)*0.5;
+
+	painter.drawText(ex.x, ex.y, "X");
+	painter.drawText(ey.x, ey.y, "Y");
+	painter.drawText(ez.x, ez.y, "Z");
+	painter.end();
 }
 
 //-----------------------------------------------------------------------------

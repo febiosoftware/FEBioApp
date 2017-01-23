@@ -10,6 +10,7 @@
 #include <QTabWidget>
 #include <FEBioXML/XMLReader.h>
 #include <FEBioMech/FEElasticMaterial.h>
+#include <FECore/FESurfaceLoad.h>
 #include "QPlotWidget.h"
 #include "QGLView.h"
 
@@ -42,11 +43,11 @@ void CParamInput::SetParameter(FEParam* pv)
 	m_pv = pv;
 	if (pv) 
 	{
-		if (pv->m_itype == FE_PARAM_DOUBLE)
+		if (pv->type() == FE_PARAM_DOUBLE)
 		{
 			if (m_pedit) m_pedit->setText(QString::number(pv->value<double>()));
 		}
-		if (pv->m_itype == FE_PARAM_BOOL)
+		if (pv->type() == FE_PARAM_BOOL)
 		{
 			if (m_pcheck) m_pcheck->setChecked(pv->value<bool>());
 		}
@@ -57,14 +58,14 @@ void CParamInput::UpdateParameter()
 {
 	if (m_pv) 
 	{
-		if ((m_pv->m_itype == FE_PARAM_DOUBLE) && m_pedit)
+		if ((m_pv->type() == FE_PARAM_DOUBLE) && m_pedit)
 		{
 			QString s = m_pedit->text();
 			double f = s.toDouble();
 			printf("Setting parameter %s to %lg\n", m_pv->name(), f);
-			m_pv->setvalue(f);
+			m_pv->value<double>() = f;
 		}
-		else if ((m_pv->m_itype == FE_PARAM_BOOL) && m_pcheck)
+		else if ((m_pv->type() == FE_PARAM_BOOL) && m_pcheck)
 		{
 			bool b = m_pcheck->isChecked();
 			m_pv->value<bool>() = b;
@@ -529,8 +530,8 @@ void MyDialog::parseInputList(XMLTag& tag, QBoxLayout* playout)
 			CParamInput* pin = new CParamInput;
 			QWidget* pw = 0;
 			QLineEdit* pedit; QCheckBox* pcheck;
-			if (pi.m_itype == FE_PARAM_DOUBLE) { pin->SetWidget(pedit  = new QLineEdit); pw = pedit;  }
-			if (pi.m_itype == FE_PARAM_BOOL  ) { pin->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
+			if (pi.type() == FE_PARAM_DOUBLE) { pin->SetWidget(pedit  = new QLineEdit); pw = pedit;  }
+			if (pi.type() == FE_PARAM_BOOL) { pin->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
 			pin->SetParameter(&pi);
 			assert(pw);
 
@@ -602,8 +603,8 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 	CParamInput* pi = new CParamInput;
 	QWidget* pw = 0;
 	QLineEdit* pedit; QCheckBox* pcheck;
-	if (pv->m_itype == FE_PARAM_DOUBLE) { pi->SetWidget(pedit  = new QLineEdit); pw = pedit; }
-	if (pv->m_itype == FE_PARAM_BOOL  ) { pi->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
+	if (pv->type() == FE_PARAM_DOUBLE) { pi->SetWidget(pedit = new QLineEdit); pw = pedit; }
+	if (pv->type() == FE_PARAM_BOOL) { pi->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
 	if (pv) pi->SetParameter(pv);
 	assert(pw);
 

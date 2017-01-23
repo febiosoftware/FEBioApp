@@ -6,6 +6,7 @@
 #include <FECore/FEModel.h>
 #include <FECore/FEBox.h>
 #include <FECore/FEElemElemList.h>
+#include <FECore/FESurface.h>
 #include <QMouseEvent>
 #include <QMessageBox>
 #include <QMenu>

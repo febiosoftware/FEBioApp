@@ -5,19 +5,21 @@
 #include <QApplication>
 #include "MyDialog.h"
 #include <FEBioLib/febio.h>
+#include <FEBioLib/version.h>
 #include <QSurfaceFormat>
-
-// This is defined in the FEBioLib library
-extern int get_app_path (char *pname, size_t pathsize);
 
 int main(int argc, char* argv[])
 {
 	// initialize the FEBio library
 	febio::InitLibrary();
 
+#ifdef _DEBUG
+	printf("FEBio version %d.%d.%d\n\n", VERSION, SUBVERSION, SUBSUBVERSION);
+#endif
+
 	// read the configuration file
 	char szpath[1024] = {0};
-	if (get_app_path(szpath, 1023) == 0)
+	if (febio::get_app_path(szpath, 1023) == 0)
 	{
 		char sz[1024] = {0};
 

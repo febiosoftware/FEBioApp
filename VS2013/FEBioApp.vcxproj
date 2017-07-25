@@ -74,7 +74,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(QTDIR)\include\QtWidgets;$(QTDIR)\include\;$(QTDIR)\include\QtGui;$(FEBioDir);$(SolutionDir)..\FEBioApp;$(GLEWDIR)\include\GL;$(IncludePath)</IncludePath>
-    <LibraryPath>$(QTDir)\lib;$(FEBioDir)\VS2013\x64\Debug;$(MKL15Dir)\lib\intel64;$(LMDir)\lib;$(INTELDir)\intel64;$(ZLibDir)\lib;$(GLEWDIR)\lib\Release\x64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(QTDir)\lib;$(FEBioDir)\VS2013\x64\Debug Dll;$(GLEWDIR)\lib\Release\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -83,8 +83,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(QTDIR)include\QtWidgets;$(QTDIR)include\;$(QTDIR)include\QtGui;$(FEBioDir);$(SolutionDir)..\FEBioApp;$(GLEWDIR)\include\GL;$(IncludePath)</IncludePath>
-    <LibraryPath>$(QTDir)lib;$(FEBioDir)VS2010\Release;$(MKLDir)\ia32\lib;$(LMDir)\lib;$(ZLibDir)\lib;$(GLEWDIR)\lib\Release\Win32;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(QTDIR)\include\QtWidgets;$(QTDIR)\include\;$(QTDIR)\include\QtGui;$(FEBioDir);$(SolutionDir)..\FEBioApp;$(GLEWDIR)\include\GL;$(IncludePath)</IncludePath>
+    <LibraryPath>$(QTDir)\lib;$(FEBioDir)\VS2013\x64\Release Dll;$(GLEWDIR)\lib\Release\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -110,10 +110,11 @@
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;fecore.lib;numcore.lib;febiolib.lib;febiomech.lib;febioheat.lib;febiomix.lib;febiofluid.lib;febioopt.lib;febioplot.lib;febioxml.lib;febiotest.lib;mkl_intel_lp64.lib;mkl_core.lib;mkl_intel_thread.lib;libiomp5md.lib;opengl32.lib;glu32.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
+      <AdditionalDependencies>Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;fecore.lib;febiomech.lib;febiolib.lib;opengl32.lib;glu32.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -143,11 +144,12 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;fecore.lib;numcore.lib;febiolib.lib;febiomech.lib;febioheat.lib;febiomix.lib;febiofluid.lib;febioopt.lib;febioplot.lib;febioxml.lib;febiotest.lib;mkl_intel_c.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5mt.lib;levmar.lib;opengl32.lib;glu32.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;fecore.lib;numcore.lib;febiolib.lib;febiomech.lib;febioheat.lib;febiomix.lib;febiofluid.lib;febioopt.lib;febioplot.lib;febioxml.lib;febiotest.lib;opengl32.lib;glu32.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -32,7 +32,7 @@ public:
 	void SetWidget(QLineEdit* pw) { m_pedit = pw; }
 	void SetWidget(QCheckBox* pw) { m_pcheck = pw; }
 
-	void SetParameter(FEParam* pv);
+	void SetParameter(const string& name, const FEParamValue& val);
 
 	void UpdateParameter();
 
@@ -40,7 +40,8 @@ private:
 	QLineEdit*	m_pedit;
 	QCheckBox*	m_pcheck;
 
-	FEParam*	m_pv;	// pointer to parameter
+	FEParamValue	m_val;
+	string			m_name;
 };
 
 //-----------------------------------------------------------------------------
@@ -93,9 +94,6 @@ private: // helper functions for parsing app file
 	void parseGraph    (XMLTag& tag, QBoxLayout* playout);
 	void parsePlot3d   (XMLTag& tag, QBoxLayout* playout);
 	void parseInputList(XMLTag& tag, QBoxLayout* playout);
-
-	FEParam* findParameter(const char* sz);
-	FECoreBase* findComponent(const char* sz);
 
 private:
 	char		m_szfile[512];	//!< FE model input file name

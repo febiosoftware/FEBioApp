@@ -53,16 +53,20 @@ void QPlotData::clear()
 //-----------------------------------------------------------------------------
 QRectF QPlotData::boundRect() const
 {
-	QRectF r(m_data[0].x(), m_data[0].y(), 0.0, 0.0);
-	for (int i=1; i<(int)m_data.size(); ++i)
+	if (m_data.empty() == false)
 	{
-		const QPointF& p = m_data[i];
-		if (p.x() < r.left  ()) r.setLeft  (p.x());
-		if (p.x() > r.right ()) r.setRight (p.x());
-		if (p.y() > r.bottom()) r.setBottom(p.y());
-		if (p.y() < r.top   ()) r.setTop   (p.y());
+		QRectF r(m_data[0].x(), m_data[0].y(), 0.0, 0.0);
+		for (int i=1; i<(int)m_data.size(); ++i)
+		{
+			const QPointF& p = m_data[i];
+			if (p.x() < r.left  ()) r.setLeft  (p.x());
+			if (p.x() > r.right ()) r.setRight (p.x());
+			if (p.y() > r.bottom()) r.setBottom(p.y());
+			if (p.y() < r.top   ()) r.setTop   (p.y());
+		}
+		return r;
 	}
-	return r;
+	else return QRectF(0.0, 0.0, 0.0, 0.0);
 }
 
 //-----------------------------------------------------------------------------

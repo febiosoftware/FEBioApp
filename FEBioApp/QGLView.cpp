@@ -153,6 +153,8 @@ void QGLView::Update()
 
 		// recalculate normals
 		m_glmesh.UpdateNormals();
+
+		repaint();
 	}
 }
 

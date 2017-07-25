@@ -11,8 +11,14 @@
 #include <FEBioXML/XMLReader.h>
 #include <FEBioMech/FEElasticMaterial.h>
 #include <FECore/FESurfaceLoad.h>
+#include <FECore/FEParam.h>
+#include <FECore/ParamString.h>
 #include "QPlotWidget.h"
 #include "QGLView.h"
+
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
 
 void qt_error(const char* sz)
 {
@@ -35,41 +41,41 @@ CParamInput::CParamInput()
 {
 	m_pedit = 0;
 	m_pcheck = 0;
-	m_pv = 0;
 }
 
-void CParamInput::SetParameter(FEParam* pv)
+void CParamInput::SetParameter(const string& name, const FEParamValue& val)
 {
-	m_pv = pv;
-	if (pv) 
+	m_name = name;
+	m_val = val;
+	if (val.isValid()) 
 	{
-		if (pv->type() == FE_PARAM_DOUBLE)
+		if (val.type() == FE_PARAM_DOUBLE)
 		{
-			if (m_pedit) m_pedit->setText(QString::number(pv->value<double>()));
+			if (m_pedit) m_pedit->setText(QString::number(val.toDouble()));
 		}
-		if (pv->type() == FE_PARAM_BOOL)
+		if (val.type() == FE_PARAM_BOOL)
 		{
-			if (m_pcheck) m_pcheck->setChecked(pv->value<bool>());
+			if (m_pcheck) m_pcheck->setChecked(val.toBool());
 		}
 	}
 }
 
 void CParamInput::UpdateParameter()
 {
-	if (m_pv) 
+	if (m_val.isValid()) 
 	{
-		if ((m_pv->type() == FE_PARAM_DOUBLE) && m_pedit)
+		if ((m_val.type() == FE_PARAM_DOUBLE) && m_pedit)
 		{
 			QString s = m_pedit->text();
 			double f = s.toDouble();
-			printf("Setting parameter %s to %lg\n", m_pv->name(), f);
-			m_pv->value<double>() = f;
+			m_val.setDouble(f);
+			printf("Setting parameter %s to %lg\n", m_name.c_str(), f);
 		}
-		else if ((m_pv->type() == FE_PARAM_BOOL) && m_pcheck)
+		else if ((m_val.type() == FE_PARAM_BOOL) && m_pcheck)
 		{
 			bool b = m_pcheck->isChecked();
-			m_pv->value<bool>() = b;
-			printf("Setting parameter %s to %s\n", m_pv->name(), (b ? "true" : "false"));
+			m_val.setBool(b);
+			printf("Setting parameter %s to %s\n", m_name.c_str(), (b ? "true" : "false"));
 		}
 	}
 }
@@ -77,7 +83,7 @@ void CParamInput::UpdateParameter()
 //-----------------------------------------------------------------------------
 void CDataPlot::Update(FEModel& fem)
 {
-	double t = fem.m_ftime;
+	double t = fem.GetCurrentTime();
 	FEMesh& mesh = fem.GetMesh();
 	FEElement& el = mesh.Domain(0).ElementRef(0);
 
@@ -198,6 +204,7 @@ bool MyDialog::parseModel(XMLTag& tag)
 			else
 			{
 				printf("Failed loading input file %s\n", m_szfile);
+				QMessageBox::critical(this, "FEBioApp", QString("Failed loading file %1").arg(m_szfile));
 			}
 
 			++tag;
@@ -513,7 +520,8 @@ void MyDialog::parseInputList(XMLTag& tag, QBoxLayout* playout)
 {
 	const char* sztitle = tag.AttributeValue("title", true);
 
-	FECoreBase* pc = findComponent(tag.szvalue());
+	ParamString ps(tag.szvalue());
+	FECoreBase* pc = m_fem.FindComponent(ps);
 	if (pc)
 	{
 		QGroupBox* pg = 0;
@@ -532,7 +540,7 @@ void MyDialog::parseInputList(XMLTag& tag, QBoxLayout* playout)
 			QLineEdit* pedit; QCheckBox* pcheck;
 			if (pi.type() == FE_PARAM_DOUBLE) { pin->SetWidget(pedit  = new QLineEdit); pw = pedit;  }
 			if (pi.type() == FE_PARAM_BOOL) { pin->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
-			pin->SetParameter(&pi);
+			pin->SetParameter(pi.name(), pi.paramValue());
 			assert(pw);
 
 			// add it to the row
@@ -569,10 +577,13 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 
 	XMLReader& xml = *tag.m_preader;
 
-	FEParam* pv = 0;
+	string paramName = "";
+	FEParamValue val;
 	if (tag.isleaf())
 	{
-		pv = findParameter(tag.szvalue());
+		paramName = tag.szvalue();
+		ParamString ps(tag.szvalue());
+		val = m_fem.FindParameter(ps);
 	}
 	else
 	{
@@ -581,16 +592,18 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 		{
 			if (tag == "param")
 			{
-				pv = findParameter(tag.szvalue());
+				paramName = tag.szvalue();
+				ParamString ps(tag.szvalue());
+				val = m_fem.FindParameter(ps);
 				++tag;
 			}
 			else xml.SkipTag(tag);
 		}
 		while (!tag.isend());
 	}
-	if (pv == 0) 
+	if (val.isValid() == false) 
 	{
-		printf("ERROR: Failed finding parameter %s\n", tag.szvalue());
+		printf("ERROR: Failed finding parameter %s\n", paramName.c_str());
 		return;
 	}
 
@@ -603,9 +616,9 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 	CParamInput* pi = new CParamInput;
 	QWidget* pw = 0;
 	QLineEdit* pedit; QCheckBox* pcheck;
-	if (pv->type() == FE_PARAM_DOUBLE) { pi->SetWidget(pedit = new QLineEdit); pw = pedit; }
-	if (pv->type() == FE_PARAM_BOOL) { pi->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
-	if (pv) pi->SetParameter(pv);
+	if (val.type() == FE_PARAM_DOUBLE) { pi->SetWidget(pedit = new QLineEdit); pw = pedit; }
+	if (val.type() == FE_PARAM_BOOL) { pi->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
+	if (val.isValid()) pi->SetParameter(paramName, val);
 	assert(pw);
 
 	playout->addLayout(pl);
@@ -657,153 +670,6 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 	m_in.push_back(pi);
 					
 	++tag;
-}
-
-FEParam* MyDialog::findParameter(const char* sz)
-{
-	ParamString s(sz);
-	if (strcmp(s.c_str(), "fem") == 0)
-	{
-		s = s.next();
-		char szbuf[256] = {0}, *szindex = 0;
-		int nindex = -1;
-		strcpy(szbuf, s.c_str());
-		char* ch = strchr(szbuf, '(');
-		if (ch)
-		{
-			*ch++ = 0;
-			szindex = ch;
-			ch = strchr(ch, ')');
-			if (ch == 0) return 0;
-			*ch=0;
-
-			if (szindex[0] == '"')
-			{
-				ch = strchr(++szindex, '"');
-				if (ch==0) return 0;
-				*ch = 0;
-			}
-			else
-			{
-				nindex = atoi(szindex);
-				szindex = 0;
-			}
-		}
-
-		if (strcmp(szbuf, "material") == 0)
-		{
-			// get the material
-			FEMaterial* pmat = 0;
-			if (szindex) pmat = m_fem.FindMaterial(szindex);
-			else pmat = m_fem.FindMaterial(nindex);
-			if (pmat == 0) return 0;
-
-			s = s.next();
-			FEParam* pp = pmat->GetParameter(s);
-			return pp;
-		}
-		else if (strcmp(szbuf, "surfaceLoad") == 0)
-		{
-			// get the surface load
-			FESurfaceLoad* psl = 0;
-			if (szindex) psl = m_fem.FindSurfaceLoad(szindex);
-			if (psl == 0) return 0;
-
-			s = s.next();
-			FEParam* pp = psl->GetParameter(s);
-			return pp;
-		}
-	}
-	return 0;
-}
-
-char* processComponent(char* szbuf, int& nindex)
-{
-	char* szindex = 0;
-	char* ch = strchr(szbuf, '(');
-	if (ch)
-	{
-		*ch++ = 0;
-		szindex = ch;
-		ch = strchr(ch, ')');
-		if (ch == 0) return 0;
-		*ch=0;
-
-		if (szindex[0] == '"')
-		{
-			ch = strchr(++szindex, '"');
-			if (ch==0) return 0;
-			*ch = 0;
-			nindex = -1;
-		}
-		else
-		{
-			nindex = atoi(szindex);
-			szindex = 0;
-		}
-	}
-	return szindex;
-}
-
-FECoreBase* MyDialog::findComponent(const char* sz)
-{
-	ParamString s(sz);
-	if (strcmp(s.c_str(), "fem") == 0)
-	{
-		s = s.next();
-		char szbuf[256] = {0};
-		strcpy(szbuf, s.c_str());
-
-		int nindex = -1;
-		char* szindex = processComponent(szbuf, nindex);
-
-		if (strcmp(szbuf, "material") == 0)
-		{
-			// get the material
-			FEMaterial* pmat = 0;
-			if (szindex) pmat = m_fem.FindMaterial(szindex);
-			else pmat = m_fem.FindMaterial(nindex);
-			if (pmat == 0) return 0;
-
-			s = s.next();
-			if (s.count() == 0) return pmat;
-
-			while (s.count())
-			{
-				strcpy(szbuf, s.c_str());
-				int nindex = -1;
-				char* szindex = processComponent(szbuf, nindex);
-
-				FEProperty* pp = pmat->FindProperty(szbuf);
-				if (pp)
-				{
-					FECoreBase* pc = 0;
-					if (szindex)
-					{
-						int np = pp->size();
-						for (int i=0; i<np; ++i)
-						{
-							FECoreBase* pci = pp->get(i);
-							if (pci && (strcmp(pci->GetName(), szindex)==0) )
-							{
-								pc = pci;
-								break;
-							}
-						}
-					}
-					else if (nindex >= 0) pc = pp->get(nindex);
-					else pc = pp->get(0);
-
-					pmat = dynamic_cast<FEMaterial*>(pc);
-					if (pmat == 0) return 0;
-
-					s = s.next();
-				}
-			}
-			return pmat;
-		}
-	}
-	return 0;
 }
 
 // Include the MOC stuff

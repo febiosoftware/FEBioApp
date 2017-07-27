@@ -3,69 +3,14 @@
 #include <QLineEdit>
 #include <QCheckBox>
 #include <FEBioLib/FEBioModel.h>
-#include "QPlotWidget.h"
+#include "PlotWidget.h"
 #include "QGLView.h"
+#include "DataPlot.h"
+#include "ParamInput.h"
 
 class XMLTag;
 class FEModel;
 class QBoxLayout;
-
-//-----------------------------------------------------------------------------
-//! This class connects an FE model parameter to an input field.
-class CParamInput
-{
-public:
-	enum {
-		ALIGN_LEFT,
-		ALIGN_RIGHT,
-		ALIGN_TOP,
-		ALIGN_BOTTOM,
-		ALIGN_TOP_LEFT,
-		ALIGN_TOP_RIGHT,
-		ALIGN_BOTTOM_LEFT,
-		ALIGN_BOTTOM_RIGHT
-	};
-
-public:
-	CParamInput();
-
-	void SetWidget(QLineEdit* pw) { m_pedit = pw; }
-	void SetWidget(QCheckBox* pw) { m_pcheck = pw; }
-
-	void SetParameter(const string& name, const FEParamValue& val);
-
-	void UpdateParameter();
-
-private:
-	QLineEdit*	m_pedit;
-	QCheckBox*	m_pcheck;
-
-	FEParamValue	m_val;
-	string			m_name;
-};
-
-//-----------------------------------------------------------------------------
-class CDataSource
-{
-public:
-	FEParamValue	m_x;
-	FEParamValue	m_y;
-};
-
-//-----------------------------------------------------------------------------
-//! Class for plotting data
-class CDataPlot : public QPlotWidget
-{
-public:
-	CDataPlot(QWidget* parent = 0);
-
-	void Update(FEModel& fem);
-
-	void AddData(CDataSource& data);
-
-private:
-	vector<CDataSource>	m_data;
-};
 
 //-----------------------------------------------------------------------------
 //! This class represents the GUI
@@ -76,7 +21,13 @@ class MyDialog : public QDialog
 public:
 	MyDialog();
 
-	void BuildGUI(const char* szfile);
+	bool BuildGUI(const char* szfile);
+
+	void AddInputParameter(CParamInput *pi) { m_in.push_back(pi); }
+
+	void AddGraph(CDataPlot* plot) { m_plot.push_back(plot); }
+
+	void AddPlot3D(QGLView* plot3d) { m_gl.push_back(plot3d); }
 
 public Q_SLOTS:
 	void Run();	// run the FE model
@@ -90,24 +41,7 @@ private:
 
 	bool FECallback(FEModel& fem, unsigned int nwhen);
 
-private: // helper functions for parsing app file
-	bool parseModel(XMLTag& tag);
-	bool parseGUI  (XMLTag& tag);
-	bool parseTags     (XMLTag& tag, QBoxLayout* playout);
-	void parseGroup    (XMLTag& tag, QBoxLayout* playout);
-	void parseVGroup   (XMLTag& tag, QBoxLayout* playout);
-	void parseHGroup   (XMLTag& tag, QBoxLayout* playout);
-	void parseTabGroup (XMLTag& tag, QBoxLayout* playout);
-	void parseInput    (XMLTag& tag, QBoxLayout* playout);
-	void parseStretch  (XMLTag& tag, QBoxLayout* playout);
-	void parseButton   (XMLTag& tag, QBoxLayout* playout);
-	void parseLabel    (XMLTag& tag, QBoxLayout* playout);
-	void parseGraph    (XMLTag& tag, QBoxLayout* playout);
-	void parsePlot3d   (XMLTag& tag, QBoxLayout* playout);
-	void parseInputList(XMLTag& tag, QBoxLayout* playout);
-
 private:
-	char		m_szfile[512];	//!< FE model input file name
 	FEBioModel	m_fem;			//!< The FE model
 	vector<QGLView*>		m_gl;
 	vector<CDataPlot*>		m_plot;

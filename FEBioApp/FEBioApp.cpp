@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
 
 	// create the application
 	QApplication app(argc, argv);
+	app.setApplicationDisplayName("FEBioApp");
 
 	// set the OpenGL default format
 	QSurfaceFormat format;
@@ -51,7 +52,7 @@ int main(int argc, char* argv[])
 	dlg.setAttribute(Qt::WA_QuitOnClose);
 
 	// Build the GUI from the app's file
-	dlg.BuildGUI(argv[1]);
+	if (dlg.BuildGUI(argv[1]) == false) return 1;
 
 	// show the dialog
 	dlg.show();

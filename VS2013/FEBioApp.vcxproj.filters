@@ -27,9 +27,6 @@
     <ClCompile Include="..\FEBioApp\MyDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\FEBioApp\QPlotWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\FEBioApp\QGLView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -40,6 +37,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\FEBioApp\Interpolator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FEBioApp\PlotWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FEBioApp\moc_PlotWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -64,10 +67,10 @@
     <CustomBuild Include="..\FEBioApp\MyDialog.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\FEBioApp\QPlotWidget.h">
+    <CustomBuild Include="..\FEBioApp\QGLView.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\FEBioApp\QGLView.h">
+    <CustomBuild Include="..\FEBioApp\PlotWidget.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>

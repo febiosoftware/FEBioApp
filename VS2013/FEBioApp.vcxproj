@@ -156,16 +156,25 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\FEBioApp\DataPlot.cpp" />
     <ClCompile Include="..\FEBioApp\FEBioApp.cpp" />
     <ClCompile Include="..\FEBioApp\GLCamera.cpp" />
     <ClCompile Include="..\FEBioApp\GLMesh.cpp" />
     <ClCompile Include="..\FEBioApp\Interpolator.cpp" />
+    <ClCompile Include="..\FEBioApp\moc_MyDialog.cpp" />
+    <ClCompile Include="..\FEBioApp\moc_PlotWidget.cpp" />
+    <ClCompile Include="..\FEBioApp\moc_QGLView.cpp" />
     <ClCompile Include="..\FEBioApp\MyDialog.cpp" />
+    <ClCompile Include="..\FEBioApp\ParamInput.cpp" />
+    <ClCompile Include="..\FEBioApp\PlotWidget.cpp" />
     <ClCompile Include="..\FEBioApp\QGLView.cpp" />
-    <ClCompile Include="..\FEBioApp\QPlotWidget.cpp" />
     <ClCompile Include="..\FEBioApp\stdafx.cpp" />
+    <ClCompile Include="..\FEBioApp\UIBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\FEBioApp\DataPlot.h" />
+    <ClInclude Include="..\FEBioApp\ParamInput.h" />
+    <ClInclude Include="..\FEBioApp\UIBuilder.h" />
     <CustomBuild Include="..\FEBioApp\MyDialog.h">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)bin/moc.exe "%(FullPath)" -o "%(RootDir)%(Directory)moc_%(Filename).cpp"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)/bin/moc.exe "%(FullPath)" -o "%(RootDir)%(Directory)moc_%(Filename).cpp"</Command>
@@ -184,15 +193,12 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)moc_%(Filename).cpp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)moc_%(Filename).cpp</Outputs>
     </CustomBuild>
-    <CustomBuild Include="..\FEBioApp\QPlotWidget.h">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)bin/moc.exe "%(FullPath)" -o "%(RootDir)%(Directory)moc_%(Filename).cpp"</Command>
+    <ClInclude Include="..\FEBioApp\Interpolator.h" />
+    <CustomBuild Include="..\FEBioApp\PlotWidget.h">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)/bin/moc.exe "%(FullPath)" -o "%(RootDir)%(Directory)moc_%(Filename).cpp"</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compiling %(Filename).%(Extension) using MOC</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename).%(Extension) using MOC</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)moc_%(Filename).cpp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)moc_%(Filename).cpp</Outputs>
     </CustomBuild>
-    <ClInclude Include="..\FEBioApp\Interpolator.h" />
     <ClInclude Include="..\FEBioApp\stdafx.h" />
     <ClInclude Include="..\FEBioApp\targetver.h" />
   </ItemGroup>

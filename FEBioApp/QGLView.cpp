@@ -626,5 +626,3 @@ bool QGLView::event(QEvent* event)
 	}
 	return QOpenGLWidget::event(event);
 }
-
-#include "moc_qglview.cpp"

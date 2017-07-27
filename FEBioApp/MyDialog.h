@@ -45,6 +45,14 @@ private:
 };
 
 //-----------------------------------------------------------------------------
+class CDataSource
+{
+public:
+	FEParamValue	m_x;
+	FEParamValue	m_y;
+};
+
+//-----------------------------------------------------------------------------
 //! Class for plotting data
 class CDataPlot : public QPlotWidget
 {
@@ -53,11 +61,10 @@ public:
 
 	void Update(FEModel& fem);
 
-	void SetParamData(const FEParamValue& x, const FEParamValue& y);
+	void AddData(CDataSource& data);
 
 private:
-	FEParamValue	m_x;
-	FEParamValue	m_y;
+	vector<CDataSource>	m_data;
 };
 
 //-----------------------------------------------------------------------------

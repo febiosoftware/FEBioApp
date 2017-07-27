@@ -87,21 +87,24 @@ CDataPlot::CDataPlot(QWidget* parent) : QPlotWidget(parent)
 }
 
 //-----------------------------------------------------------------------------
-void CDataPlot::SetParamData(const FEParamValue& x, const FEParamValue& y)
+void CDataPlot::AddData(CDataSource& data)
 {
-	m_x = x;
-	m_y = y;
+	m_data.push_back(data);
+	QPlotData d;
+	addPlotData(d);
 }
 
 //-----------------------------------------------------------------------------
 void CDataPlot::Update(FEModel& fem)
 {
-	if (plots() > 0)
+	for (int i=0; i<plots(); ++i)
 	{
-		QPlotData& data = getPlotData(0);
+		QPlotData& plot = getPlotData(i);
 
-		if (m_x.isValid() && m_y.isValid())
-			data.addPoint(m_x.value<double>(), m_y.value<double>());
+		CDataSource& data = m_data[i];
+
+		if (data.m_x.isValid() && data.m_y.isValid())
+			plot.addPoint(data.m_x.value<double>(), data.m_y.value<double>());
 	}
 }
 
@@ -305,6 +308,7 @@ void MyDialog::parseVGroup(XMLTag& tag, QBoxLayout* playout)
 
 	if (pg) 
 	{ 
+		pl->addStretch();
 		pg->setLayout(pl); 
 		playout->addWidget(pg); 
 	}
@@ -431,8 +435,7 @@ void MyDialog::parseLabel(XMLTag& tag, QBoxLayout* playout)
 
 void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
 {
-	char sz[256] = {0};
-	strcpy(sz, tag.AttributeValue("title"));
+	const char* sztitle = tag.AttributeValue("title");
 
 	// size of graph
 	int size[2] = {400, 400};
@@ -442,6 +445,9 @@ void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
 	int nplt = 0;
 
 	FEParamValue xparam, yparam;
+
+	CDataPlot* pg = new CDataPlot(0);
+	pg->setTitle(QString(sztitle));
 
 	if (!tag.isleaf())
 	{
@@ -480,6 +486,12 @@ void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
 				}
 				while (!tag.isend());
 
+				CDataSource src;
+				src.m_x = xparam;
+				src.m_y = yparam;
+
+				pg->AddData(src);
+
 				xml.SkipTag(tag);
 			}
 			else xml.SkipTag(tag);
@@ -487,18 +499,9 @@ void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
 		while (!tag.isend());
 	}
 
-	CDataPlot* pg = new CDataPlot(0);
-	pg->setTitle(QString(sz));
 	pg->setMinimumSize(QSize(size[0], size[1]));
-	pg->SetParamData(xparam, yparam);
 
-	for (int i=0; i<nplt; ++i)
-	{
-		QPlotData d;
-		pg->addPlotData(d);
-	}
-
-	playout->addWidget(pg);
+	playout->addWidget(pg, 1);
 	m_plot.push_back(pg);
 
 	++tag;
@@ -641,6 +644,7 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 	else pl = new QVBoxLayout;
 
 	QLabel* plabel = new QLabel(sz);
+//	plabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	CParamInput* pi = new CParamInput;
 	QWidget* pw = 0;
 	QLineEdit* pedit; QCheckBox* pcheck;
@@ -656,13 +660,13 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 	{
 	case CParamInput::ALIGN_LEFT:
 		pl->addWidget(plabel);
-		pl->addStretch();
 		pl->addWidget(pw);
+		pl->addStretch();
 		break;
 	case CParamInput::ALIGN_RIGHT:
 		pl->addWidget(pw);
-		pl->addStretch();
 		pl->addWidget(plabel);
+		pl->addStretch();
 		break;
 	case CParamInput::ALIGN_TOP:
 		plabel->setAlignment(Qt::AlignHCenter);

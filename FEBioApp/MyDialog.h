@@ -29,8 +29,9 @@ public:
 
 	void AddPlot3D(QGLView* plot3d) { m_gl.push_back(plot3d); }
 
-public Q_SLOTS:
-	void Run();	// run the FE model
+public slots:
+	void ResetDlg();
+	void Run();
 
 private:
 	static bool cb(FEModel* pfem, unsigned int nwhen, void* pd)

@@ -1,6 +1,7 @@
 #pragma once
 #include <FECore/FEParam.h>
 #include <string>
+#include <QtCore/QVariant>
 using namespace std;
 
 class QLineEdit;
@@ -30,7 +31,11 @@ public:
 
 	void SetParameter(const string& name, const FEParamValue& val);
 
+	// update the parameter based on the UI value
 	void UpdateParameter();
+
+	// reset UI to initial value
+	void ResetParameter();
 
 private:
 	QLineEdit*	m_pedit;
@@ -38,4 +43,5 @@ private:
 
 	FEParamValue	m_val;
 	string			m_name;
+	QVariant		m_initVal;
 };

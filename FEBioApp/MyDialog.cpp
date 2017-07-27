@@ -103,3 +103,18 @@ bool MyDialog::BuildGUI(const char* szfile)
 
 	return true;
 }
+
+void MyDialog::ResetDlg()
+{
+	// update input values
+	for (int i = 0; i<(int)m_in.size(); ++i)
+	{
+		m_in[i]->ResetParameter();
+	}
+
+	// clear all plots
+	for (int i = 0; i<(int)m_plot.size(); ++i) m_plot[i]->clearData();
+
+	// update GUI
+	repaint();
+}

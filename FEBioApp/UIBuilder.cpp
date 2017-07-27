@@ -250,7 +250,8 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 				const char* sza = tag.szvalue();
 				if      (strcmp(sza, "fem.solve()") == 0) nact = 0;
 				else if (strcmp(sza, "app.quit()" ) == 0) nact = 1;
-				else printf("ERROR: Do not understand action\n");
+				else if (strcmp(sza, "app.reset()") == 0) nact = 2;
+				else printf("ERROR: Do not understand action %s\n", sza);
 
 				++tag;
 			}
@@ -268,6 +269,7 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 
 	if      (nact == 0) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Run()));
 	else if (nact == 1) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(accept()));
+	else if (nact == 2) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(ResetDlg()));
 
 	++tag;
 }
@@ -453,6 +455,10 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 		if (pg) { pg->setLayout(pf); playout->addWidget(pg); }
 		else playout->addLayout(pf);
 	}
+	else
+	{
+		printf("ERROR: Cannot find property: %s\n", tag.szvalue());
+	}
 	++tag;
 }
 
@@ -485,6 +491,7 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 		paramName = tag.szvalue();
 		ParamString ps(tag.szvalue());
 		val = m_fem->FindParameter(ps);
+		++tag;
 	}
 	else
 	{
@@ -571,6 +578,4 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 	}
 
 	m_dlg->AddInputParameter(pi);
-					
-	++tag;
 }

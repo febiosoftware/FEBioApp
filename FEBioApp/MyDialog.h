@@ -49,11 +49,15 @@ private:
 class CDataPlot : public QPlotWidget
 {
 public:
-	CDataPlot(QWidget* parent = 0, int w = 0, int h = 0) : QPlotWidget(parent, w, h)
-	{
-	}
+	CDataPlot(QWidget* parent = 0);
 
 	void Update(FEModel& fem);
+
+	void SetParamData(const FEParamValue& x, const FEParamValue& y);
+
+private:
+	FEParamValue	m_x;
+	FEParamValue	m_y;
 };
 
 //-----------------------------------------------------------------------------

@@ -77,7 +77,7 @@ void QPlotData::addPoint(double x, double y)
 }
 
 //-----------------------------------------------------------------------------
-QPlotWidget::QPlotWidget(QWidget* parent, int w, int h) : QWidget(parent)
+QPlotWidget::QPlotWidget(QWidget* parent) : QWidget(parent)
 {
 	static int n = 0;
 
@@ -87,9 +87,8 @@ QPlotWidget::QPlotWidget(QWidget* parent, int w, int h) : QWidget(parent)
 	m_xscale = findScale(m_viewRect.left(), m_viewRect.right());
 	m_yscale = findScale(m_viewRect.top(), m_viewRect.bottom());
 
-	if (w < 200) w = 200;
-	if (h < 200) h = 200;
-	m_sizeHint = QSize(w, h);
+	m_sizeHint = QSize(400, 400);
+	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
 	m_pZoomToFit = new QAction(tr("Zoom to fit"), this);
 	connect(m_pZoomToFit, SIGNAL(triggered()), this, SLOT(OnZoomToFit()));
@@ -123,7 +122,7 @@ void QPlotWidget::OnZoomToFit()
 void QPlotWidget::OnShowProps()
 {
 	QMessageBox b;
-	b.setText("Comgin soon!");
+	b.setText("Coming soon!");
 	b.setIcon(QMessageBox::Information);
 	b.exec();
 }

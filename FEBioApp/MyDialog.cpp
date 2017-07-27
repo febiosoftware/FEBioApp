@@ -51,11 +51,11 @@ void CParamInput::SetParameter(const string& name, const FEParamValue& val)
 	{
 		if (val.type() == FE_PARAM_DOUBLE)
 		{
-			if (m_pedit) m_pedit->setText(QString::number(val.toDouble()));
+			if (m_pedit) m_pedit->setText(QString::number(val.value<double>()));
 		}
 		if (val.type() == FE_PARAM_BOOL)
 		{
-			if (m_pcheck) m_pcheck->setChecked(val.toBool());
+			if (m_pcheck) m_pcheck->setChecked(val.value<bool>());
 		}
 	}
 }
@@ -68,38 +68,40 @@ void CParamInput::UpdateParameter()
 		{
 			QString s = m_pedit->text();
 			double f = s.toDouble();
-			m_val.setDouble(f);
+			m_val.value<double>() = f;
 			printf("Setting parameter %s to %lg\n", m_name.c_str(), f);
 		}
 		else if ((m_val.type() == FE_PARAM_BOOL) && m_pcheck)
 		{
 			bool b = m_pcheck->isChecked();
-			m_val.setBool(b);
+			m_val.value<bool>() = b;
 			printf("Setting parameter %s to %s\n", m_name.c_str(), (b ? "true" : "false"));
 		}
 	}
 }
 
 //-----------------------------------------------------------------------------
+CDataPlot::CDataPlot(QWidget* parent) : QPlotWidget(parent)
+{
+	
+}
+
+//-----------------------------------------------------------------------------
+void CDataPlot::SetParamData(const FEParamValue& x, const FEParamValue& y)
+{
+	m_x = x;
+	m_y = y;
+}
+
+//-----------------------------------------------------------------------------
 void CDataPlot::Update(FEModel& fem)
 {
-	double t = fem.GetCurrentTime();
-	FEMesh& mesh = fem.GetMesh();
-	FEElement& el = mesh.Domain(0).ElementRef(0);
-
-	FEMaterialPoint& mp = *el.GetMaterialPoint(0);
-	FEElasticMaterialPoint& ep = *mp.ExtractData<FEElasticMaterialPoint>();
-
-	mat3ds C = ep.RightCauchyGreen();
-	mat3ds s = ep.m_s;
-
-	mat3dd I(1.0);
-	mat3ds E = (C - I)*0.5;
-
 	if (plots() > 0)
 	{
 		QPlotData& data = getPlotData(0);
-		data.addPoint(E.xx(), s.xx());
+
+		if (m_x.isValid() && m_y.isValid())
+			data.addPoint(m_x.value<double>(), m_y.value<double>());
 	}
 }
 
@@ -115,6 +117,9 @@ bool MyDialog::FECallback(FEModel& fem, unsigned int nwhen)
 {
 	if ((nwhen == CB_MAJOR_ITERS) || (nwhen == CB_INIT))
 	{
+		// update all model data
+		fem.UpdateModelData();
+
 		// update the plots
 		for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->Update(fem);
 	}
@@ -418,6 +423,7 @@ void MyDialog::parseLabel(XMLTag& tag, QBoxLayout* playout)
 	QLabel* plabel = new QLabel(sz);
 	QFont f("Times", 14, QFont::Bold);
 	plabel->setFont(f);
+	plabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 	playout->addWidget(plabel);
 
 	++tag;
@@ -434,6 +440,8 @@ void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
 	XMLReader& xml = *tag.m_preader;
 
 	int nplt = 0;
+
+	FEParamValue xparam, yparam;
 
 	if (!tag.isleaf())
 	{
@@ -455,6 +463,23 @@ void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
 			{
 				nplt++;
 
+				++tag;
+				do
+				{
+					if (tag == "x")
+					{
+						ParamString x_str(tag.szvalue());
+						xparam = m_fem.FindParameter(x_str);
+					}
+					else if (tag == "y")
+					{
+						ParamString y_str(tag.szvalue());
+						yparam = m_fem.FindParameter(y_str);
+					}
+					++tag;
+				}
+				while (!tag.isend());
+
 				xml.SkipTag(tag);
 			}
 			else xml.SkipTag(tag);
@@ -462,8 +487,10 @@ void MyDialog::parseGraph(XMLTag& tag, QBoxLayout* playout)
 		while (!tag.isend());
 	}
 
-	CDataPlot* pg = new CDataPlot(0, size[0], size[1]);
+	CDataPlot* pg = new CDataPlot(0);
 	pg->setTitle(QString(sz));
+	pg->setMinimumSize(QSize(size[0], size[1]));
+	pg->SetParamData(xparam, yparam);
 
 	for (int i=0; i<nplt; ++i)
 	{
@@ -542,6 +569,7 @@ void MyDialog::parseInputList(XMLTag& tag, QBoxLayout* playout)
 			if (pi.type() == FE_PARAM_BOOL) { pin->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
 			pin->SetParameter(pi.name(), pi.paramValue());
 			assert(pw);
+			pw->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 			// add it to the row
 			pf->addRow(pi.name(), pw);
@@ -620,6 +648,7 @@ void MyDialog::parseInput(XMLTag& tag, QBoxLayout* playout)
 	if (val.type() == FE_PARAM_BOOL) { pi->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
 	if (val.isValid()) pi->SetParameter(paramName, val);
 	assert(pw);
+	pw->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 	playout->addLayout(pl);
 

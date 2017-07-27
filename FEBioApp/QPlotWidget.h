@@ -43,7 +43,7 @@ class QPlotWidget : public QWidget
 
 public:
 	//! constructor
-	QPlotWidget(QWidget* parent = 0, int w = 0, int h = 0);
+	QPlotWidget(QWidget* parent = 0);
 
 	//! Set the plot title
 	void setTitle(const QString& s);

@@ -348,11 +348,19 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 					{
 						ParamString x_str(tag.szvalue());
 						xparam = m_fem->FindParameter(x_str);
+						if (xparam.isValid() == false)
+						{
+							printf("Failed to find parameter: %s\n", tag.szvalue());
+						}
 					}
 					else if (tag == "y")
 					{
 						ParamString y_str(tag.szvalue());
 						yparam = m_fem->FindParameter(y_str);
+						if (yparam.isValid() == false)
+						{
+							printf("Failed to find parameter: %s\n", tag.szvalue());
+						}
 					}
 					++tag;
 				}

@@ -251,6 +251,7 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 				if      (strcmp(sza, "fem.solve()") == 0) nact = 0;
 				else if (strcmp(sza, "app.quit()" ) == 0) nact = 1;
 				else if (strcmp(sza, "app.reset()") == 0) nact = 2;
+				else if (strcmp(sza, "fem.reload()") == 0) nact = 3;
 				else printf("ERROR: Do not understand action %s\n", sza);
 
 				++tag;
@@ -270,6 +271,7 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 	if      (nact == 0) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Run()));
 	else if (nact == 1) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(accept()));
 	else if (nact == 2) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(ResetDlg()));
+	else if (nact == 3) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Reload()));
 
 	++tag;
 }
@@ -430,8 +432,35 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 {
 	const char* sztitle = tag.AttributeValue("title", true);
 
-	ParamString ps(tag.szvalue());
-	FECoreBase* pc = m_fem->FindComponent(ps);
+	int naction = -1;
+
+	FECoreBase* pc = 0;
+	if (tag.isleaf())
+	{
+		ParamString ps(tag.szvalue());
+		pc = m_fem->FindComponent(ps);
+	}
+	else
+	{
+		++tag;
+		do
+		{
+			if (tag == "params")
+			{
+				ParamString ps(tag.szvalue());
+				pc = m_fem->FindComponent(ps);
+			}
+			else if (tag == "action")
+			{
+				const char* szaction = tag.szvalue();
+				if (strcmp(szaction, "fem.solve()") == 0) naction = 0;
+			}
+			
+			++tag;
+		}
+		while (!tag.isend());
+	}
+
 	if (pc)
 	{
 		QGroupBox* pg = 0;
@@ -448,8 +477,18 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 			CParamInput* pin = new CParamInput;
 			QWidget* pw = 0;
 			QLineEdit* pedit; QCheckBox* pcheck;
-			if (pi.type() == FE_PARAM_DOUBLE) { pin->SetWidget(pedit  = new QLineEdit); pw = pedit;  }
-			if (pi.type() == FE_PARAM_BOOL) { pin->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
+			if (pi.type() == FE_PARAM_DOUBLE) 
+			{ 
+				pin->SetWidget(pedit  = new QLineEdit); 
+				pw = pedit; 
+				if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
+			}
+			if (pi.type() == FE_PARAM_BOOL)
+			{ 
+				pin->SetWidget(pcheck = new QCheckBox); 
+				pw = pcheck;
+				if (naction == 0) QObject::connect(pcheck, SIGNAL(stateChanged(int)), m_dlg, SLOT(Run()));
+			}
 			pin->SetParameter(pi.name(), pi.paramValue());
 			assert(pw);
 			pw->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);

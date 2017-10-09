@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QMessageBox>
 #include "UIBuilder.h"
+#include <FECore/FECoreTask.h>
 
 #ifdef GetCurrentTime
 #undef GetCurrentTime
@@ -31,16 +32,13 @@ MyDialog::MyDialog()
 {
 	setLayout(new QVBoxLayout);
 
-	m_fem.AddCallback(cb, CB_ALWAYS, this);
+	m_model.m_fem.AddCallback(cb, CB_ALWAYS, this);
 }
 
 bool MyDialog::FECallback(FEModel& fem, unsigned int nwhen)
 {
 	if ((nwhen == CB_MAJOR_ITERS) || (nwhen == CB_INIT))
 	{
-		// update all model data
-		fem.UpdateModelData();
-
 		// update the plots
 		for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->Update(fem);
 	}
@@ -60,17 +58,19 @@ void MyDialog::Run()
 	// clear all plots
 	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->clearData();
 
+	FEBioModel& fem = m_model.m_fem;
+
 	// do initialization
 	if (bfirst)
 	{
-		m_fem.Init();
+		fem.Init();
 		bfirst = false;
 	}
-	else m_fem.Reset();
+	else fem.Reset();
 
 	// solve the model
 	printf("Calling FEBio ... ");
-	if (m_fem.Solve())
+	if (fem.Solve())
 	{
 		printf("NORMAL TERMINATION\n");
 	}
@@ -90,12 +90,55 @@ void MyDialog::Run()
 	repaint();
 }
 
+void MyDialog::RunTask()
+{
+	static bool bfirst = true;
+
+	// make sure there is a task
+	if (m_model.m_task == 0)
+	{
+		printf("No task defined.");
+		qt_error("No task defined");
+		return;
+	}
+
+	// first time we get here, we need to do some initialization
+	if (bfirst)
+	{	
+		bfirst = false;
+		
+		// initialize the model
+		if (m_model.m_fem.Init() == false)
+		{
+			qt_error("Model failed to initialize");
+		}
+
+		if (m_model.m_task->Init(m_model.m_taskFile.c_str()) == false)
+		{
+			qt_error("Failed initializing task");
+		}
+	}
+	else m_model.m_fem.Reset();
+
+	// run the task
+	printf("Calling FEBio ... ");
+	if (m_model.m_task->Run())
+	{
+		printf("NORMAL TERMINATION\n");
+	}
+	else
+	{
+		printf("ERROR TERMINATION\n");
+		qt_error("ERROR TERMINATION\n");
+	}
+}
+
 bool MyDialog::BuildGUI(const char* szfile)
 {
 	setWindowTitle(szfile);
 
 	UIBuilder ui;
-	if (ui.BuildUI(this, m_fem, szfile) == false)
+	if (ui.BuildUI(this, m_model, szfile) == false)
 	{
 		QMessageBox::critical(this, "", "Failed building UI");
 		return false;

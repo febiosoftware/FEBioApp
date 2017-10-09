@@ -13,6 +13,19 @@ class FEModel;
 class QBoxLayout;
 
 //-----------------------------------------------------------------------------
+class ModelData
+{
+public:
+	FEBioModel		m_fem;
+	FECoreTask*		m_task;
+	std::string 	m_taskFile;
+
+	ModelData::ModelData() : m_task(0) {}
+
+	ModelData::~ModelData() { if (m_task) delete m_task; m_task = 0; }
+};
+
+//-----------------------------------------------------------------------------
 //! This class represents the GUI
 class MyDialog : public QDialog
 {
@@ -32,6 +45,7 @@ public:
 public slots:
 	void ResetDlg();
 	void Run();
+	void RunTask();
 
 private:
 	static bool cb(FEModel* pfem, unsigned int nwhen, void* pd)
@@ -43,7 +57,7 @@ private:
 	bool FECallback(FEModel& fem, unsigned int nwhen);
 
 private:
-	FEBioModel	m_fem;			//!< The FE model
+	ModelData				m_model;	//!< The model data
 	vector<QGLView*>		m_gl;
 	vector<CDataPlot*>		m_plot;
 	vector<CParamInput*>	m_in;

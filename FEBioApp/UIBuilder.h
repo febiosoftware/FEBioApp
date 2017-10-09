@@ -3,15 +3,16 @@
 class MyDialog;
 class XMLTag;
 class QBoxLayout;
-class FEBioModel;
+class ModelData;
 class FEModel;
+class FECoreTask;
 
 class UIBuilder
 {
 public:
 	UIBuilder();
 
-	bool BuildUI(MyDialog* dlg, FEBioModel& fem, const char* szfile);
+	bool BuildUI(MyDialog* dlg, ModelData& data, const char* szfile);
 
 private: // helper functions for parsing app file
 	bool parseModel(XMLTag& tag);
@@ -29,7 +30,7 @@ private: // helper functions for parsing app file
 	void parsePlot3d   (XMLTag& tag, QBoxLayout* playout);
 	void parseInputList(XMLTag& tag, QBoxLayout* playout);
 
-	FEBioModel*	m_fem;			//!< the FE model we're processing
+	ModelData*	m_data;			//!< the FE model we're processing
 	char		m_szfile[512];	//!< FE model input file name
 	MyDialog*	m_dlg;			//!< the dialog we're building
 };

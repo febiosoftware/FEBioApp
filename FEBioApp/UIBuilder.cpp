@@ -8,6 +8,7 @@
 #include <FECore/ParamString.h>
 #include <FECore/FEModel.h>
 #include <FEBioLib/FEBioModel.h>
+#include <FECore/FECoreTask.h>
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -24,11 +25,11 @@
 
 UIBuilder::UIBuilder()
 {
-	m_fem = 0;
+	m_data = 0;
 	m_dlg = 0;
 }
 
-bool UIBuilder::BuildUI(MyDialog* dlg, FEBioModel& fem, const char* szfile)
+bool UIBuilder::BuildUI(MyDialog* dlg, ModelData& data, const char* szfile)
 {
 	if (dlg == 0) return false;
 
@@ -36,7 +37,7 @@ bool UIBuilder::BuildUI(MyDialog* dlg, FEBioModel& fem, const char* szfile)
 	if (xml.Open(szfile) == false) return false;
 
 	m_dlg = dlg;
-	m_fem = &fem;
+	m_data = &data;
 
 	strcpy(m_szfile, szfile);
 
@@ -61,6 +62,8 @@ bool UIBuilder::BuildUI(MyDialog* dlg, FEBioModel& fem, const char* szfile)
 
 bool UIBuilder::parseModel(XMLTag& tag)
 {
+	FEBioModel& fem = m_data->m_fem;
+
 	XMLReader& xml = *tag.m_preader;
 	++tag;
 	do
@@ -70,7 +73,7 @@ bool UIBuilder::parseModel(XMLTag& tag)
 			strcpy(m_szfile, tag.szvalue());
 
 			// Try to load the FE model file
-			if (m_fem->Input(m_szfile))
+			if (fem.Input(m_szfile))
 			{
 				printf("Success loading input file %s\n", m_szfile);
 			}
@@ -79,6 +82,18 @@ bool UIBuilder::parseModel(XMLTag& tag)
 				printf("Failed loading input file %s\n", m_szfile);
 				return false;
 			}
+
+			++tag;
+		}
+		else if (tag == "task")
+		{
+			const char* sztype = tag.AttributeValue("type");
+			if (sztype == 0) return false;
+
+			m_data->m_task = fecore_new<FECoreTask>(FETASK_ID, sztype, &m_data->m_fem);
+			if (m_data->m_task == 0) return false;
+
+			m_data->m_taskFile = tag.szvalue();
 
 			++tag;
 		}
@@ -252,6 +267,7 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 				else if (strcmp(sza, "app.quit()" ) == 0) nact = 1;
 				else if (strcmp(sza, "app.reset()") == 0) nact = 2;
 				else if (strcmp(sza, "fem.reload()") == 0) nact = 3;
+				else if (strcmp(sza, "task.run()") == 0) nact = 4;
 				else printf("ERROR: Do not understand action %s\n", sza);
 
 				++tag;
@@ -272,6 +288,7 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 	else if (nact == 1) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(accept()));
 	else if (nact == 2) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(ResetDlg()));
 	else if (nact == 3) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Reload()));
+	else if (nact == 4) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(RunTask()));
 
 	++tag;
 }
@@ -315,6 +332,8 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 
 	FEParamValue xparam, yparam;
 
+	FEBioModel& fem = m_data->m_fem;
+
 	CDataPlot* pg = new CDataPlot(0);
 	pg->setTitle(QString(sztitle));
 
@@ -349,7 +368,7 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 					if (tag == "x")
 					{
 						ParamString x_str(tag.szvalue());
-						xparam = m_fem->FindParameter(x_str);
+						xparam = fem.FindParameter(x_str);
 						if (xparam.isValid() == false)
 						{
 							printf("Failed to find parameter: %s\n", tag.szvalue());
@@ -358,7 +377,7 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 					else if (tag == "y")
 					{
 						ParamString y_str(tag.szvalue());
-						yparam = m_fem->FindParameter(y_str);
+						yparam = fem.FindParameter(y_str);
 						if (yparam.isValid() == false)
 						{
 							printf("Failed to find parameter: %s\n", tag.szvalue());
@@ -422,7 +441,7 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 	QGLView* pgl = new QGLView(0, size[0], size[1]);
 	playout->addWidget(pgl);
 
-	pgl->SetFEModel(m_fem);
+	pgl->SetFEModel(&m_data->m_fem);
 	m_dlg->AddPlot3D(pgl);
 
 	++tag;
@@ -434,11 +453,13 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 
 	int naction = -1;
 
+	FEModel& fem = m_data->m_fem;
+
 	FECoreBase* pc = 0;
 	if (tag.isleaf())
 	{
 		ParamString ps(tag.szvalue());
-		pc = m_fem->FindComponent(ps);
+		pc = fem.FindComponent(ps);
 	}
 	else
 	{
@@ -448,7 +469,7 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 			if (tag == "params")
 			{
 				ParamString ps(tag.szvalue());
-				pc = m_fem->FindComponent(ps);
+				pc = fem.FindComponent(ps);
 			}
 			else if (tag == "action")
 			{
@@ -529,6 +550,8 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 		else printf("WARNING: Unknown align value %s\n", szalign);
 	}
 
+	FEModel& fem = m_data->m_fem;
+
 	XMLReader& xml = *tag.m_preader;
 
 	string paramName = "";
@@ -537,7 +560,7 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 	{
 		paramName = tag.szvalue();
 		ParamString ps(tag.szvalue());
-		val = m_fem->FindParameter(ps);
+		val = fem.FindParameter(ps);
 		++tag;
 	}
 	else
@@ -549,7 +572,7 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 			{
 				paramName = tag.szvalue();
 				ParamString ps(tag.szvalue());
-				val = m_fem->FindParameter(ps);
+				val = fem.FindParameter(ps);
 				++tag;
 			}
 			else xml.SkipTag(tag);

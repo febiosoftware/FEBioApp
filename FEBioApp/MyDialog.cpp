@@ -56,7 +56,7 @@ void MyDialog::Run()
 	}
 
 	// clear all plots
-	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->clearData();
+	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->Reset();
 
 	FEBioModel& fem = m_model.m_fem;
 
@@ -81,7 +81,7 @@ void MyDialog::Run()
 	}
 
 	// resize all graphs
-	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->fitToData();
+	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->UpdatePlots();
 
 	// update all 3D plots
 	for (int i=0; i<(int) m_gl.size(); ++i) m_gl[i]->Update();

@@ -362,38 +362,60 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 				if (sz) strcpy(szname, sz);
 				else sprintf(szname, "plot%d", nplt);
 
-				++tag;
-				do
+				const char* sztype = tag.AttributeValue("type", true);
+				if (sztype == 0)
 				{
-					if (tag == "x")
+					++tag;
+					do
 					{
-						ParamString x_str(tag.szvalue());
-						xparam = fem.FindParameter(x_str);
-						if (xparam.isValid() == false)
+						if (tag == "x")
 						{
-							printf("Failed to find parameter: %s\n", tag.szvalue());
+							ParamString x_str(tag.szvalue());
+							xparam = fem.FindParameter(x_str);
+							if (xparam.isValid() == false)
+							{
+								printf("Failed to find parameter: %s\n", tag.szvalue());
+							}
 						}
+						else if (tag == "y")
+						{
+							ParamString y_str(tag.szvalue());
+							yparam = fem.FindParameter(y_str);
+							if (yparam.isValid() == false)
+							{
+								printf("Failed to find parameter: %s\n", tag.szvalue());
+							}
+						}
+						++tag;
 					}
-					else if (tag == "y")
+					while (!tag.isend());
+
+					CParamDataSource* src = new CParamDataSource;
+					src->m_x = xparam;
+					src->m_y = yparam;
+
+					pg->AddData(src, szname);
+
+					xml.SkipTag(tag);
+				}
+				else if (strcmp(sztype, "static") == 0)
+				{
+					CStaticDataSource* src = new CStaticDataSource;
+					++tag;
+					do
 					{
-						ParamString y_str(tag.szvalue());
-						yparam = fem.FindParameter(y_str);
-						if (yparam.isValid() == false)
-						{
-							printf("Failed to find parameter: %s\n", tag.szvalue());
-						}
+						double p[2];
+						tag.value(p, 2);
+
+						src->m_data.push_back(QPointF(p[0], p[1]));
+						++tag;
 					}
+					while (!tag.isend());
+
+					pg->AddData(src, szname);
+
 					++tag;
 				}
-				while (!tag.isend());
-
-				CDataSource src;
-				src.m_x = xparam;
-				src.m_y = yparam;
-
-				pg->AddData(src, szname);
-
-				xml.SkipTag(tag);
 			}
 			else xml.SkipTag(tag);
 		}

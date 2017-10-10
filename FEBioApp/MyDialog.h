@@ -7,6 +7,7 @@
 #include "QGLView.h"
 #include "DataPlot.h"
 #include "ParamInput.h"
+#include <FECore/FECoreTask.h>
 
 class XMLTag;
 class FEModel;

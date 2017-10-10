@@ -11,8 +11,8 @@ CDataPlot::CDataPlot(QWidget* parent) : CPlotWidget(parent)
 void CDataPlot::AddData(CDataSource* data, const QString& label)
 {
 	m_data.push_back(data);
-	CPlotData d;
-	d.setLabel(label);
+	CLineChartData* d = new CLineChartData;
+	d->setLabel(label);
 	addPlotData(d);
 }
 

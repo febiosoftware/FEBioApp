@@ -135,7 +135,17 @@ void MyDialog::RunTask()
 
 bool MyDialog::BuildGUI(const char* szfile)
 {
-	setWindowTitle(szfile);
+	const char* fileTitle = 0;
+	fileTitle = strrchr(szfile, '/');
+	if (fileTitle == 0) 
+	{
+		fileTitle = strrchr(szfile, '\\');
+		if (fileTitle == 0) fileTitle = szfile;
+		else fileTitle++;
+	}
+	else fileTitle++;
+
+	setWindowTitle(fileTitle);
 
 	UIBuilder ui;
 	if (ui.BuildUI(this, m_model, szfile) == false)

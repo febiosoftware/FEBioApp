@@ -32,7 +32,7 @@ void CParamInput::SetParameter(const string& name, const FEParamValue& val)
 		else if (val.type() == FE_PARAM_INT)
 		{
 			int n = val.value<int>();
-			if (m_pcheck) m_pedit->setText(QString::number(n));
+			if (m_pedit) m_pedit->setText(QString::number(n));
 			m_initVal = n;
 		}
 	}
@@ -81,7 +81,7 @@ void CParamInput::ResetParameter()
 		}
 		else if (m_val.type() == FE_PARAM_INT)
 		{
-			if (m_pcheck) m_pedit->setText(QString::number(m_initVal.toInt()));
+			if (m_pedit) m_pedit->setText(QString::number(m_initVal.toInt()));
 		}
 	}
 }

@@ -517,29 +517,38 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 		{
 			FEParam& pi = *it;
 
-			CParamInput* pin = new CParamInput;
-			QWidget* pw = 0;
-			QLineEdit* pedit; QCheckBox* pcheck;
-			if (pi.type() == FE_PARAM_DOUBLE) 
-			{ 
-				pin->SetWidget(pedit  = new QLineEdit); 
-				pw = pedit; 
-				if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
-			}
-			if (pi.type() == FE_PARAM_BOOL)
-			{ 
-				pin->SetWidget(pcheck = new QCheckBox); 
-				pw = pcheck;
-				if (naction == 0) QObject::connect(pcheck, SIGNAL(stateChanged(int)), m_dlg, SLOT(Run()));
-			}
-			pin->SetParameter(pi.name(), pi.paramValue());
-			assert(pw);
-			pw->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+			if ((pi.type() == FE_PARAM_DOUBLE) || (pi.type() == FE_PARAM_BOOL) || (pi.type() == FE_PARAM_INT))
+			{
+				CParamInput* pin = new CParamInput;
+				QWidget* pw = 0;
+				QLineEdit* pedit; QCheckBox* pcheck;
+				if (pi.type() == FE_PARAM_DOUBLE) 
+				{ 
+					pin->SetWidget(pedit  = new QLineEdit); 
+					pw = pedit; 
+					if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
+				}
+				if (pi.type() == FE_PARAM_BOOL)
+				{ 
+					pin->SetWidget(pcheck = new QCheckBox); 
+					pw = pcheck;
+					if (naction == 0) QObject::connect(pcheck, SIGNAL(stateChanged(int)), m_dlg, SLOT(Run()));
+				}
+				if (pi.type() == FE_PARAM_INT)
+				{
+					pin->SetWidget(pedit = new QLineEdit);
+					pw = pedit;
+					if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
+				}
+				pin->SetParameter(pi.name(), pi.paramValue());
+				assert(pw);
+				pw->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-			// add it to the row
-			pf->addRow(pi.name(), pw);
+				// add it to the row
+				pf->addRow(pi.name(), pw);
 
-			m_dlg->AddInputParameter(pin);
+				m_dlg->AddInputParameter(pin);
+			}
 		}
 
 		if (pg) { pg->setLayout(pf); playout->addWidget(pg); }
@@ -617,8 +626,9 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 	CParamInput* pi = new CParamInput;
 	QWidget* pw = 0;
 	QLineEdit* pedit; QCheckBox* pcheck;
-	if (val.type() == FE_PARAM_DOUBLE) { pi->SetWidget(pedit = new QLineEdit); pw = pedit; }
-	if (val.type() == FE_PARAM_BOOL) { pi->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
+	if (val.type() == FE_PARAM_DOUBLE) { pi->SetWidget(pedit  = new QLineEdit); pw = pedit; }
+	if (val.type() == FE_PARAM_BOOL  ) { pi->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
+	if (val.type() == FE_PARAM_INT   ) { pi->SetWidget(pedit  = new QLineEdit); pw = pedit; }
 	if (val.isValid()) pi->SetParameter(paramName, val);
 	assert(pw);
 	pw->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);

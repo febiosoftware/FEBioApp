@@ -66,7 +66,10 @@ void MyDialog::Run()
 		fem.Init();
 		bfirst = false;
 	}
-	else fem.Reset();
+	else 
+	{
+		fem.Reset();
+	}
 
 	// solve the model
 	printf("Calling FEBio ... ");

@@ -8,6 +8,8 @@
 #include <FEBioLib/version.h>
 #include <QSurfaceFormat>
 
+bool configure();
+
 int main(int argc, char* argv[])
 {
 	// initialize the FEBio library
@@ -18,21 +20,9 @@ int main(int argc, char* argv[])
 #endif
 
 	// read the configuration file
-	char szpath[1024] = {0};
-	if (febio::get_app_path(szpath, 1023) == 0)
+	if (configure() == false)
 	{
-		char sz[1024] = {0};
-
-		char* ch = strrchr(szpath, '\\');
-		if (ch == 0) ch = strrchr(szpath, '/');
-		if (ch) ch[1] = 0;
-
-		sprintf(sz, "%sfebio.xml", szpath);
-
-		if (febio::Configure(sz) == false)
-		{
-			printf("ERROR: Failed reading configuration file.\n");
-		}
+		printf("ERROR: Failed reading configuration file.\n");
 	}
 
 	// create the application
@@ -59,4 +49,23 @@ int main(int argc, char* argv[])
 
 	// run the app
 	return app.exec();
+}
+
+bool configure()
+{
+	char szpath[1024] = { 0 };
+	if (febio::get_app_path(szpath, 1023) == 0)
+	{
+		char sz[1024] = { 0 };
+
+		char* ch = strrchr(szpath, '\\');
+		if (ch == 0) ch = strrchr(szpath, '/');
+		if (ch) ch[1] = 0;
+
+		sprintf(sz, "%sfebio.xml", szpath);
+
+		return febio::Configure(sz);
+	}
+
+	return false;
 }

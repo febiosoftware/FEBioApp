@@ -140,6 +140,8 @@ bool UIBuilder::parseTags(XMLTag& tag, QBoxLayout* playout)
 		else if (tag == "graph"     ) parseGraph    (tag, playout);
 		else if (tag == "plot3d"    ) parsePlot3d   (tag, playout);
 		else xml.SkipTag(tag);
+
+		++tag;
 	}
 	while (!tag.isend());
 
@@ -149,7 +151,6 @@ bool UIBuilder::parseTags(XMLTag& tag, QBoxLayout* playout)
 void UIBuilder::parseStretch(XMLTag& tag, QBoxLayout* playout)
 {
 	playout->addStretch();
-	++tag;
 }
 
 void UIBuilder::parseGroup(XMLTag& tag, QBoxLayout* playout)
@@ -172,8 +173,6 @@ void UIBuilder::parseGroup(XMLTag& tag, QBoxLayout* playout)
 		playout->addWidget(pg); 
 	}
 	else playout->addLayout(pl);
-
-	++tag;
 }
 
 void UIBuilder::parseVGroup(XMLTag& tag, QBoxLayout* playout)
@@ -193,8 +192,6 @@ void UIBuilder::parseVGroup(XMLTag& tag, QBoxLayout* playout)
 		playout->addWidget(pg); 
 	}
 	else playout->addLayout(pl);
-
-	++tag;
 }
 
 void UIBuilder::parseHGroup(XMLTag& tag, QBoxLayout* playout)
@@ -213,8 +210,6 @@ void UIBuilder::parseHGroup(XMLTag& tag, QBoxLayout* playout)
 		playout->addWidget(pg); 
 	}
 	else playout->addLayout(pl);
-
-	++tag;
 }
 
 void UIBuilder::parseTabGroup(XMLTag& tag, QBoxLayout* playout)
@@ -243,8 +238,6 @@ void UIBuilder::parseTabGroup(XMLTag& tag, QBoxLayout* playout)
 	while (!tag.isend());
 
 	playout->addWidget(ptab);
-
-	++tag;
 }
 
 void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
@@ -289,8 +282,6 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 	else if (nact == 2) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(ResetDlg()));
 	else if (nact == 3) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Reload()));
 	else if (nact == 4) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(RunTask()));
-
-	++tag;
 }
 
 void UIBuilder::parseLabel(XMLTag& tag, QBoxLayout* playout)
@@ -315,8 +306,6 @@ void UIBuilder::parseLabel(XMLTag& tag, QBoxLayout* playout)
 	plabel->setFont(f);
 	plabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 	playout->addWidget(plabel);
-
-	++tag;
 }
 
 void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
@@ -426,8 +415,6 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 
 	playout->addWidget(pg, 1);
 	m_dlg->AddGraph(pg);
-
-	++tag;
 }
 
 void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
@@ -465,8 +452,6 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 
 	pgl->SetFEModel(&m_data->m_fem);
 	m_dlg->AddPlot3D(pgl);
-
-	++tag;
 }
 
 void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
@@ -558,7 +543,6 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 	{
 		printf("ERROR: Cannot find property: %s\n", tag.szvalue());
 	}
-	++tag;
 }
 
 void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)

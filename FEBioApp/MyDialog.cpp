@@ -6,6 +6,8 @@
 #include <QMessageBox>
 #include "UIBuilder.h"
 #include <FECore/FECoreTask.h>
+#include <QtCore/QCoreApplication>
+#include <time.h>
 
 #ifdef GetCurrentTime
 #undef GetCurrentTime
@@ -32,28 +34,84 @@ MyDialog::MyDialog()
 {
 	setLayout(new QVBoxLayout);
 
+	m_bupdateParams = true;
+
+	m_bforceStop = false;
+
 	m_model.m_fem.AddCallback(cb, CB_ALWAYS, this);
 }
 
 bool MyDialog::FECallback(FEModel& fem, unsigned int nwhen)
 {
+	if (m_bforceStop) return false;
+
+	static clock_t t0, t1;
+	if (nwhen == CB_INIT)
+	{
+		t0 = clock();
+	}
+
 	if ((nwhen == CB_MAJOR_ITERS) || (nwhen == CB_INIT))
 	{
-		// update the plots
-		for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->Update(fem);
+		t1 = clock();
+
+		double sec = (double)(t1 - t0) / CLOCKS_PER_SEC;
+
+		if (sec > 0.05)
+		{
+			// update the plots
+			for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->Update(fem);
+
+			// update all 3D plots
+			for (int i = 0; i<(int)m_gl.size(); ++i) m_gl[i]->Update(nwhen == CB_INIT);
+
+			t0 = t1;
+		}
 	}
+
+	if ((nwhen == CB_MAJOR_ITERS) && (m_bupdateParams))
+	{
+		UpdateModelParameters();
+	}
+
+	QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+
 	return true;
+}
+
+void MyDialog::UpdateModelParameters()
+{
+	for (int i = 0; i<(int)m_in.size(); ++i)
+	{
+		m_in[i]->UpdateParameter();
+	}
+
+	m_bupdateParams = false;
+}
+
+void MyDialog::Stop()
+{
+	m_bforceStop = true;
+}
+
+void MyDialog::Quit()
+{
+	// stop the model if it is running
+	Stop();
+
+	// cloe the dialog box
+	accept();
 }
 
 void MyDialog::Run()
 {
 	static bool bfirst = true;
 
+	// make sure stop flag is off
+	m_bforceStop = false;
+
 	// update input values
-	for (int i=0; i<(int) m_in.size(); ++i)
-	{
-		m_in[i]->UpdateParameter();
-	}
+	UpdateModelParameters();
 
 	// clear all plots
 	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->Reset();
@@ -79,8 +137,15 @@ void MyDialog::Run()
 	}
 	else
 	{
-		printf("ERROR TERMINATION\n");
-		qt_error("ERROR TERMINATION\n");
+		if (m_bforceStop == false)
+		{
+			printf("ERROR TERMINATION\n");
+			qt_error("ERROR TERMINATION\n");
+		}
+		else
+		{
+			printf("USER TERMINATION\n");
+		}
 	}
 
 	// resize all graphs
@@ -173,4 +238,9 @@ void MyDialog::ResetDlg()
 
 	// update GUI
 	repaint();
+}
+
+void MyDialog::paramChanged()
+{
+	m_bupdateParams = true;
 }

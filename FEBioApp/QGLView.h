@@ -23,7 +23,7 @@ public:
 
 	void SetFEModel(FEModel* pfem);
 
-	void Update();
+	void Update(bool bzoom = true);
 
 protected:
 	void mousePressEvent  (QMouseEvent* ev);

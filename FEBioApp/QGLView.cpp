@@ -110,17 +110,20 @@ void QGLView::SetFEModel(FEModel* pfem)
 }
 
 //-----------------------------------------------------------------------------
-void QGLView::Update()
+void QGLView::Update(bool bzoom)
 {
 	// find the center of the box
 	if (m_psurf)
 	{
-		FEBox box(*m_psurf);
-		m_cam.SetTarget(box.center());
-		double D = box.maxsize()*1.5;
-		m_cam.SetTargetDistance(D);
-		m_zmax = 2*D;
-		m_zmin = 1e-4*D;
+		if (bzoom)
+		{
+			FEBox box(*m_psurf);
+			m_cam.SetTarget(box.center());
+			double D = box.maxsize()*1.5;
+			m_cam.SetTargetDistance(D);
+			m_zmax = 2*D;
+			m_zmin = 1e-4*D;
+		}
 
 		// copy nodal coordinates
 		int NF = m_glmesh.Faces();

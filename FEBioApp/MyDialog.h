@@ -47,6 +47,9 @@ public slots:
 	void ResetDlg();
 	void Run();
 	void RunTask();
+	void paramChanged();
+	void Stop();
+	void Quit();
 
 private:
 	static bool cb(FEModel* pfem, unsigned int nwhen, void* pd)
@@ -57,9 +60,14 @@ private:
 
 	bool FECallback(FEModel& fem, unsigned int nwhen);
 
+	void UpdateModelParameters();
+
 private:
 	ModelData				m_model;	//!< The model data
 	vector<QGLView*>		m_gl;
 	vector<CDataPlot*>		m_plot;
 	vector<CParamInput*>	m_in;
+
+	bool	m_bupdateParams;	//!< a parameter has changed
+	bool	m_bforceStop;		//!< stop the model to run
 };

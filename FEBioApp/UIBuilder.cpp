@@ -17,6 +17,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QCheckBox>
+#include <QValidator>
 #include "PlotWidget.h"
 #include "QGLView.h"
 #include "ParamInput.h"
@@ -51,7 +52,7 @@ bool UIBuilder::BuildUI(MyDialog* dlg, ModelData& data, const char* szfile)
 		else if (tag == "GUI"  ) { if (parseGUI  (tag) == false) return false; }
 		else xml.SkipTag(tag);
 
-		tag++;
+		++tag;
 	}
 	while (!tag.isend());
 
@@ -261,6 +262,7 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 				else if (strcmp(sza, "app.reset()") == 0) nact = 2;
 				else if (strcmp(sza, "fem.reload()") == 0) nact = 3;
 				else if (strcmp(sza, "task.run()") == 0) nact = 4;
+				else if (strcmp(sza, "fem.stop()") == 0) nact = 5;
 				else printf("ERROR: Do not understand action %s\n", sza);
 
 				++tag;
@@ -278,10 +280,11 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 	pl->addWidget(pb);
 
 	if      (nact == 0) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Run()));
-	else if (nact == 1) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(accept()));
+	else if (nact == 1) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Quit()));
 	else if (nact == 2) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(ResetDlg()));
 	else if (nact == 3) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Reload()));
 	else if (nact == 4) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(RunTask()));
+	else if (nact == 5) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Stop()));
 }
 
 void UIBuilder::parseLabel(XMLTag& tag, QBoxLayout* playout)
@@ -360,7 +363,7 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 						if (tag == "x")
 						{
 							ParamString x_str(tag.szvalue());
-							xparam = fem.FindParameter(x_str);
+							xparam = fem.GetParameterValue(x_str);
 							if (xparam.isValid() == false)
 							{
 								printf("Failed to find parameter: %s\n", tag.szvalue());
@@ -369,7 +372,7 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 						else if (tag == "y")
 						{
 							ParamString y_str(tag.szvalue());
-							yparam = fem.FindParameter(y_str);
+							yparam = fem.GetParameterValue(y_str);
 							if (yparam.isValid() == false)
 							{
 								printf("Failed to find parameter: %s\n", tag.szvalue());
@@ -575,7 +578,7 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 	{
 		paramName = tag.szvalue();
 		ParamString ps(tag.szvalue());
-		val = fem.FindParameter(ps);
+		val = fem.GetParameterValue(ps);
 		++tag;
 	}
 	else
@@ -587,7 +590,7 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 			{
 				paramName = tag.szvalue();
 				ParamString ps(tag.szvalue());
-				val = fem.FindParameter(ps);
+				val = fem.GetParameterValue(ps);
 				++tag;
 			}
 			else xml.SkipTag(tag);
@@ -609,10 +612,25 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 //	plabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	CParamInput* pi = new CParamInput;
 	QWidget* pw = 0;
-	QLineEdit* pedit; QCheckBox* pcheck;
-	if (val.type() == FE_PARAM_DOUBLE) { pi->SetWidget(pedit  = new QLineEdit); pw = pedit; }
-	if (val.type() == FE_PARAM_BOOL  ) { pi->SetWidget(pcheck = new QCheckBox); pw = pcheck; }
-	if (val.type() == FE_PARAM_INT   ) { pi->SetWidget(pedit  = new QLineEdit); pw = pedit; }
+	if (val.type() == FE_PARAM_DOUBLE)
+	{ 
+		QLineEdit* edit = new QLineEdit; 
+		edit->setValidator(new QDoubleValidator);
+		pi->SetWidget(edit);
+		pw = edit; 
+		QObject::connect(edit, SIGNAL(textEdited(const QString&)), m_dlg, SLOT(paramChanged()));
+	}
+	if (val.type() == FE_PARAM_BOOL  )
+	{ 
+		QCheckBox* pcheck = new QCheckBox;
+		pi->SetWidget(pcheck);
+		pw = pcheck; 
+	}
+	if (val.type() == FE_PARAM_INT)
+	{ 
+		QLineEdit* pedit = new QLineEdit; pedit->setValidator(new QIntValidator);
+		pi->SetWidget(pedit); pw = pedit; 
+	}
 	if (val.isValid()) pi->SetParameter(paramName, val);
 	assert(pw);
 	pw->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);

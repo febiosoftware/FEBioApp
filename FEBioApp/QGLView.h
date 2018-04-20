@@ -23,7 +23,11 @@ public:
 
 	void SetFEModel(FEModel* pfem);
 
+	void SetBackgroundColor(double r, double g, double b);
+
 	void Update(bool bzoom = true);
+
+	void SetDataSource(const char* szdata);
 
 protected:
 	void mousePressEvent  (QMouseEvent* ev);
@@ -60,6 +64,10 @@ private:
 	GLuint	myFragmentShader;
 	GLuint	myProgram;
 	bool	m_bshader;
+
+	std::string		m_map;
+
+	double m_bgcol[3];
 
 	QAction*	m_pShader;
 };

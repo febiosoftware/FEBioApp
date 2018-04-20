@@ -428,7 +428,9 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 	// size of plot view
 	int size[2] = {400, 400};
 
+	const char* szmap = "displacement";
 	XMLReader& xml = *tag.m_preader;
+	double col[3] = {0.8, 0.8, 1.0};
 	if (!tag.isleaf())
 	{
 		++tag;
@@ -445,6 +447,17 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 				}
 				++tag;
 			}
+			else if (tag == "bg_color")
+			{
+				tag.value(col, 3);
+				++tag;
+			}
+			else if (tag == "map")
+			{
+				const char* sztype = tag.AttributeValue("type");
+				if (sztype) szmap = sztype;
+				++tag;
+			}
 			else xml.SkipTag(tag);
 		}
 		while (!tag.isend());
@@ -454,6 +467,8 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 	playout->addWidget(pgl);
 
 	pgl->SetFEModel(&m_data->m_fem);
+	pgl->SetDataSource(szmap);
+	pgl->SetBackgroundColor(col[0], col[1], col[2]);
 	m_dlg->AddPlot3D(pgl);
 }
 

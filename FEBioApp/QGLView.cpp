@@ -28,10 +28,14 @@ QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 	f.setSamples(8);
 	setFormat(f);
 
+	m_bgcol[0] = 0.8;
+	m_bgcol[1] = 0.8;
+	m_bgcol[2] = 1.0;
+
 	myVertexShader = 0;
 	myFragmentShader = 0;
 	myProgram = 0;
-	m_bshader = true;
+	m_bshader = false;
 
 	m_pShader = new QAction("Activate shader", this);
 	connect(m_pShader, SIGNAL(triggered()), this, SLOT(OnActivateShader()));
@@ -48,6 +52,14 @@ QGLView::~QGLView()
 	if (myFragmentShader != 0) glDeleteShader(myVertexShader);
 
 	doneCurrent();
+}
+
+//-----------------------------------------------------------------------------
+void QGLView::SetBackgroundColor(double r, double g, double b)
+{
+	m_bgcol[0] = r;
+	m_bgcol[1] = g;
+	m_bgcol[2] = b;
 }
 
 //-----------------------------------------------------------------------------
@@ -110,55 +122,94 @@ void QGLView::SetFEModel(FEModel* pfem)
 }
 
 //-----------------------------------------------------------------------------
+void QGLView::SetDataSource(const char* szdata)
+{
+	m_map = szdata;
+}
+
+//-----------------------------------------------------------------------------
 void QGLView::Update(bool bzoom)
 {
 	// find the center of the box
-	if (m_psurf)
+	if (m_psurf == 0) return;
+
+	if (bzoom)
 	{
-		if (bzoom)
-		{
-			FEBox box(*m_psurf);
-			m_cam.SetTarget(box.center());
-			double D = box.maxsize()*1.5;
-			m_cam.SetTargetDistance(D);
-			m_zmax = 2*D;
-			m_zmin = 1e-4*D;
-		}
-
-		// copy nodal coordinates
-		int NF = m_glmesh.Faces();
-		for (int i=0; i<NF; ++i)
-		{
-			GLMesh::FACE& f = m_glmesh.Face(i);
-			m_glmesh.nodePosition(f.lnode[0]) = m_psurf->Node(f.nid[0]).m_rt;
-			m_glmesh.nodePosition(f.lnode[1]) = m_psurf->Node(f.nid[1]).m_rt;
-			m_glmesh.nodePosition(f.lnode[2]) = m_psurf->Node(f.nid[2]).m_rt;
-		}
-
-		// assign texture coordinates
-		// first we need to find the largest displacement
-		double Dmax = 0.0;
-		for (int i=0; i<m_psurf->Nodes(); ++i)
-		{
-			FENode& ni = m_psurf->Node(i);
-			double D = (ni.m_rt - ni.m_r0).norm();
-			if (D > Dmax) Dmax = D;
-		}
-
-		// then, assign texture coordinates
-		for (int i=0; i<NF; ++i)
-		{
-			GLMesh::FACE& f = m_glmesh.Face(i);
-			m_glmesh.nodeTexCoord1D(f.lnode[0]) = (m_psurf->Node(f.nid[0]).m_rt - m_psurf->Node(f.nid[0]).m_r0).norm() / Dmax;
-			m_glmesh.nodeTexCoord1D(f.lnode[1]) = (m_psurf->Node(f.nid[1]).m_rt - m_psurf->Node(f.nid[1]).m_r0).norm() / Dmax;
-			m_glmesh.nodeTexCoord1D(f.lnode[2]) = (m_psurf->Node(f.nid[2]).m_rt - m_psurf->Node(f.nid[2]).m_r0).norm() / Dmax;
-		}
-
-		// recalculate normals
-		m_glmesh.UpdateNormals();
-
-		repaint();
+		FEBox box(*m_psurf);
+		m_cam.SetTarget(box.center());
+		double D = box.maxsize()*1.5;
+		m_cam.SetTargetDistance(D);
+		m_zmax = 2*D;
+		m_zmin = 1e-4*D;
 	}
+
+	// copy nodal coordinates
+	int NF = m_glmesh.Faces();
+	for (int i=0; i<NF; ++i)
+	{
+		GLMesh::FACE& f = m_glmesh.Face(i);
+		m_glmesh.nodePosition(f.lnode[0]) = m_psurf->Node(f.nid[0]).m_rt;
+		m_glmesh.nodePosition(f.lnode[1]) = m_psurf->Node(f.nid[1]).m_rt;
+		m_glmesh.nodePosition(f.lnode[2]) = m_psurf->Node(f.nid[2]).m_rt;
+	}
+
+	int NN = m_psurf->Nodes();
+	vector<double> val(NN, 0);
+
+	if (m_map.empty() == false)
+	{
+		DOFS& dofs = m_pfem->GetDOFS();
+		int nvar = dofs.GetVariableIndex(m_map.c_str());
+		if (nvar >= 0)
+		{
+			int ndof = dofs.GetVariableSize(nvar);
+			int dof0 = dofs.GetDOF(nvar, 0);
+
+			// evaluate data values
+			double Dmin = 1e99, Dmax = -1e99;
+			for (int i=0; i<m_psurf->Nodes(); ++i)
+			{
+				FENode& ni = m_psurf->Node(i);
+
+				double D = 0;
+				if (ndof == 1)
+				{
+					D = ni.get(dof0);
+				}
+				else
+				{
+					for (int j=0; j<ndof; ++j)
+					{
+						double dn = ni.get(dof0 + j);
+						D += dn*dn;
+					}
+				}
+
+				if (D < Dmin) Dmin = D;
+				else if (D > Dmax) Dmax = D;
+
+				val[i] = D;
+			}
+			if (Dmax == Dmin) Dmax++;
+
+			// normalize textture coordinates
+			for (int i=0; i<NN; ++i) val[i] = (val[i] - Dmin) / (Dmax - Dmin);
+		}
+	}
+
+	// then, assign texture coordinates
+	for (int i = 0; i<NF; ++i)
+	{
+		GLMesh::FACE& f = m_glmesh.Face(i);
+		m_glmesh.nodeTexCoord1D(f.lnode[0]) = val[f.nid[0]];
+		m_glmesh.nodeTexCoord1D(f.lnode[1]) = val[f.nid[1]];
+		m_glmesh.nodeTexCoord1D(f.lnode[2]) = val[f.nid[2]];
+	}
+
+	// recalculate normals
+	m_glmesh.UpdateNormals();
+
+	repaint();
 }
 
 //-----------------------------------------------------------------------------
@@ -282,7 +333,7 @@ void QGLView::initializeGL()
 //	initializeOpenGLFunctions();
 	glewInit();
 
-    glClearColor(0.8f, 0.8f, 1.0f, 1.0f);
+	glClearColor((float)m_bgcol[0], (float)m_bgcol[1], (float)m_bgcol[2], 1.0f);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -306,19 +357,20 @@ void QGLView::initializeGL()
 //-----------------------------------------------------------------------------
 void QGLView::initTextures()
 {
-	GLubyte toonTable[3][3] = {
+	GLubyte toonTable[5][3] = {
 		{  0,   0, 255},
+		{  0, 255, 255},
 		{  0, 255,   0},
+		{255, 255,   0},
 		{255,   0,   0},
 	};
 
-/*	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-//	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 3, 0, GL_RGB, GL_UNSIGNED_BYTE, toonTable);
-*/
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 5, 0, GL_RGB, GL_UNSIGNED_BYTE, toonTable);
 }
 
 //-----------------------------------------------------------------------------
@@ -433,10 +485,6 @@ void QGLView::paintGL()
 // Draws the coordinate axes triad.
 void QGLView::drawTriad()
 {
-	QPainter painter(this);
-	painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
-	painter.beginNativePainting();
-
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	GLfloat ones[] = {1.f, 1.f, 1.f, 1.f};
 	GLfloat ambient[] = {0.0f,0.0f,0.0f,1.f};
@@ -551,7 +599,8 @@ void QGLView::drawTriad()
 	// restore attributes
 	glPopAttrib();
 
-	painter.endNativePainting();
+/*	QPainter painter(this);
+	painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
 
 	// draw the coordinate labels
 	painter.setPen(Qt::black);
@@ -574,6 +623,7 @@ void QGLView::drawTriad()
 	painter.drawText(ey.x, ey.y, "Y");
 	painter.drawText(ez.x, ez.y, "Z");
 	painter.end();
+*/
 }
 
 //-----------------------------------------------------------------------------

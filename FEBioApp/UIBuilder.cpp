@@ -574,6 +574,8 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 
 	string paramName = "";
 	FEParamValue val;
+	bool brange = false;
+	double rng[3];
 	if (tag.isleaf())
 	{
 		paramName = tag.szvalue();
@@ -591,6 +593,12 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 				paramName = tag.szvalue();
 				ParamString ps(tag.szvalue());
 				val = fem.GetParameterValue(ps);
+				++tag;
+			}
+			else if (tag == "range")
+			{
+				tag.value(rng, 3);
+				brange = true;
 				++tag;
 			}
 			else xml.SkipTag(tag);
@@ -614,11 +622,22 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 	QWidget* pw = 0;
 	if (val.type() == FE_PARAM_DOUBLE)
 	{ 
-		QLineEdit* edit = new QLineEdit; 
-		edit->setValidator(new QDoubleValidator);
-		pi->SetWidget(edit);
-		pw = edit; 
-		QObject::connect(edit, SIGNAL(textEdited(const QString&)), m_dlg, SLOT(paramChanged()));
+		if (brange)
+		{
+			CFloatSlider* slider = new CFloatSlider;
+			slider->setFloatRange(rng[0], rng[1], rng[2]);
+			pw = slider;
+			pi->SetWidget(slider);
+			QObject::connect(slider, SIGNAL(valueChanged(int)), m_dlg, SLOT(paramChanged()));
+		}
+		else
+		{
+			QLineEdit* edit = new QLineEdit; 
+			edit->setValidator(new QDoubleValidator);
+			pi->SetWidget(edit);
+			pw = edit; 
+			QObject::connect(edit, SIGNAL(textEdited(const QString&)), m_dlg, SLOT(paramChanged()));
+		}
 	}
 	if (val.type() == FE_PARAM_BOOL  )
 	{ 

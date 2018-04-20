@@ -2,6 +2,7 @@
 #include <QDialog>
 #include <QLineEdit>
 #include <QCheckBox>
+#include <QSlider>
 #include <FEBioLib/FEBioModel.h>
 #include "PlotWidget.h"
 #include "QGLView.h"

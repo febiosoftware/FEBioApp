@@ -2,10 +2,27 @@
 #include <FECore/FEParam.h>
 #include <string>
 #include <QtCore/QVariant>
+#include <QSlider>
 using namespace std;
 
 class QLineEdit;
 class QCheckBox;
+
+//-----------------------------------------------------------------------------
+class CFloatSlider : public QSlider
+{
+public:
+	CFloatSlider(QWidget* parent = 0);
+
+	void setFloatRange(double minValue, double maxValue, double steps);
+
+	void setFloatValue(double v);
+
+	double getFloatValue() const;
+
+private:
+	double	m_minVal, m_maxVal, m_valStep;
+};
 
 //-----------------------------------------------------------------------------
 //! This class connects an FE model parameter to an input field.
@@ -28,6 +45,7 @@ public:
 
 	void SetWidget(QLineEdit* pw) { m_pedit = pw; }
 	void SetWidget(QCheckBox* pw) { m_pcheck = pw; }
+	void SetWidget(CFloatSlider* pw) { m_slider = pw; }
 
 	void SetParameter(const string& name, const FEParamValue& val);
 
@@ -38,8 +56,9 @@ public:
 	void ResetParameter();
 
 private:
-	QLineEdit*	m_pedit;
-	QCheckBox*	m_pcheck;
+	QLineEdit*		m_pedit;
+	QCheckBox*		m_pcheck;
+	CFloatSlider*	m_slider;
 
 	FEParamValue	m_val;
 	string			m_name;

@@ -428,6 +428,8 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 	// size of plot view
 	int size[2] = {400, 400};
 
+	bool brange = false;
+	double rng[2];
 	const char* szmap = "displacement";
 	XMLReader& xml = *tag.m_preader;
 	double col[3] = {0.8, 0.8, 1.0};
@@ -456,7 +458,22 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 			{
 				const char* sztype = tag.AttributeValue("type");
 				if (sztype) szmap = sztype;
-				++tag;
+
+				if (tag.isleaf()) ++tag;
+				else
+				{
+					++tag;
+					do
+					{
+						if (tag == "range")
+						{
+							brange = true;
+							tag.value(rng, 2);							
+						}
+						++tag;
+					}
+					while (!tag.isend());
+				}
 			}
 			else xml.SkipTag(tag);
 		}
@@ -468,6 +485,7 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 
 	pgl->SetFEModel(&m_data->m_fem);
 	pgl->SetDataSource(szmap);
+	if (brange) pgl->SetDataRange(rng[0], rng[1]);
 	pgl->SetBackgroundColor(col[0], col[1], col[2]);
 	m_dlg->AddPlot3D(pgl);
 }

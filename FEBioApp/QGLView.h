@@ -29,6 +29,8 @@ public:
 
 	void SetDataSource(const char* szdata);
 
+	void SetDataRange(double vmin, double vmax);
+
 protected:
 	void mousePressEvent  (QMouseEvent* ev);
 	void mouseMoveEvent   (QMouseEvent* ev);
@@ -68,6 +70,9 @@ private:
 	std::string		m_map;
 
 	double m_bgcol[3];
+
+	bool	m_userRange;
+	double	m_rng[2];
 
 	QAction*	m_pShader;
 };

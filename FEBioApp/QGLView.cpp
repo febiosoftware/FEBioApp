@@ -37,6 +37,9 @@ QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 	myProgram = 0;
 	m_bshader = false;
 
+	m_userRange = false;
+	m_rng[0] = m_rng[1] = 0;
+
 	m_pShader = new QAction("Activate shader", this);
 	connect(m_pShader, SIGNAL(triggered()), this, SLOT(OnActivateShader()));
 }
@@ -128,6 +131,14 @@ void QGLView::SetDataSource(const char* szdata)
 }
 
 //-----------------------------------------------------------------------------
+void QGLView::SetDataRange(double vmin, double vmax)
+{
+	m_userRange = true;
+	m_rng[0] = vmin;
+	m_rng[1] = vmax;
+}
+
+//-----------------------------------------------------------------------------
 void QGLView::Update(bool bzoom)
 {
 	// find the center of the box
@@ -189,6 +200,11 @@ void QGLView::Update(bool bzoom)
 				else if (D > Dmax) Dmax = D;
 
 				val[i] = D;
+			}
+			if (m_userRange)
+			{
+				Dmin = m_rng[0];
+				Dmax = m_rng[1];
 			}
 			if (Dmax == Dmin) Dmax++;
 

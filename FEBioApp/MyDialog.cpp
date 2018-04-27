@@ -37,6 +37,7 @@ MyDialog::MyDialog()
 	m_bupdateParams = true;
 
 	m_bforceStop = false;
+	m_brunning = false;
 
 	m_model.m_fem.AddCallback(cb, CB_ALWAYS, this);
 }
@@ -105,6 +106,8 @@ void MyDialog::Quit()
 
 void MyDialog::Run()
 {
+	if (m_brunning) return;
+
 	static bool bfirst = true;
 
 	// make sure stop flag is off
@@ -130,6 +133,9 @@ void MyDialog::Run()
 	}
 
 	// solve the model
+	setWindowTitle(m_fileName + " (Running)");
+
+	m_brunning = true;
 	printf("Calling FEBio ... ");
 	if (fem.Solve())
 	{
@@ -147,6 +153,8 @@ void MyDialog::Run()
 			printf("USER TERMINATION\n");
 		}
 	}
+	setWindowTitle(m_fileName);
+	m_brunning = false;
 
 	// resize all graphs
 	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->UpdatePlots();
@@ -213,6 +221,7 @@ bool MyDialog::BuildGUI(const char* szfile)
 	}
 	else fileTitle++;
 
+	m_fileName = fileTitle;
 	setWindowTitle(fileTitle);
 
 	UIBuilder ui;

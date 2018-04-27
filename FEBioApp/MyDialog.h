@@ -69,6 +69,9 @@ private:
 	vector<CDataPlot*>		m_plot;
 	vector<CParamInput*>	m_in;
 
+	QString		m_fileName;
+
 	bool	m_bupdateParams;	//!< a parameter has changed
 	bool	m_bforceStop;		//!< stop the model to run
+	bool	m_brunning;			//!< is model running
 };

@@ -433,6 +433,7 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 	const char* szmap = "displacement";
 	XMLReader& xml = *tag.m_preader;
 	double col[3] = {0.8, 0.8, 1.0};
+	double w[3] = {0, 0, 0};
 	if (!tag.isleaf())
 	{
 		++tag;
@@ -473,7 +474,13 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 						++tag;
 					}
 					while (!tag.isend());
+					++tag;
 				}
+			}
+			else if (tag == "rotation")
+			{
+				tag.value(w, 3);
+				++tag;
 			}
 			else xml.SkipTag(tag);
 		}
@@ -485,6 +492,7 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 
 	pgl->SetFEModel(&m_data->m_fem);
 	pgl->SetDataSource(szmap);
+	pgl->SetRotation(w[0], w[1], w[2]);
 	if (brange) pgl->SetDataRange(rng[0], rng[1]);
 	pgl->SetBackgroundColor(col[0], col[1], col[2]);
 	m_dlg->AddPlot3D(pgl);

@@ -139,6 +139,17 @@ void QGLView::SetDataRange(double vmin, double vmax)
 }
 
 //-----------------------------------------------------------------------------
+void QGLView::SetRotation(double eulerX, double eulerY, double eulerZ)
+{
+	const double D2R = 3.1415926 / 180.0;
+	quatd q;
+	q.SetEuler(eulerX*D2R, eulerY*D2R, eulerZ*D2R);
+	m_cam.SetOrientation(q);
+
+	m_cam.Update(true);
+}
+
+//-----------------------------------------------------------------------------
 void QGLView::Update(bool bzoom)
 {
 	// find the center of the box

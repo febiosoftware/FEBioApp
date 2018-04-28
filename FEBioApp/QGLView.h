@@ -31,6 +31,8 @@ public:
 
 	void SetDataRange(double vmin, double vmax);
 
+	void SetRotation(double eulerX, double eulerY, double eulerZ);
+
 protected:
 	void mousePressEvent  (QMouseEvent* ev);
 	void mouseMoveEvent   (QMouseEvent* ev);

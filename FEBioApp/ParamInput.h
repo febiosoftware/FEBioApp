@@ -2,15 +2,18 @@
 #include <FECore/FEParam.h>
 #include <string>
 #include <QtCore/QVariant>
-#include <QSlider>
+#include <QWidget>
 using namespace std;
 
 class QLineEdit;
 class QCheckBox;
+class QSlider;
 
 //-----------------------------------------------------------------------------
-class CFloatSlider : public QSlider
+class CFloatSlider : public QWidget
 {
+	Q_OBJECT
+
 public:
 	CFloatSlider(QWidget* parent = 0);
 
@@ -20,8 +23,17 @@ public:
 
 	double getFloatValue() const;
 
+signals:
+	void valueChanged(double newVal);
+
+protected slots:
+	void onValueChanged();
+
 private:
 	double	m_minVal, m_maxVal, m_valStep;
+
+	QSlider*	m_slider;
+	QLineEdit*	m_edit;
 };
 
 //-----------------------------------------------------------------------------

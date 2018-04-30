@@ -2,11 +2,25 @@
 #include "ParamInput.h"
 #include <QLineEdit>
 #include <QCheckBox>
+#include <QBoxLayout>
+#include <QSlider>
+#include <QValidator>
 
 //-----------------------------------------------------------------------------
-CFloatSlider::CFloatSlider(QWidget* parent) : QSlider(Qt::Horizontal, parent)
+CFloatSlider::CFloatSlider(QWidget* parent) : QWidget(parent)
 {
+	m_slider = new QSlider(Qt::Horizontal);
+	m_edit = new QLineEdit; m_edit->setValidator(new QDoubleValidator);
+	m_edit->setMaximumWidth(40);
+	m_edit->setReadOnly(true);
+	QHBoxLayout* l = new QHBoxLayout;
+	l->addWidget(m_slider);
+	l->addWidget(m_edit);
+	setLayout(l);
+
 	setFloatRange(0.0, 1.0, 0.1);
+
+	QObject::connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(onValueChanged()));
 }
 
 void CFloatSlider::setFloatRange(double minValue, double maxValue, double step)
@@ -17,7 +31,7 @@ void CFloatSlider::setFloatRange(double minValue, double maxValue, double step)
 
 	int nsteps = (maxValue - minValue) / step;
 
-	setRange(0, nsteps);
+	m_slider->setRange(0, nsteps);
 }
 
 void CFloatSlider::setFloatValue(double v)
@@ -25,14 +39,25 @@ void CFloatSlider::setFloatValue(double v)
 	if (v < m_minVal) v = m_minVal;
 	if (v > m_maxVal) v = m_maxVal;
 	int n = (int)((v - m_minVal) / m_valStep);
-	setSliderPosition(n);
+	m_slider->setSliderPosition(n);
+
+	v = getFloatValue();
+	m_edit->setText(QString::number(v));
 }
 
 double CFloatSlider::getFloatValue() const
 {
-	int n = sliderPosition();
-	double f = m_minVal + n*(m_maxVal - m_minVal) / maximum();
+	int n = m_slider->sliderPosition();
+	double f = m_minVal + n*(m_maxVal - m_minVal) / m_slider->maximum();
 	return f;
+}
+
+void CFloatSlider::onValueChanged()
+{
+	double v = getFloatValue();
+	m_edit->setText(QString::number(v));
+
+	emit valueChanged(v);
 }
 
 //-----------------------------------------------------------------------------

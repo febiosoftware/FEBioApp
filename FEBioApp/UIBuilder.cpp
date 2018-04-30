@@ -683,7 +683,7 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 			slider->setFloatRange(rng[0], rng[1], rng[2]);
 			pw = slider;
 			pi->SetWidget(slider);
-			QObject::connect(slider, SIGNAL(valueChanged(int)), m_dlg, SLOT(paramChanged()));
+			QObject::connect(slider, SIGNAL(valueChanged(double)), m_dlg, SLOT(paramChanged()));
 		}
 		else
 		{

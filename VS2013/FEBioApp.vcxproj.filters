@@ -60,6 +60,9 @@
     <ClCompile Include="..\FEBioApp\UIBuilder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\FEBioApp\moc_ParamInput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\FEBioApp\stdafx.h">

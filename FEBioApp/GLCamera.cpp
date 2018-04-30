@@ -14,18 +14,18 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 //-----------------------------------------------------------------------------
-void glxTranslate(const vec3d& r)
+void glxTranslate(const vec3f& r)
 {
 	glTranslated(r.x, r.y, r.z);
 }
 
 //-----------------------------------------------------------------------------
-void glxRotate(const quatd& q)
+void glxRotate(const quat4f& q)
 {
 	double w = 180.0*q.GetAngle()/3.1415926;
 	if (w != 0)
 	{
-		vec3d r = q.GetVector();
+		vec3f r = q.GetVector();
 		glRotated(w, r.x, r.y, r.z);
 	}
 }
@@ -67,9 +67,9 @@ void CGLCamera::Reset()
 {
 	SetCameraSpeed(0.8f);
 	SetCameraBias(0.8f);
-	m_rot.Target(quatd(0, vec3d(1,0,0)));
-	m_pos.Target(vec3d(0,0,0));
-	m_trg.Target(vec3d(0,0,0));
+	m_rot.Target(quat4f(0, vec3f(1,0,0)));
+	m_pos.Target(vec3f(0,0,0));
+	m_trg.Target(vec3f(0,0,0));
 	Update(true);
 
 	m_bdecal = false;
@@ -128,7 +128,7 @@ void CGLCamera::Transform()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	vec3d r = Target();
+	vec3f r = Target();
 
 	// zoom-in a little when in decal mode
 //	if (m_bdecal) r.z *= .999f;
@@ -143,7 +143,7 @@ void CGLCamera::Transform()
 	glxTranslate(-GetPosition());
 }
 
-void CGLCamera::Pan(const quatd& q)
+void CGLCamera::Pan(const quat4f& q)
 {
 
 }	
@@ -153,16 +153,16 @@ void CGLCamera::Dolly(float f)
 
 }
 
-void CGLCamera::Truck(const vec3d& r)
+void CGLCamera::Truck(const vec3f& r)
 {
-	vec3d dr(r);
+	vec3f dr(r);
 	m_rot.Target().Inverse().RotateVector(dr);
 	SetTarget(GetFinalPosition() + dr);
 }
 
-void CGLCamera::Orbit(const quatd& q)
+void CGLCamera::Orbit(const quat4f& q)
 {
-	quatd o = q*m_rot.Target();
+	quat4f o = q*m_rot.Target();
 	o.MakeUnit();
 	m_rot.Target(o);
 }
@@ -172,16 +172,16 @@ void CGLCamera::Zoom(float f)
 	SetTargetDistance(GetFinalTargetDistance() * f);
 }
 
-void CGLCamera::SetTarget(const vec3d& r)
+void CGLCamera::SetTarget(const vec3f& r)
 {
 	m_pos.Target(r);
 }
 
-void CGLCamera::SetViewDirection(const vec3d &r)
+void CGLCamera::SetViewDirection(const vec3f &r)
 {
-	if (r.norm() != 0.f)
+	if (r.Length() != 0.f)
 	{
-		m_rot.Target(quatd(vec3d(0,0,1.f), r).Inverse());
+		m_rot.Target(quat4f(vec3f(0,0,1.f), r).Inverse());
 	}
 }
 

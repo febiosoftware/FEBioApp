@@ -432,8 +432,10 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 	double rng[2];
 	const char* szmap = "displacement";
 	XMLReader& xml = *tag.m_preader;
-	double col[3] = {0.8, 0.8, 1.0};
-	double w[3] = {0, 0, 0};
+	double bgc[3] = {0.8, 0.8, 1.0};
+	double fgc[3] = {0.0, 0.0, 0.0 };
+	double w[3] = { 0, 0, 0 };
+	double smoothingAngle = 60.0;
 	if (!tag.isleaf())
 	{
 		++tag;
@@ -452,7 +454,12 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 			}
 			else if (tag == "bg_color")
 			{
-				tag.value(col, 3);
+				tag.value(bgc, 3);
+				++tag;
+			}
+			else if (tag == "fg_color")
+			{
+				tag.value(fgc, 3);
 				++tag;
 			}
 			else if (tag == "map")
@@ -482,6 +489,11 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 				tag.value(w, 3);
 				++tag;
 			}
+			else if (tag == "smoothing_angle")
+			{
+				tag.value(smoothingAngle);
+				++tag;
+			}
 			else xml.SkipTag(tag);
 		}
 		while (!tag.isend());
@@ -490,11 +502,13 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 	QGLView* pgl = new QGLView(0, size[0], size[1]);
 	playout->addWidget(pgl);
 
+	pgl->SetSmoothingAngle(smoothingAngle);	// must be set before SetFEModel is called
 	pgl->SetFEModel(&m_data->m_fem);
 	pgl->SetDataSource(szmap);
 	pgl->SetRotation(w[0], w[1], w[2]);
 	if (brange) pgl->SetDataRange(rng[0], rng[1]);
-	pgl->SetBackgroundColor(col[0], col[1], col[2]);
+	pgl->SetBackgroundColor(bgc[0], bgc[1], bgc[2]);
+	pgl->SetForegroundColor(fgc[0], fgc[1], fgc[2]);
 	m_dlg->AddPlot3D(pgl);
 }
 

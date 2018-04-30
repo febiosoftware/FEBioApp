@@ -4,6 +4,7 @@
 #include <QAction>
 #include "GLMesh.h"
 #include "GLCamera.h"
+#include <GLWLib/GLWidget.h>
 
 //-----------------------------------------------------------------------------
 class FEModel;
@@ -24,6 +25,7 @@ public:
 	void SetFEModel(FEModel* pfem);
 
 	void SetBackgroundColor(double r, double g, double b);
+	void SetForegroundColor(double r, double g, double b);
 
 	void Update(bool bzoom = true);
 
@@ -32,6 +34,8 @@ public:
 	void SetDataRange(double vmin, double vmax);
 
 	void SetRotation(double eulerX, double eulerY, double eulerZ);
+
+	void SetSmoothingAngle(double w);
 
 protected:
 	void mousePressEvent  (QMouseEvent* ev);
@@ -51,7 +55,6 @@ protected:
 private:
 	void initShaders();
 	void initTextures();
-	void drawTriad();
 
 private:
 	FEModel*	m_pfem;
@@ -71,10 +74,19 @@ private:
 
 	std::string		m_map;
 
+	GLBox*			m_time;
+	GLTriad*		m_triad;
+	GLLegendBar*	m_legend;
+	CColorTexture*	m_col;
+
+	double	m_smoothingAngle;
+
 	double m_bgcol[3];
 
 	bool	m_userRange;
 	double	m_rng[2];
+
+	char	m_sztime[256];
 
 	QAction*	m_pShader;
 };

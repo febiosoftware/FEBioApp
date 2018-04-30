@@ -24,7 +24,10 @@ public:
 	FEParamValue	m_x;
 	FEParamValue	m_y;
 
-	void Reset() { m_data.clear(); }
+	void Reset()
+	{ 
+		m_data.clear(); 
+	}
 
 	void Update()
 	{
@@ -53,7 +56,7 @@ public:
 
 	void AddData(CDataSource* data, const QString& label);
 
-	void UpdatePlots();
+	void UpdatePlots(bool bclear = true);
 
 private:
 	vector<CDataSource*>	m_data;

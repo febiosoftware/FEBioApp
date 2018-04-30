@@ -56,13 +56,13 @@ bool MyDialog::FECallback(FEModel& fem, unsigned int nwhen)
 	{
 		t1 = clock();
 
+		// update the plots
+		for (int i = 0; i<(int)m_plot.size(); ++i) m_plot[i]->Update(fem);
+
 		double sec = (double)(t1 - t0) / CLOCKS_PER_SEC;
 
 		if (sec > 0.05)
 		{
-			// update the plots
-			for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->Update(fem);
-
 			// update all 3D plots
 			for (int i = 0; i<(int)m_gl.size(); ++i) m_gl[i]->Update(nwhen == CB_INIT);
 

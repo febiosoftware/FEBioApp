@@ -9,7 +9,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include <FECore/mat3d.h>
+#include <PostViewLib/math3d.h>
 #include "Interpolator.h"
 
 //-----------------------------------------------------------------------------
@@ -21,9 +21,9 @@ public:
 	GLCameraTransform& operator = (const GLCameraTransform& key);
 
 public:
-	vec3d	pos;	// position
-	vec3d	trg;	// target
-	quatd	rot;	// rotation
+	vec3f	pos;	// position
+	vec3f	trg;	// target
+	quat4f	rot;	// rotation
 };
 
 //-----------------------------------------------------------------------------
@@ -61,23 +61,23 @@ public:
 	// --- camera movements ---
 public:
 	// pan the camera (rotate around camera center)
-	void Pan(const quatd& q);
+	void Pan(const quat4f& q);
 
 	// dolly the camera (move camera + target forward/backward)
 	void Dolly(float f);
 
 	// truck the camera (move camera in plane)
-	void Truck(const vec3d& r);
+	void Truck(const vec3f& r);
 
 	// orbit camera (rotate around target)
-	void Orbit(const quatd& q);
+	void Orbit(const quat4f& q);
 
 	// zoom camera (move camera toward/away from target)
 	void Zoom(float f);
 
 public:
 	// sets the distance to the target
-	void SetTargetDistance(double z) { vec3d r = m_trg.Target(); r.z = z; m_trg.Target(r); }
+	void SetTargetDistance(double z) { vec3f r = m_trg.Target(); r.z = z; m_trg.Target(r); }
 
 	// gets the distance to the target
 	double GetTargetDistance() { return m_trg.Value().z; }
@@ -86,24 +86,24 @@ public:
 	double GetFinalTargetDistance() { return m_trg.Target().z; }
 
 	// set the target + distance
-	void SetTarget(const vec3d& r);
+	void SetTarget(const vec3f& r);
 
 	// set the orientation of the camera
-	void SetOrientation(const quatd& q) { m_rot.Target(q); }
+	void SetOrientation(const quat4f& q) { m_rot.Target(q); }
 
 	// get the camera orientation
-	quatd GetOrientation() { return m_rot.Value(); }
+	quat4f GetOrientation() { return m_rot.Value(); }
 
 	// get the target position
-	vec3d GetPosition() { return m_pos.Value(); }
+	vec3f GetPosition() { return m_pos.Value(); }
 
-	vec3d GetFinalPosition() const {return m_pos.Target(); } 
+	vec3f GetFinalPosition() const {return m_pos.Target(); } 
 
-	vec3d Target() const { return m_trg.Value(); }
-	vec3d FinalTarget() const {return m_trg.Target(); } 
+	vec3f Target() const { return m_trg.Value(); }
+	vec3f FinalTarget() const {return m_trg.Target(); } 
 
 	// set the view direction
-	void SetViewDirection(const vec3d& r);
+	void SetViewDirection(const vec3f& r);
 
 	// set the camera transformation
 	void SetTransform(GLCameraTransform& t);

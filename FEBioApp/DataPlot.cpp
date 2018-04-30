@@ -37,9 +37,9 @@ void CDataPlot::Update(FEModel& fem)
 }
 
 //-----------------------------------------------------------------------------
-void CDataPlot::UpdatePlots()
+void CDataPlot::UpdatePlots(bool bclear)
 {
-	clearData();
+	if (bclear) clearData();
 
 	for (int i = 0; i<plots(); ++i)
 	{

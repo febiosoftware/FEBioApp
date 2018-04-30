@@ -1,6 +1,5 @@
 #pragma once
-#include <FECore/mat3d.h>
-#include <FECore/quatd.h>
+#include <PostViewLib/math3d.h>
 
 //=============================================================================
 //! This class implements an interpolator that interpolates between two values.
@@ -41,18 +40,18 @@ public:
 
 	bool Update();
 
-	void Target(const vec3d& q);
+	void Target(const vec3f& q);
 
-	vec3d Value() const { return m_vt; }
+	vec3f Value() const { return m_vt; }
 
 	void HitTarget();
 
-	vec3d Target() const { return m_v1; }
+	vec3f Target() const { return m_v1; }
 
 public:
-	vec3d	m_v0;	// starting value
-	vec3d	m_v1;	// target value
-	vec3d	m_vt;	// current value
+	vec3f	m_v0;	// starting value
+	vec3f	m_v1;	// target value
+	vec3f	m_vt;	// current value
 	double	m_at;	// interpolation value (between 0 and 1)
 	double	m_da;	// update value
 	bool	m_banim;
@@ -68,18 +67,18 @@ public:
 
 	bool Update();
 
-	void Target(const quatd& q);
+	void Target(const quat4f& q);
 
-	quatd Value() const { return m_qt; }
+	quat4f Value() const { return m_qt; }
 
 	void HitTarget();
 
-	quatd Target() const { return m_q1; }
+	quat4f Target() const { return m_q1; }
 
 public:
-	quatd	m_q0;	// starting value
-	quatd	m_q1;	// target value
-	quatd	m_qt;	// current value
+	quat4f	m_q0;	// starting value
+	quat4f	m_q1;	// target value
+	quat4f	m_qt;	// current value
 	double	m_at;	// interpolation value (between 0 and 1)
 	double	m_da;	// update value
 	bool	m_banim;

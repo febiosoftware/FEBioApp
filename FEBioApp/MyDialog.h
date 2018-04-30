@@ -44,6 +44,8 @@ public:
 
 	void AddPlot3D(QGLView* plot3d) { m_gl.push_back(plot3d); }
 
+	bool IsRunning() const { return m_brunning; }
+
 public slots:
 	void ResetDlg();
 	void Run();

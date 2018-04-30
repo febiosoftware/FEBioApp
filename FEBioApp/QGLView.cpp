@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QMenu>
 #include <QPainter>
+#include <GLWLib/GLWidgetManager.h>
 
 //-----------------------------------------------------------------------------
 QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
@@ -20,8 +21,12 @@ QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 	if (h < 200) h = 200;
 	m_sizeHint = QSize(w, h);
 
+	m_sztime[0] = 0;
+
+	m_smoothingAngle = 60;
+
 	m_cam.SetTargetDistance(5.f);
-	m_cam.GetOrientation() = quatd(-1, vec3d(1,0,0));
+	m_cam.GetOrientation() = quat4f(-1, vec3f(1,0,0));
 	m_cam.Update(true);
 
 	QSurfaceFormat f = format();
@@ -39,6 +44,22 @@ QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 
 	m_userRange = false;
 	m_rng[0] = m_rng[1] = 0;
+
+	ColorMapManager::Initialize();
+
+	m_col = new CColorTexture;
+
+	CGLWidgetManager* wm = CGLWidgetManager::GetInstance();
+	wm->AttachToView(this);
+	wm->AddWidget(m_triad = new GLTriad(0, 0, 150, 150));
+	m_triad->align(GLW_ALIGN_LEFT | GLW_ALIGN_BOTTOM);
+	m_triad->show_coord_labels(true);
+
+	wm->AddWidget(m_time = new GLBox(0, 0, 200, 30, ""));
+	m_time->align(GLW_ALIGN_LEFT | GLW_ALIGN_TOP);
+
+	wm->AddWidget(m_legend = new GLLegendBar(m_col, 0, 0, 120, 400));
+	m_legend->align(GLW_ALIGN_RIGHT | GLW_ALIGN_VCENTER);
 
 	m_pShader = new QAction("Activate shader", this);
 	connect(m_pShader, SIGNAL(triggered()), this, SLOT(OnActivateShader()));
@@ -63,6 +84,15 @@ void QGLView::SetBackgroundColor(double r, double g, double b)
 	m_bgcol[0] = r;
 	m_bgcol[1] = g;
 	m_bgcol[2] = b;
+}
+
+//-----------------------------------------------------------------------------
+void QGLView::SetForegroundColor(double r, double g, double b)
+{
+	GLCOLOR c((byte)(255.0*r), (byte)(255.0*g), (byte)(255.0*b));
+	m_triad->set_fg_color(c);
+	m_time->set_fg_color(c);
+	m_legend->set_fg_color(c);
 }
 
 //-----------------------------------------------------------------------------
@@ -119,7 +149,7 @@ void QGLView::SetFEModel(FEModel* pfem)
 	m_glmesh.UpdateFaces();
 
 	// partition the surface
-	m_glmesh.PartitionFaces();
+	m_glmesh.PartitionFaces(m_smoothingAngle);
 
 	Update();
 }
@@ -142,11 +172,17 @@ void QGLView::SetDataRange(double vmin, double vmax)
 void QGLView::SetRotation(double eulerX, double eulerY, double eulerZ)
 {
 	const double D2R = 3.1415926 / 180.0;
-	quatd q;
+	quat4f q;
 	q.SetEuler(eulerX*D2R, eulerY*D2R, eulerZ*D2R);
 	m_cam.SetOrientation(q);
 
 	m_cam.Update(true);
+}
+
+//-----------------------------------------------------------------------------
+void QGLView::SetSmoothingAngle(double w)
+{
+	m_smoothingAngle = w;
 }
 
 //-----------------------------------------------------------------------------
@@ -158,7 +194,8 @@ void QGLView::Update(bool bzoom)
 	if (bzoom)
 	{
 		FEBox box(*m_psurf);
-		m_cam.SetTarget(box.center());
+		vec3d r = box.center();
+		m_cam.SetTarget(vec3f(r.x, r.y, r.z));
 		double D = box.maxsize()*1.5;
 		m_cam.SetTargetDistance(D);
 		m_zmax = 2*D;
@@ -217,7 +254,13 @@ void QGLView::Update(bool bzoom)
 				Dmin = m_rng[0];
 				Dmax = m_rng[1];
 			}
-			if (Dmax == Dmin) Dmax++;
+			else
+			{
+				if (Dmax == Dmin) Dmax++;
+				m_rng[0] = Dmin;
+				m_rng[1] = Dmax;
+			}
+			if (m_legend) m_legend->SetRange(m_rng[0], m_rng[1]);
 
 			// normalize textture coordinates
 			for (int i=0; i<NN; ++i) val[i] = (val[i] - Dmin) / (Dmax - Dmin);
@@ -269,13 +312,13 @@ void QGLView::mouseMoveEvent(QMouseEvent* ev)
 		if (balt)
 		{
 			// rotate in-plane
-			quatd qz = quatd((y - yp)*0.01, vec3d(0, 0, 1));
+			quat4f qz = quat4f((y - yp)*0.01, vec3f(0, 0, 1));
 			m_cam.Orbit(qz);
 		}
 		else
 		{
-			quatd qx = quatd((y - yp)*0.01, vec3d(1, 0, 0));
-			quatd qy = quatd((x - xp)*0.01, vec3d(0, 1, 0));
+			quat4f qx = quat4f((y - yp)*0.01, vec3f(1, 0, 0));
+			quat4f qy = quat4f((x - xp)*0.01, vec3f(0, 1, 0));
 			m_cam.Orbit(qx);
 			m_cam.Orbit(qy);
 		}
@@ -283,7 +326,7 @@ void QGLView::mouseMoveEvent(QMouseEvent* ev)
 	}
 	else if ((but2) || (but3 && balt))
 	{
-		vec3d r = vec3d(-(float)(x - xp), (float)(y - yp), 0.f);
+		vec3f r = vec3f(-(float)(x - xp), (float)(y - yp), 0.f);
 
 		double h = (double) height(); if (h==0) h = 1;
 		double w = (double) width();
@@ -384,20 +427,6 @@ void QGLView::initializeGL()
 //-----------------------------------------------------------------------------
 void QGLView::initTextures()
 {
-	GLubyte toonTable[5][3] = {
-		{  0,   0, 255},
-		{  0, 255, 255},
-		{  0, 255,   0},
-		{255, 255,   0},
-		{255,   0,   0},
-	};
-
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 5, 0, GL_RGB, GL_UNSIGNED_BYTE, toonTable);
 }
 
 //-----------------------------------------------------------------------------
@@ -473,19 +502,22 @@ void QGLView::initShaders()
 void QGLView::resizeGL(int w, int h)
 {
     glViewport(0, 0, w, h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-	if (h==0) h = 1;
-	double ar = (double) w / (double) h;
-
-	gluPerspective(60.0, ar, m_zmin, m_zmax);
-    glMatrixMode(GL_MODELVIEW);
 }
 
 void QGLView::paintGL()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	int w = width();
+	int h = height();
+	if (h == 0) h = 1;
+	double ar = (double)w / (double)h;
+
+	gluPerspective(60.0, ar, m_zmin, m_zmax);
+	glMatrixMode(GL_MODELVIEW);
 
 	m_cam.Transform();
 
@@ -493,164 +525,38 @@ void QGLView::paintGL()
 
 	glColor3ub(236, 212, 212);
 	glEnable(GL_TEXTURE_1D);
+	glEnable(GL_DEPTH_TEST);
+	m_col->GetTexture().MakeCurrent();
 	m_glmesh.Render();
 
 	glUseProgram(0);
-	drawTriad();
 	if (m_bshader) glUseProgram(myProgram);
-/*
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-	QPainter painter(this);
-	painter.setPen(Qt::black);
-	painter.setFont(QFont("Arial", 12));
-	painter.drawText(10, 50, "Hello");
-	painter.end();
-*/
-}
 
-//-----------------------------------------------------------------------------
-// Draws the coordinate axes triad.
-void QGLView::drawTriad()
-{
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
-	GLfloat ones[] = {1.f, 1.f, 1.f, 1.f};
-	GLfloat ambient[] = {0.0f,0.0f,0.0f,1.f};
-	GLfloat specular[] = {0.5f,0.5f,0.5f,1};
-	GLfloat emission[] = {0,0,0,1};
-	GLfloat	light[] = {0, 0, -1, 0};
-
-	// get the viewport so that we may restore it later
-	int view[4];
-	glGetIntegerv(GL_VIEWPORT, view);
-
-	// set the new viewport in the lower-left corner
-	const int w = 100;
-	const int h = 100;
-	int x0 = 0;
-	int y0 = 0;
-	int x1 = x0 + w;
-	int y1 = y0 + h;
-	if (x1 < x0) { x0 ^= x1; x1 ^= x0; x0 ^= x1; }
-	if (y1 < y0) { y0 ^= y1; y1 ^= y0; y0 ^= y1; }
-	glViewport(x0, y0, x1-x0, y1-y0);
-
-	// setup the projection mode
+	// set the projection Matrix to ortho2d so we can draw some stuff on the screen
 	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
 	glLoadIdentity();
-	float d = 1.2f;
-	float ar = 1.f;
-	if (h != 0) ar = fabs((float) w / (float) h);
-	if (ar >= 1.f)	glOrtho(-d*ar, d*ar, -d, d, -2, 2); else glOrtho(-d, d, -d/ar, d/ar, -2, 2);
+	gluOrtho2D(0, width(), height(), 0);
 
-	// reset the modelview matrix
 	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
 	glLoadIdentity();
 
-	// clear depth buffer
-	glClear(GL_DEPTH_BUFFER_BIT);
-
-	// store attributes
 	glDisable(GL_TEXTURE_1D);
-	glDisable(GL_CULL_FACE);
-	glFrontFace(GL_CW);
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	
-/*
-	glLightfv(GL_LIGHT0, GL_POSITION, light);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, ones);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, ones);
+	if (m_pfem)
+	{
+		double time = m_pfem->GetTime().currentTime;
+		sprintf(m_sztime, " Time = %.4g", time);
+	}
+	else m_sztime[0] = 0;
+	m_time->set_label(m_sztime);
 
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, emission);
-	glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, 32);
-*/
-	quatd q = m_cam.GetOrientation();
-	vec3d r = q.GetVector();
-	float a = 180*q.GetAngle()/3.1415926;
-
-	if ((a > 0) && (r.norm() > 0))
-		glRotatef(a, r.x, r.y, r.z);	
-
-	// create the cylinder object
-//	glEnable(GL_LIGHTING);
-	GLUquadricObj* pcyl = gluNewQuadric();
-
-	const GLdouble r0 = .05;
-	const GLdouble r1 = .15;
-
-	// draw x-axis
-	glPushMatrix();
-	glRotatef(90, 0, 1, 0);
-	glColor3ub(255, 0, 0);
-	gluCylinder(pcyl, r0, r0, .9, 5, 1);
-	glTranslatef(0,0,.8f);
-	gluCylinder(pcyl, r1, 0, 0.2, 10, 1);
-	glPopMatrix();
-
-	// draw y-axis
-	glPushMatrix();
-	glRotatef(-90, 1, 0, 0);
-	glColor3ub(0, 255, 0);
-	gluCylinder(pcyl, r0, r0, .9, 5, 1);
-	glTranslatef(0,0,.8f);
-	gluCylinder(pcyl, r1, 0, 0.2, 10, 1);
-	glPopMatrix();
-
-	// draw z-axis
-	glPushMatrix();
-	glColor3ub(0, 0, 255);
-	gluCylinder(pcyl, r0, r0, .9, 5, 1);
-	glTranslatef(0,0,.8f);
-	gluCylinder(pcyl, r1, 0, 0.2, 10, 1);
-	glPopMatrix();
-
-	// cleanup
-	gluDeleteQuadric(pcyl);
-
-	// restore project matrix
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-
-	// restore modelview matrix
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
-
-	// restore viewport
-	glViewport(view[0], view[1], view[2], view[3]);
-
-	// restore attributes
-	glPopAttrib();
-
-/*	QPainter painter(this);
+	// render the widgets
+	m_triad->setOrientation(m_cam.GetOrientation());
+	QPainter painter(this);
 	painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
-
-	// draw the coordinate labels
-	painter.setPen(Qt::black);
-	painter.setFont(QFont("Helvetica", 12));
-	vec3d ex(1.0, 0.0, 0.0);
-	vec3d ey(0.0, 1.0, 0.0);
-	vec3d ez(0.0, 0.0, 1.0);
-	q.RotateVector(ex);
-	q.RotateVector(ey);
-	q.RotateVector(ez);
-
-	y0 = view[3] - y0;
-	y1 = view[3] - y1;
-
-	ex.x = x0 + (x1 - x0)*(ex.x + 1)*0.5; ex.y = y0 + (y1 - y0)*(ex.y + 1)*0.5;
-	ey.x = x0 + (x1 - x0)*(ey.x + 1)*0.5; ey.y = y0 + (y1 - y0)*(ey.y + 1)*0.5;
-	ez.x = x0 + (x1 - x0)*(ez.x + 1)*0.5; ez.y = y0 + (y1 - y0)*(ez.y + 1)*0.5;
-
-	painter.drawText(ex.x, ex.y, "X");
-	painter.drawText(ey.x, ey.y, "Y");
-	painter.drawText(ez.x, ez.y, "Z");
+	CGLWidgetManager* wm = CGLWidgetManager::GetInstance();
+	wm->DrawWidgets(&painter);
 	painter.end();
-*/
 }
 
 //-----------------------------------------------------------------------------

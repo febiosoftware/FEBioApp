@@ -627,6 +627,7 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 
 	XMLReader& xml = *tag.m_preader;
 
+	string paramLabel;
 	string paramName = "";
 	FEParamValue val;
 	bool brange = false;
@@ -656,6 +657,11 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 				brange = true;
 				++tag;
 			}
+			else if (tag == "label")
+			{
+				paramLabel = tag.szvalue();
+				++tag;
+			}
 			else xml.SkipTag(tag);
 		}
 		while (!tag.isend());
@@ -666,12 +672,14 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 		return;
 	}
 
+	if (paramLabel.empty()) paramLabel = sz;
+
 	QBoxLayout* pl = 0;
 
 	if ((nalign==CParamInput::ALIGN_LEFT)||(nalign==CParamInput::ALIGN_RIGHT)) pl = new QHBoxLayout;
 	else pl = new QVBoxLayout;
 
-	QLabel* plabel = new QLabel(sz);
+	QLabel* plabel = new QLabel(QString::fromStdString(paramLabel));
 //	plabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	CParamInput* pi = new CParamInput;
 	QWidget* pw = 0;

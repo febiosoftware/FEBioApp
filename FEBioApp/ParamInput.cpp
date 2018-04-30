@@ -14,6 +14,7 @@ CFloatSlider::CFloatSlider(QWidget* parent) : QWidget(parent)
 	m_edit->setMaximumWidth(40);
 	m_edit->setReadOnly(true);
 	QHBoxLayout* l = new QHBoxLayout;
+	l->setMargin(0);
 	l->addWidget(m_slider);
 	l->addWidget(m_edit);
 	setLayout(l);

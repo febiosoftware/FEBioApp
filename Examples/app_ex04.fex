@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<febio_app version="0.1">
+	<Model name="fem">
+		<file>ex04.feb</file>
+	</Model>
+	<GUI title="$(filename)">
+		<label title="Beam Bending Example"/>
+		<hgroup>
+			<vgroup>
+				<group title="Pressure Load" align="vertical">
+					<input title="Pressure">
+						<param>fem.surface_load("pressure").pressure</param>
+						<range>-5, 5, 1</range>
+					</input>
+				</group>
+				<stretch/>
+				<hgroup>
+					<stretch/>
+					<button title="Run">
+						<action>fem.solve()</action>
+					</button>
+					<button title="Stop">
+						<action>fem.stop()</action>
+					</button>
+				</hgroup>
+			</vgroup>
+			<plot3d title="view1">
+				<size>640, 480</size>
+				<model>fem</model>
+				<bg_color>0.5, 0.5, 0.7</bg_color>
+				<map type="displacement">
+					<range>0, 10</range>
+				</map>
+			</plot3d>
+		</hgroup>
+		<button title="Quit">
+			<action>app.quit()</action>
+		</button>
+	</GUI>
+</febio_app>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<febio_app version="0.1">
+	<Model name="fem">
+		<file>ex03.feb</file>
+	</Model>
+	<GUI title="$(filename)">
+		<label title="Beam Bending Example"/>
+		<hgroup>
+			<vgroup>
+				<group title="Material Parameters" align="vertical">
+					<input title="Young's Modulus">
+						<param>fem.material[0].E</param>
+					</input>
+					<input title="Poisson's ratio">
+						<param>fem.material("Mat1").v</param>
+					</input>
+				</group>
+				<group title="Pressure Load" align="vertical">
+					<input title="Pressure">
+						<param>fem.surface_load("pressure").pressure</param>
+					</input>
+					<input title="Linear">
+						<param>fem.surface_load("pressure").linear</param>
+					</input>
+				</group>
+				<stretch/>
+				<button title="Solve">
+					<action>fem.solve()</action>
+				</button>
+			</vgroup>
+			<plot3d title="view1">
+				<size>640, 480</size>
+				<model>fem</model>
+				<map type="displacement"/>
+			</plot3d>
+		</hgroup>
+		<button title="Quit">
+			<action>app.quit()</action>
+		</button>
+	</GUI>
+</febio_app>

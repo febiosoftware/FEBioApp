@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<febio_app version="0.1">
+	<Model name="fem">
+		<file>ex02.feb</file>
+	</Model>
+	<GUI title="$(filename)">
+		<label title="Viscoelastic Demo"/>
+		<group align="horizontal">
+			<group align="vertical">
+				<vgroup title="Visco params">
+					<input title="G1">fem.material[0].g1</input>
+					<input title="t1">fem.material[0].t1</input>
+				</vgroup>
+				<input_list title="Elastic params">fem.material[0].elastic</input_list>
+				<stretch/>
+				<button title="Solve">
+					<action>fem.solve()</action>
+				</button>
+			</group>
+			<tab_group>
+				<tab title="Graph1">
+					<graph title="stress-strain">
+						<size>640, 480</size>
+						<data title="sx">
+							<x>fem.data("Ex").value[0]</x>
+							<y>fem.data("sx").value[0]</y>
+						</data>
+					</graph>
+				</tab>
+				<tab title="Graph2">
+					<graph title="stress - time">
+						<size>640, 480</size>
+						<data title="sx">
+							<x>fem.time</x>
+							<y>fem.data("sx").value[0]</y>
+						</data>
+					</graph>
+				</tab>
+			</tab_group>
+		</group>
+		<button title="Quit">
+			<action>app.quit()</action>
+		</button>
+	</GUI>
+</febio_app>

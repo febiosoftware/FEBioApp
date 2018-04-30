@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<febio_app version="0.1">
+	<Model name="fem">
+		<file>ex01.feb</file>
+	</Model>
+	<GUI title="$(filename)">
+		<label title="My First FEBio App"/>
+		<input title="Young's Modulus">
+			<param>fem.material('Mat1').E</param>
+		</input>
+		<input title="Poisson's ratio">
+			<param>fem.material("Mat1").v</param>
+		</input>
+		<button title="Solve">
+			<action>fem.solve()</action>
+		</button>
+		<graph title="stress-strain">
+			<data title="sx">
+				<x>fem.data("Ex").value[0]</x>
+				<y>fem.data("sx").value[0]</y>
+			</data>
+		</graph>
+		<button title="Quit">
+			<action>app.quit()</action>
+		</button>
+	</GUI>
+</febio_app>

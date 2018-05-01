@@ -22,6 +22,7 @@ QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 	m_sizeHint = QSize(w, h);
 
 	m_sztime[0] = 0;
+	m_timeFormat = 0;
 
 	m_smoothingAngle = 60;
 
@@ -93,6 +94,12 @@ void QGLView::SetForegroundColor(double r, double g, double b)
 	m_triad->set_fg_color(c);
 	m_time->set_fg_color(c);
 	m_legend->set_fg_color(c);
+}
+
+//-----------------------------------------------------------------------------
+void QGLView::SetTimeFormat(int nformat)
+{
+	m_timeFormat = nformat;
 }
 
 //-----------------------------------------------------------------------------
@@ -545,7 +552,19 @@ void QGLView::paintGL()
 	if (m_pfem)
 	{
 		double time = m_pfem->GetTime().currentTime;
-		sprintf(m_sztime, " Time = %.4g", time);
+
+		if (m_timeFormat == 1)
+		{
+			int nsec = (int) fmod(time, 60.0); time /= 60.0;
+			int nmin = (int) fmod(time, 60.0); time /= 60.0;
+			int nhr  = (int) fmod(time, 24.0); time /= 24.0;
+			int days = (int) time;
+			sprintf(m_sztime, " Time = %d:%02d:%02d:%02d", days, nhr, nmin, nsec);
+		}
+		else
+		{
+			sprintf(m_sztime, " Time = %.4g", time);
+		}
 	}
 	else m_sztime[0] = 0;
 	m_time->set_label(m_sztime);

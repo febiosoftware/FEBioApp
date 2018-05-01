@@ -30,6 +30,42 @@ void qt_info(const char* sz)
 }
 
 //-----------------------------------------------------------------------------
+CActionButton::CActionButton(QWidget* parent) : QPushButton(parent)
+{
+	m_naction[0] = m_naction[1] = -1;
+	m_index = 0;
+	QObject::connect(this, SIGNAL(clicked()), this, SLOT(onClicked()));
+}
+
+void CActionButton::onClicked()
+{
+	int naction = m_naction[m_index];
+	
+	if (m_index == 0)
+	{
+		if (m_naction[1] != -1) 
+		{
+			m_index = 1;
+			setText(m_label[m_index]);
+		}
+	}
+	else 
+	{
+		m_index = 0;
+		setText(m_label[m_index]);
+	}
+
+	emit doAction(naction);
+}
+
+void CActionButton::setAction(int naction, const QString& label, int index)
+{
+	m_naction[index] = naction;
+	m_label[index] = label;
+	if (index == 0) setText(label);
+}
+
+//-----------------------------------------------------------------------------
 MyDialog::MyDialog()
 {
 	setLayout(new QVBoxLayout);
@@ -38,6 +74,7 @@ MyDialog::MyDialog()
 
 	m_bforceStop = false;
 	m_brunning = false;
+	m_bpaused = false;
 
 	m_model.m_fem.AddCallback(cb, CB_ALWAYS, this);
 }
@@ -75,7 +112,12 @@ bool MyDialog::FECallback(FEModel& fem, unsigned int nwhen)
 		UpdateModelParameters();
 	}
 
-	QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+	if (m_bpaused)
+	{
+		// stay in loop until done
+		while (m_bpaused) QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+	}
+	else QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 
 	return true;
 }
@@ -90,9 +132,24 @@ void MyDialog::UpdateModelParameters()
 	m_bupdateParams = false;
 }
 
+void MyDialog::doAction(int naction)
+{
+	switch (naction)
+	{
+	case 0: Run(); break;
+	case 1: Quit(); break;
+	case 2: ResetDlg(); break;
+	case 3: RunTask(); break;
+	case 4: Stop(); break;
+	case 5: Pause(); break;
+	case 6: Continue(); break;
+	}
+}
+
 void MyDialog::Stop()
 {
 	m_bforceStop = true;
+	m_bpaused = false;
 }
 
 void MyDialog::Quit()
@@ -136,6 +193,7 @@ void MyDialog::Run()
 	setWindowTitle(m_fileName + " (Running)");
 
 	m_brunning = true;
+	m_bpaused = false;
 	printf("Calling FEBio ... ");
 	if (fem.Solve())
 	{
@@ -155,6 +213,7 @@ void MyDialog::Run()
 	}
 	setWindowTitle(m_fileName);
 	m_brunning = false;
+	m_bpaused = false;
 
 	// resize all graphs
 	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->UpdatePlots();
@@ -252,4 +311,20 @@ void MyDialog::ResetDlg()
 void MyDialog::paramChanged()
 {
 	m_bupdateParams = true;
+}
+
+void MyDialog::Pause()
+{
+	if (m_brunning)
+	{
+		m_bpaused = true;
+	}
+}
+
+void MyDialog::Continue()
+{
+	if (m_brunning && m_bpaused)
+	{
+		m_bpaused = false;
+	}
 }

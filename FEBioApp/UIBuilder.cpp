@@ -241,11 +241,29 @@ void UIBuilder::parseTabGroup(XMLTag& tag, QBoxLayout* playout)
 	playout->addWidget(ptab);
 }
 
-void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
+int getAction(const char* szaction)
 {
 	int nact = -1;
-	char sz[256] = {0};
-	strcpy(sz, tag.AttributeValue("title"));
+	if      (strcmp(szaction, "fem.solve()"   ) == 0) nact = 0;
+	else if (strcmp(szaction, "app.quit()"    ) == 0) nact = 1;
+	else if (strcmp(szaction, "app.reset()"   ) == 0) nact = 2;
+	else if (strcmp(szaction, "task.run()"    ) == 0) nact = 3;
+	else if (strcmp(szaction, "fem.stop()"    ) == 0) nact = 4;
+	else if (strcmp(szaction, "fem.pause()"   ) == 0) nact = 5;
+	else if (strcmp(szaction, "fem.continue()") == 0) nact = 6;
+	else printf("ERROR: Do not understand action %s\n", szaction);
+
+	return nact;
+}
+
+void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
+{
+	int index = 0;
+	int nact[2] = {-1, -1};
+	char sz[2][256] = {0};
+
+	const char* sztitle = tag.AttributeValue("title", true);
+	if (sztitle) strcpy(sz[0], sztitle);
 
 	XMLReader& xml = *tag.m_preader;
 
@@ -257,13 +275,13 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 			if (tag == "action")
 			{
 				const char* sza = tag.szvalue();
-				if      (strcmp(sza, "fem.solve()") == 0) nact = 0;
-				else if (strcmp(sza, "app.quit()" ) == 0) nact = 1;
-				else if (strcmp(sza, "app.reset()") == 0) nact = 2;
-				else if (strcmp(sza, "fem.reload()") == 0) nact = 3;
-				else if (strcmp(sza, "task.run()") == 0) nact = 4;
-				else if (strcmp(sza, "fem.stop()") == 0) nact = 5;
-				else printf("ERROR: Do not understand action %s\n", sza);
+				int naction = getAction(sza);
+				nact[index] = naction;
+
+				const char* szt = tag.AttributeValue("title", true);
+				if (szt) strcpy(sz[index], szt);
+
+				index++;
 
 				++tag;
 			}
@@ -273,18 +291,16 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 	}
 
 	QHBoxLayout* pl = new QHBoxLayout;
-	QPushButton* pb = new QPushButton(sz);
+	CActionButton* pb = new CActionButton();
+
+	if (nact[0] != -1) pb->setAction(nact[0], sz[0], 0);
+	if (nact[1] != -1) pb->setAction(nact[1], sz[1], 1);
 
 	playout->addLayout(pl);
 	pl->addStretch();
 	pl->addWidget(pb);
 
-	if      (nact == 0) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Run()));
-	else if (nact == 1) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Quit()));
-	else if (nact == 2) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(ResetDlg()));
-	else if (nact == 3) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Reload()));
-	else if (nact == 4) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(RunTask()));
-	else if (nact == 5) QObject::connect(pb, SIGNAL(clicked()), m_dlg, SLOT(Stop()));
+	QObject::connect(pb, SIGNAL(doAction(int)), m_dlg, SLOT(doAction(int)));
 }
 
 void UIBuilder::parseLabel(XMLTag& tag, QBoxLayout* playout)
@@ -436,6 +452,7 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 	double fgc[3] = {0.0, 0.0, 0.0 };
 	double w[3] = { 0, 0, 0 };
 	double smoothingAngle = 60.0;
+	int timeFormat = 0;
 	if (!tag.isleaf())
 	{
 		++tag;
@@ -494,6 +511,11 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 				tag.value(smoothingAngle);
 				++tag;
 			}
+			else if (tag == "time_format")
+			{
+				tag.value(timeFormat);
+				++tag;
+			}
 			else xml.SkipTag(tag);
 		}
 		while (!tag.isend());
@@ -502,6 +524,7 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 	QGLView* pgl = new QGLView(0, size[0], size[1]);
 	playout->addWidget(pgl);
 
+	pgl->SetTimeFormat(timeFormat);
 	pgl->SetSmoothingAngle(smoothingAngle);	// must be set before SetFEModel is called
 	pgl->SetFEModel(&m_data->m_fem);
 	pgl->SetDataSource(szmap);

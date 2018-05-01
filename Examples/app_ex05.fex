@@ -25,11 +25,13 @@
 				<stretch/>
 				<hgroup>
 					<stretch/>
-					<button title="Run">
-						<action>fem.solve()</action>
+					<button>
+						<action title="Run">fem.solve()</action>
+						<action title="Stop">fem.stop()</action>
 					</button>
-					<button title="Stop">
-						<action>fem.stop()</action>
+					<button>
+						<action title="Pause">fem.pause()</action>
+						<action title="Continue">fem.continue()</action>
 					</button>
 				</hgroup>
 			</vgroup>
@@ -44,6 +46,7 @@
 				</map-->
 				<rotation>-90,0,0</rotation>
 				<smoothing_angle>180.0</smoothing_angle>
+				<time_format>1</time_format>
 			</plot3d>
 		</hgroup>
 		<button title="Quit">

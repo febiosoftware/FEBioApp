@@ -37,6 +37,8 @@ public:
 
 	void SetSmoothingAngle(double w);
 
+	void SetTimeFormat(int nformat);
+
 protected:
 	void mousePressEvent  (QMouseEvent* ev);
 	void mouseMoveEvent   (QMouseEvent* ev);
@@ -87,6 +89,7 @@ private:
 	double	m_rng[2];
 
 	char	m_sztime[256];
+	int		m_timeFormat;
 
 	QAction*	m_pShader;
 };

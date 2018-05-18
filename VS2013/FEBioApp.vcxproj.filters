@@ -83,9 +83,6 @@
     <ClInclude Include="..\FEBioApp\DataPlot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\FEBioApp\ParamInput.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\FEBioApp\UIBuilder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -98,6 +95,9 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="..\FEBioApp\PlotWidget.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\FEBioApp\ParamInput.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>

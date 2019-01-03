@@ -82,6 +82,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(FEBio3Dir);$(QT512DIR)\include;$(QT512DIR)\include\QtGui;$(QT512DIR)\include\QtWidgets;$(PostViewDir);$(GLEWDIR)\include\GL;$(IncludePath)</IncludePath>
+    <LibraryPath>$(QT512DIR)\lib;$(FEBio3Dir)\VS2015\x64\Release DLL;$(GLEWDIR)\lib\Release\x64;$(PostViewDir)\VS2015\x64\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -142,6 +144,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>fecore.lib;febiolib.lib;febioxml.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;opengl32.lib;glu32.lib;glew32.lib;postviewlib.lib;GLWLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

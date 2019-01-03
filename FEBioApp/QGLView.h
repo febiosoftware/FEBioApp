@@ -92,4 +92,6 @@ private:
 	int		m_timeFormat;
 
 	QAction*	m_pShader;
+
+	vector<double>	m_val;
 };

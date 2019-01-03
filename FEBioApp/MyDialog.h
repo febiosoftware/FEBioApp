@@ -69,6 +69,8 @@ public:
 
 	bool IsRunning() const { return m_brunning; }
 
+	void closeEvent(QCloseEvent* ev) override;
+
 public slots:
 	void ResetDlg();
 	void Run();

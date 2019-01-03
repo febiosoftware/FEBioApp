@@ -161,6 +161,12 @@ void MyDialog::Quit()
 	accept();
 }
 
+void MyDialog::closeEvent(QCloseEvent* ev)
+{
+	// stop the model if it's running
+	Stop();
+}
+
 void MyDialog::Run()
 {
 	if (m_brunning) return;

@@ -220,7 +220,7 @@ void QGLView::Update(bool bzoom)
 	}
 
 	int NN = m_psurf->Nodes();
-	vector<double> val(NN, 0);
+	if (m_val.size() != NN) m_val.resize(NN, 0.0);
 
 	if (m_map.empty() == false)
 	{
@@ -231,8 +231,44 @@ void QGLView::Update(bool bzoom)
 			int ndof = dofs.GetVariableSize(nvar);
 			int dof0 = dofs.GetDOF(nvar, 0);
 
-			// evaluate data values
+			// evaluate data range
 			double Dmin = 1e99, Dmax = -1e99;
+			if (m_userRange)
+			{
+				Dmin = m_rng[0];
+				Dmax = m_rng[1];
+			}
+			else
+			{
+				FEMesh* pm = m_psurf->GetMesh();
+				for (int i=0; i<pm->Nodes(); ++i)
+				{
+					FENode& ni = pm->Node(i);
+
+					double D = 0;
+					if (ndof == 1)
+					{
+						D = ni.get(dof0);
+					}
+					else
+					{
+						for (int j = 0; j<ndof; ++j)
+						{
+							double dn = ni.get(dof0 + j);
+							D += dn*dn;
+						}
+					}
+
+					if (D < Dmin) Dmin = D;
+					else if (D > Dmax) Dmax = D;
+				}
+			}
+
+			if (Dmax == Dmin) Dmax++;
+			m_rng[0] = Dmin;
+			m_rng[1] = Dmax;
+
+			// evaluate surface values
 			for (int i=0; i<m_psurf->Nodes(); ++i)
 			{
 				FENode& ni = m_psurf->Node(i);
@@ -251,26 +287,13 @@ void QGLView::Update(bool bzoom)
 					}
 				}
 
-				if (D < Dmin) Dmin = D;
-				else if (D > Dmax) Dmax = D;
+				m_val[i] = D;
+			}
 
-				val[i] = D;
-			}
-			if (m_userRange)
-			{
-				Dmin = m_rng[0];
-				Dmax = m_rng[1];
-			}
-			else
-			{
-				if (Dmax == Dmin) Dmax++;
-				m_rng[0] = Dmin;
-				m_rng[1] = Dmax;
-			}
 			if (m_legend) m_legend->SetRange(m_rng[0], m_rng[1]);
 
 			// normalize textture coordinates
-			for (int i=0; i<NN; ++i) val[i] = (val[i] - Dmin) / (Dmax - Dmin);
+			for (int i=0; i<NN; ++i) m_val[i] = (m_val[i] - Dmin) / (Dmax - Dmin);
 		}
 	}
 
@@ -278,9 +301,9 @@ void QGLView::Update(bool bzoom)
 	for (int i = 0; i<NF; ++i)
 	{
 		GLMesh::FACE& f = m_glmesh.Face(i);
-		m_glmesh.nodeTexCoord1D(f.lnode[0]) = val[f.nid[0]];
-		m_glmesh.nodeTexCoord1D(f.lnode[1]) = val[f.nid[1]];
-		m_glmesh.nodeTexCoord1D(f.lnode[2]) = val[f.nid[2]];
+		m_glmesh.nodeTexCoord1D(f.lnode[0]) = m_val[f.nid[0]];
+		m_glmesh.nodeTexCoord1D(f.lnode[1]) = m_val[f.nid[1]];
+		m_glmesh.nodeTexCoord1D(f.lnode[2]) = m_val[f.nid[2]];
 	}
 
 	// recalculate normals

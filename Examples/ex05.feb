@@ -17,9 +17,9 @@
 	</Globals>
 	<Material>
 		<material id="1" name="Material1" type="isotropic Fourier">
-			<density>1e3</density>
+			<density>1000</density>
 			<k>0.56</k>
-			<c>4.1813e3</c>
+			<c>4181.3</c>
 		</material>
 	</Material>
 	<Geometry>

@@ -44,8 +44,8 @@ void GLMesh::Render()
 		glEnableClientState(GL_NORMAL_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-		glVertexPointer(3, GL_DOUBLE, 0, &m_Node[0]);
-		glNormalPointer(GL_DOUBLE   , 0, &m_Norm[0]);
+		glVertexPointer(3, GL_FLOAT, 0, &m_Node[0]);
+		glNormalPointer(GL_FLOAT, 0, &m_Norm[0]);
 		glTexCoordPointer(1, GL_DOUBLE, 0, &m_Tex[0]);
 
 		glDrawArrays(GL_TRIANGLES, 0, m_Node.size());
@@ -142,12 +142,12 @@ void GLMesh::PartitionFaces(double wAngle)
 	{
 		FACE& f = Face(i);
 
-		vec3d& r0 = m_Node[f.lnode[0]];
-		vec3d& r1 = m_Node[f.lnode[1]];
-		vec3d& r2 = m_Node[f.lnode[2]];
+		vec3f& r0 = m_Node[f.lnode[0]];
+		vec3f& r1 = m_Node[f.lnode[1]];
+		vec3f& r2 = m_Node[f.lnode[2]];
 
-		vec3d faceNorm = (r1 - r0) ^ (r2 - r0);
-		faceNorm.unit();
+		vec3f faceNorm = (r1 - r0) ^ (r2 - r0);
+		faceNorm.Normalize();
 
 		f.fnorm = faceNorm;
 	}
@@ -210,29 +210,29 @@ void GLMesh::UpdateNormals()
 	{
 		FACE& f = Face(i);
 
-		vec3d& r0 = m_Node[f.lnode[0]];
-		vec3d& r1 = m_Node[f.lnode[1]];
-		vec3d& r2 = m_Node[f.lnode[2]];
+		vec3f& r0 = m_Node[f.lnode[0]];
+		vec3f& r1 = m_Node[f.lnode[1]];
+		vec3f& r2 = m_Node[f.lnode[2]];
 
-		vec3d faceNorm = (r1 - r0) ^ (r2 - r0);
-		faceNorm.unit();
+		vec3f faceNorm = (r1 - r0) ^ (r2 - r0);
+		faceNorm.Normalize();
 
 		f.fnorm = faceNorm;
 	}
 
 	// clear all node normals
 	const int NN = m_Norm.size();
-	for (int i=0; i<NN; ++i) m_Norm[i] = vec3d(0,0,0);
+	for (int i=0; i<NN; ++i) m_Norm[i] = vec3f(0,0,0);
 
 	// assign node normals
 	stack<FACE*> faceStack;
 	vector<int> tag(NF);
 	int ng = 0;
 	int faceIndex = 0;
-	vector<vec3d> norm;
+	vector<vec3f> norm;
 	while (faceIndex < NF)
 	{
-		norm.assign(3*NF, vec3d(0,0,0));
+		norm.assign(3*NF, vec3f(0,0,0));
 		tag.assign(NF, 0);
 		FACE* pf = &Face(faceIndex);
 		tag[faceIndex] = 1;
@@ -240,7 +240,7 @@ void GLMesh::UpdateNormals()
 		while (faceStack.empty() == false)
 		{
 			pf = faceStack.top(); faceStack.pop();
-			vec3d& ni = pf->fnorm;
+			vec3f& ni = pf->fnorm;
 
 			norm[pf->nid[0]] += ni;
 			norm[pf->nid[1]] += ni;
@@ -281,5 +281,5 @@ void GLMesh::UpdateNormals()
 	}
 
 	// normalize node normals
-	for (int i=0; i<NN; ++i) m_Norm[i].unit();
+	for (int i=0; i<NN; ++i) m_Norm[i].Normalize();
 }

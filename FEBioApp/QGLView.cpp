@@ -147,9 +147,9 @@ void QGLView::SetFEModel(FEModel* pfem)
 	for (int i=0; i<NF; ++i)
 	{
 		GLMesh::FACE& f = m_glmesh.Face(i);
-		m_glmesh.nodePosition(f.lnode[0]) = m_psurf->Node(f.nid[0]).m_rt;
-		m_glmesh.nodePosition(f.lnode[1]) = m_psurf->Node(f.nid[1]).m_rt;
-		m_glmesh.nodePosition(f.lnode[2]) = m_psurf->Node(f.nid[2]).m_rt;
+		vec3d& r0 = m_psurf->Node(f.nid[0]).m_rt; m_glmesh.nodePosition(f.lnode[0]) = vec3f(r0.x, r0.y, r0.z);
+		vec3d& r1 = m_psurf->Node(f.nid[1]).m_rt; m_glmesh.nodePosition(f.lnode[1]) = vec3f(r1.x, r1.y, r1.z);
+		vec3d& r2 = m_psurf->Node(f.nid[2]).m_rt; m_glmesh.nodePosition(f.lnode[2]) = vec3f(r2.x, r2.y, r2.z);
 	}
 
 	// find the face neighbors
@@ -214,9 +214,9 @@ void QGLView::Update(bool bzoom)
 	for (int i=0; i<NF; ++i)
 	{
 		GLMesh::FACE& f = m_glmesh.Face(i);
-		m_glmesh.nodePosition(f.lnode[0]) = m_psurf->Node(f.nid[0]).m_rt;
-		m_glmesh.nodePosition(f.lnode[1]) = m_psurf->Node(f.nid[1]).m_rt;
-		m_glmesh.nodePosition(f.lnode[2]) = m_psurf->Node(f.nid[2]).m_rt;
+		vec3d& r0 = m_psurf->Node(f.nid[0]).m_rt; m_glmesh.nodePosition(f.lnode[0]) = vec3f(r0.x, r0.y, r0.z);
+		vec3d& r1 = m_psurf->Node(f.nid[1]).m_rt; m_glmesh.nodePosition(f.lnode[1]) = vec3f(r1.x, r1.y, r1.z);
+		vec3d& r2 = m_psurf->Node(f.nid[2]).m_rt; m_glmesh.nodePosition(f.lnode[2]) = vec3f(r2.x, r2.y, r2.z);
 	}
 
 	int NN = m_psurf->Nodes();

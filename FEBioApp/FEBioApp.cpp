@@ -7,6 +7,7 @@
 #include <FEBioLib/febio.h>
 #include <FEBioLib/version.h>
 #include <QSurfaceFormat>
+#include <iostream>
 
 bool configure();
 
@@ -42,13 +43,21 @@ int main(int argc, char* argv[])
 	dlg.setAttribute(Qt::WA_QuitOnClose);
 
 	// Build the GUI from the app's file
-	if (dlg.BuildGUI(argv[1]) == false) return 1;
+	if (argc == 2)
+	{
+		if (dlg.BuildGUI(argv[1]) == false) return 1;
 
-	// show the dialog
-	dlg.show();
+		// show the dialog
+		dlg.show();
 
-	// run the app
-	return app.exec();
+		// run the app
+		return app.exec();
+	}
+	else
+	{
+		std::cout << "\nUsage: febioapp.exe inputfile\n\n";
+		return 0;
+	}
 }
 
 bool configure()

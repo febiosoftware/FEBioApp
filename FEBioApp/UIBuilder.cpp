@@ -583,37 +583,50 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 		{
 			FEParam& pi = *it;
 
-			if ((pi.type() == FE_PARAM_DOUBLE) || (pi.type() == FE_PARAM_BOOL) || (pi.type() == FE_PARAM_INT))
+			if (pi.dim() == 1)
 			{
-				CParamInput* pin = new CParamInput;
-				QWidget* pw = 0;
+				FEParamValue val = pi.paramValue();
+				CParamInput* pin = nullptr;
+				QWidget* pw = nullptr;
 				QLineEdit* pedit; QCheckBox* pcheck;
-				if (pi.type() == FE_PARAM_DOUBLE) 
-				{ 
-					pin->SetWidget(pedit  = new QLineEdit); 
-					pw = pedit; 
-					if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
-				}
-				if (pi.type() == FE_PARAM_BOOL)
-				{ 
-					pin->SetWidget(pcheck = new QCheckBox); 
-					pw = pcheck;
-					if (naction == 0) QObject::connect(pcheck, SIGNAL(stateChanged(int)), m_dlg, SLOT(Run()));
-				}
-				if (pi.type() == FE_PARAM_INT)
+				switch (val.type())
 				{
+				case FE_PARAM_DOUBLE:
+				{
+					pin = new CParamInput;
 					pin->SetWidget(pedit = new QLineEdit);
 					pw = pedit;
 					if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
 				}
-				pin->SetParameter(pi.name(), pi.paramValue());
-				assert(pw);
-				pw->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+				break;
+				case FE_PARAM_BOOL:
+				{
+					pin = new CParamInput;
+					pin->SetWidget(pcheck = new QCheckBox);
+					pw = pcheck;
+					if (naction == 0) QObject::connect(pcheck, SIGNAL(stateChanged(int)), m_dlg, SLOT(Run()));
+				}
+				break;
+				case FE_PARAM_INT:
+				{
+					pin = new CParamInput;
+					pin->SetWidget(pedit = new QLineEdit);
+					pw = pedit;
+					if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
+				}
+				break;
+				}
 
-				// add it to the row
-				pf->addRow(pi.name(), pw);
+				if (pin)
+				{
+					assert(pw);
+					pin->SetParameter(pi.name(), val);
+					pw->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-				m_dlg->AddInputParameter(pin);
+					// add it to the row
+					pf->addRow(pi.name(), pw);
+					m_dlg->AddInputParameter(pin);
+				}
 			}
 		}
 
@@ -660,7 +673,6 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 		paramName = tag.szvalue();
 		ParamString ps(tag.szvalue());
 		val = fem.GetParameterValue(ps);
-		++tag;
 	}
 	else
 	{

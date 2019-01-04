@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'MyDialog.h'
 **
-** Created by: The Qt Meta Object Compiler version 67 (Qt 5.8.0)
+** Created by: The Qt Meta Object Compiler version 67 (Qt 5.12.0)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
@@ -12,7 +12,7 @@
 #if !defined(Q_MOC_OUTPUT_REVISION)
 #error "The header file 'MyDialog.h' doesn't include <QObject>."
 #elif Q_MOC_OUTPUT_REVISION != 67
-#error "This file was generated using the moc from 5.8.0. It"
+#error "This file was generated using the moc from 5.12.0. It"
 #error "cannot be used with the include files from this version of Qt."
 #error "(The moc has changed too much.)"
 #endif
@@ -46,7 +46,7 @@ QT_MOC_LITERAL(4, 32, 9) // "onClicked"
 static const uint qt_meta_data_CActionButton[] = {
 
  // content:
-       7,       // revision
+       8,       // revision
        0,       // classname
        0,    0, // classinfo
        2,   14, // methods
@@ -83,10 +83,9 @@ void CActionButton::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
         int *result = reinterpret_cast<int *>(_a[0]);
-        void **func = reinterpret_cast<void **>(_a[1]);
         {
-            typedef void (CActionButton::*_t)(int );
-            if (*reinterpret_cast<_t *>(func) == static_cast<_t>(&CActionButton::doAction)) {
+            using _t = void (CActionButton::*)(int );
+            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&CActionButton::doAction)) {
                 *result = 0;
                 return;
             }
@@ -94,10 +93,14 @@ void CActionButton::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
     }
 }
 
-const QMetaObject CActionButton::staticMetaObject = {
-    { &QPushButton::staticMetaObject, qt_meta_stringdata_CActionButton.data,
-      qt_meta_data_CActionButton,  qt_static_metacall, Q_NULLPTR, Q_NULLPTR}
-};
+QT_INIT_METAOBJECT const QMetaObject CActionButton::staticMetaObject = { {
+    &QPushButton::staticMetaObject,
+    qt_meta_stringdata_CActionButton.data,
+    qt_meta_data_CActionButton,
+    qt_static_metacall,
+    nullptr,
+    nullptr
+} };
 
 
 const QMetaObject *CActionButton::metaObject() const
@@ -107,9 +110,9 @@ const QMetaObject *CActionButton::metaObject() const
 
 void *CActionButton::qt_metacast(const char *_clname)
 {
-    if (!_clname) return Q_NULLPTR;
+    if (!_clname) return nullptr;
     if (!strcmp(_clname, qt_meta_stringdata_CActionButton.stringdata0))
-        return static_cast<void*>(const_cast< CActionButton*>(this));
+        return static_cast<void*>(this);
     return QPushButton::qt_metacast(_clname);
 }
 
@@ -133,7 +136,7 @@ int CActionButton::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 // SIGNAL 0
 void CActionButton::doAction(int _t1)
 {
-    void *_a[] = { Q_NULLPTR, const_cast<void*>(reinterpret_cast<const void*>(&_t1)) };
+    void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(&_t1)) };
     QMetaObject::activate(this, &staticMetaObject, 0, _a);
 }
 struct qt_meta_stringdata_MyDialog_t {
@@ -170,7 +173,7 @@ QT_MOC_LITERAL(11, 78, 7) // "naction"
 static const uint qt_meta_data_MyDialog[] = {
 
  // content:
-       7,       // revision
+       8,       // revision
        0,       // classname
        0,    0, // classinfo
        9,   14, // methods
@@ -225,10 +228,14 @@ void MyDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, vo
     }
 }
 
-const QMetaObject MyDialog::staticMetaObject = {
-    { &QDialog::staticMetaObject, qt_meta_stringdata_MyDialog.data,
-      qt_meta_data_MyDialog,  qt_static_metacall, Q_NULLPTR, Q_NULLPTR}
-};
+QT_INIT_METAOBJECT const QMetaObject MyDialog::staticMetaObject = { {
+    &QDialog::staticMetaObject,
+    qt_meta_stringdata_MyDialog.data,
+    qt_meta_data_MyDialog,
+    qt_static_metacall,
+    nullptr,
+    nullptr
+} };
 
 
 const QMetaObject *MyDialog::metaObject() const
@@ -238,9 +245,9 @@ const QMetaObject *MyDialog::metaObject() const
 
 void *MyDialog::qt_metacast(const char *_clname)
 {
-    if (!_clname) return Q_NULLPTR;
+    if (!_clname) return nullptr;
     if (!strcmp(_clname, qt_meta_stringdata_MyDialog.stringdata0))
-        return static_cast<void*>(const_cast< MyDialog*>(this));
+        return static_cast<void*>(this);
     return QDialog::qt_metacast(_clname);
 }
 

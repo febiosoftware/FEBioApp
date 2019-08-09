@@ -79,7 +79,7 @@ private:
 	GLBox*			m_time;
 	GLTriad*		m_triad;
 	GLLegendBar*	m_legend;
-	CColorTexture*	m_col;
+	Post::CColorTexture*	m_col;
 
 	double	m_smoothingAngle;
 

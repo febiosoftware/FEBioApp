@@ -12,6 +12,7 @@
 #include <QMenu>
 #include <QPainter>
 #include <GLWLib/GLWidgetManager.h>
+#include <PostViewLib/color.h>
 
 //-----------------------------------------------------------------------------
 QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
@@ -46,9 +47,9 @@ QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 	m_userRange = false;
 	m_rng[0] = m_rng[1] = 0;
 
-	ColorMapManager::Initialize();
+	Post::ColorMapManager::Initialize();
 
-	m_col = new CColorTexture;
+	m_col = new Post::CColorTexture;
 
 	CGLWidgetManager* wm = CGLWidgetManager::GetInstance();
 	wm->AttachToView(this);
@@ -90,7 +91,7 @@ void QGLView::SetBackgroundColor(double r, double g, double b)
 //-----------------------------------------------------------------------------
 void QGLView::SetForegroundColor(double r, double g, double b)
 {
-	GLCOLOR c((byte)(255.0*r), (byte)(255.0*g), (byte)(255.0*b));
+	GLColor c((byte)(255.0*r), (byte)(255.0*g), (byte)(255.0*b));
 	m_triad->set_fg_color(c);
 	m_time->set_fg_color(c);
 	m_legend->set_fg_color(c);

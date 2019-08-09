@@ -11,8 +11,6 @@
 		<rtol>0</rtol>
 		<lstol>0.9</lstol>
 		<analysis type="dynamic"/>
-		<plot_level>PLOT_NEVER</plot_level>
-		<print_level>PRINT_NEVER</print_level>
 		<beta>0.3025</beta>
 		<gamma>0.6</gamma>
 		<log_level>0</log_level>

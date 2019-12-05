@@ -1,7 +1,14 @@
 #include "stdafx.h"
 #include "UIBuilder.h"
 #include <QDialog>
-#include <XML/XMLReader.h>
+#include <FEBioXML/XMLReader.h>
+#include <FEBioMech/FEElasticMaterial.h>
+#include <FECore/FESurfaceLoad.h>
+#include <FECore/FEParam.h>
+#include <FECore/ParamString.h>
+#include <FECore/FEModel.h>
+#include <FEBioLib/FEBioModel.h>
+#include <FECore/FECoreTask.h>
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -23,7 +30,7 @@ UIBuilder::UIBuilder()
 	m_dlg = 0;
 }
 
-bool UIBuilder::BuildUI(MyDialog* dlg, FEBioData& data, const char* szfile)
+bool UIBuilder::BuildUI(MyDialog* dlg, ModelData& data, const char* szfile)
 {
 	if (dlg == 0) return false;
 
@@ -38,21 +45,16 @@ bool UIBuilder::BuildUI(MyDialog* dlg, FEBioData& data, const char* szfile)
 	XMLTag tag;
 	if (xml.FindTag("febio_app", tag) == false) return false;
 
-	try {
-		++tag;
-		do
-		{
-			if (tag == "Model") { if (parseModel(tag) == false) return false; }
-			else if (tag == "GUI") { if (parseGUI(tag) == false) return false; }
-			else xml.SkipTag(tag);
-
-			++tag;
-		} while (!tag.isend());
-	}
-	catch (...)
+	++tag;
+	do
 	{
+		if      (tag == "Model") { if (parseModel(tag) == false) return false; }
+		else if (tag == "GUI"  ) { if (parseGUI  (tag) == false) return false; }
+		else xml.SkipTag(tag);
 
+		++tag;
 	}
+	while (!tag.isend());
 
 	xml.Close();
 
@@ -61,6 +63,8 @@ bool UIBuilder::BuildUI(MyDialog* dlg, FEBioData& data, const char* szfile)
 
 bool UIBuilder::parseModel(XMLTag& tag)
 {
+	FEBioModel& fem = m_data->m_fem;
+
 	XMLReader& xml = *tag.m_preader;
 	++tag;
 	do
@@ -70,7 +74,7 @@ bool UIBuilder::parseModel(XMLTag& tag)
 			strcpy(m_szfile, tag.szvalue());
 
 			// Try to load the FE model file
-			if (m_data->ReadFEBioFile(m_szfile))
+			if (fem.Input(m_szfile))
 			{
 				printf("Success loading input file %s\n", m_szfile);
 			}
@@ -87,10 +91,10 @@ bool UIBuilder::parseModel(XMLTag& tag)
 			const char* sztype = tag.AttributeValue("type");
 			if (sztype == 0) return false;
 
-			if (m_data->SetFEBioTask(sztype, tag.szvalue()) == false)
-			{
-				return false;
-			}
+			m_data->m_task = fecore_new<FECoreTask>(FETASK_ID, sztype, &m_data->m_fem);
+			if (m_data->m_task == 0) return false;
+
+			m_data->m_taskFile = tag.szvalue();
 
 			++tag;
 		}
@@ -334,7 +338,9 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 
 	int nplt = 0;
 
-	FEBioParam xparam, yparam;
+	FEParamValue xparam, yparam;
+
+	FEBioModel& fem = m_data->m_fem;
 
 	CDataPlot* pg = new CDataPlot(0);
 	pg->setTitle(QString(sztitle));
@@ -372,16 +378,18 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 					{
 						if (tag == "x")
 						{
-							xparam = m_data->GetFEBioParameter(tag.szvalue());
-							if (xparam.IsValid() == false)
+							ParamString x_str(tag.szvalue());
+							xparam = fem.GetParameterValue(x_str);
+							if (xparam.isValid() == false)
 							{
 								printf("Failed to find parameter: %s\n", tag.szvalue());
 							}
 						}
 						else if (tag == "y")
 						{
-							yparam = m_data->GetFEBioParameter(tag.szvalue());
-							if (yparam.IsValid() == false)
+							ParamString y_str(tag.szvalue());
+							yparam = fem.GetParameterValue(y_str);
+							if (yparam.isValid() == false)
 							{
 								printf("Failed to find parameter: %s\n", tag.szvalue());
 							}
@@ -508,11 +516,7 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 				tag.value(timeFormat);
 				++tag;
 			}
-			else
-			{
-				xml.SkipTag(tag);
-				++tag;
-			}
+			else xml.SkipTag(tag);
 		}
 		while (!tag.isend());
 	}
@@ -522,7 +526,7 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 
 	pgl->SetTimeFormat(timeFormat);
 	pgl->SetSmoothingAngle(smoothingAngle);	// must be set before SetFEModel is called
-	pgl->SetFEModel(m_data);
+	pgl->SetFEModel(&m_data->m_fem);
 	pgl->SetDataSource(szmap);
 	pgl->SetRotation(w[0], w[1], w[2]);
 	if (brange) pgl->SetDataRange(rng[0], rng[1]);
@@ -537,11 +541,13 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 
 	int naction = -1;
 
-	vector<FEBioParam> paramList;
+	FEModel& fem = m_data->m_fem;
 
+	FECoreBase* pc = 0;
 	if (tag.isleaf())
 	{
-		paramList = m_data->GetFEBioParameterList(tag.szvalue());
+		ParamString ps(tag.szvalue());
+		pc = fem.FindComponent(ps);
 	}
 	else
 	{
@@ -550,7 +556,8 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 		{
 			if (tag == "params")
 			{
-				paramList = m_data->GetFEBioParameterList(tag.szvalue());
+				ParamString ps(tag.szvalue());
+				pc = fem.FindComponent(ps);
 			}
 			else if (tag == "action")
 			{
@@ -563,53 +570,63 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 		while (!tag.isend());
 	}
 
-	if (!paramList.empty())
+	if (pc)
 	{
 		QGroupBox* pg = 0;
 		if (sztitle) pg = new QGroupBox(sztitle);
 
 		QFormLayout* pf = new QFormLayout;
-		for (size_t i=0; i<paramList.size(); ++i)
+		FEParameterList& pl = pc->GetParameterList();
+		int n = pl.Parameters();
+		list<FEParam>::iterator it = pl.first();
+		for (int i=0; i<n; ++i, ++it)
 		{
-			FEBioParam& pi = paramList[i];
+			FEParam& pi = *it;
 
-			CParamInput* pin = nullptr;
-			QWidget* pw = nullptr;
-			QLineEdit* pedit; QCheckBox* pcheck;
-
-			if (pi.IsType(FEBioParam::TYPE_DOUBLE))
+			if (pi.dim() == 1)
 			{
-				pin = new CParamInput;
-				pin->SetWidget(pedit = new QLineEdit);
-				pw = pedit;
-				if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
-			}
+				FEParamValue val = pi.paramValue();
+				CParamInput* pin = nullptr;
+				QWidget* pw = nullptr;
+				QLineEdit* pedit; QCheckBox* pcheck;
+				switch (val.type())
+				{
+				case FE_PARAM_DOUBLE:
+				{
+					pin = new CParamInput;
+					pin->SetWidget(pedit = new QLineEdit);
+					pw = pedit;
+					if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
+				}
+				break;
+				case FE_PARAM_BOOL:
+				{
+					pin = new CParamInput;
+					pin->SetWidget(pcheck = new QCheckBox);
+					pw = pcheck;
+					if (naction == 0) QObject::connect(pcheck, SIGNAL(stateChanged(int)), m_dlg, SLOT(Run()));
+				}
+				break;
+				case FE_PARAM_INT:
+				{
+					pin = new CParamInput;
+					pin->SetWidget(pedit = new QLineEdit);
+					pw = pedit;
+					if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
+				}
+				break;
+				}
 
-			if (pi.IsType(FEBioParam::TYPE_BOOL))
-			{
-				pin = new CParamInput;
-				pin->SetWidget(pcheck = new QCheckBox);
-				pw = pcheck;
-				if (naction == 0) QObject::connect(pcheck, SIGNAL(stateChanged(int)), m_dlg, SLOT(Run()));
-			}
+				if (pin)
+				{
+					assert(pw);
+					pin->SetParameter(pi.name(), val);
+					pw->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-			if (pi.IsType(FEBioParam::TYPE_INT))
-			{
-				pin = new CParamInput;
-				pin->SetWidget(pedit = new QLineEdit);
-				pw = pedit;
-				if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
-			}
-
-			if (pin)
-			{
-				assert(pw);
-				pin->SetParameter(pi);
-				pw->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-
-				// add it to the row
-				pf->addRow(QString::fromStdString(pi.Name()), pw);
-				m_dlg->AddInputParameter(pin);
+					// add it to the row
+					pf->addRow(pi.name(), pw);
+					m_dlg->AddInputParameter(pin);
+				}
 			}
 		}
 
@@ -642,17 +659,20 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 		else printf("WARNING: Unknown align value %s\n", szalign);
 	}
 
+	FEModel& fem = m_data->m_fem;
+
 	XMLReader& xml = *tag.m_preader;
 
 	string paramLabel;
 	string paramName = "";
-	FEBioParam param;
+	FEParamValue val;
 	bool brange = false;
 	double rng[3];
 	if (tag.isleaf())
 	{
 		paramName = tag.szvalue();
-		param = m_data->GetFEBioParameter(paramName);
+		ParamString ps(tag.szvalue());
+		val = fem.GetParameterValue(ps);
 	}
 	else
 	{
@@ -662,7 +682,8 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 			if (tag == "param")
 			{
 				paramName = tag.szvalue();
-				param = m_data->GetFEBioParameter(paramName);
+				ParamString ps(tag.szvalue());
+				val = fem.GetParameterValue(ps);
 				++tag;
 			}
 			else if (tag == "range")
@@ -680,7 +701,7 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 		}
 		while (!tag.isend());
 	}
-	if (param.IsValid() == false) 
+	if (val.isValid() == false) 
 	{
 		printf("ERROR: Failed finding parameter %s\n", paramName.c_str());
 		return;
@@ -697,7 +718,7 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 //	plabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	CParamInput* pi = new CParamInput;
 	QWidget* pw = 0;
-	if (param.IsType(FEBioParam::TYPE_DOUBLE))
+	if (val.type() == FE_PARAM_DOUBLE)
 	{ 
 		if (brange)
 		{
@@ -716,18 +737,18 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 			QObject::connect(edit, SIGNAL(textEdited(const QString&)), m_dlg, SLOT(paramChanged()));
 		}
 	}
-	if (param.IsType(FEBioParam::TYPE_BOOL))
+	if (val.type() == FE_PARAM_BOOL  )
 	{ 
 		QCheckBox* pcheck = new QCheckBox;
 		pi->SetWidget(pcheck);
 		pw = pcheck; 
 	}
-	if (param.IsType(FEBioParam::TYPE_INT))
+	if (val.type() == FE_PARAM_INT)
 	{ 
 		QLineEdit* pedit = new QLineEdit; pedit->setValidator(new QIntValidator);
 		pi->SetWidget(pedit); pw = pedit; 
 	}
-	if (param.IsValid()) pi->SetParameter(param);
+	if (val.isValid()) pi->SetParameter(paramName, val);
 	assert(pw);
 	pw->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 

@@ -1,13 +1,12 @@
 #pragma once
 #include <QOpenGLWidget>
-#include <FECore/vec3d.h>
 #include <QAction>
-#include "GLMesh.h"
-#include "GLCamera.h"
+#include <FEBioAppLib/GLMesh.h>
+#include <GLLib/GLCamera.h>
 #include <GLWLib/GLWidget.h>
 
 //-----------------------------------------------------------------------------
-class FEModel;
+class FEBioData;
 class FESurface;
 
 //-----------------------------------------------------------------------------
@@ -22,7 +21,7 @@ public:
 	QSize minimumSizeHint() const { return QSize(200, 200); }
 	QSize sizeHint() const { return m_sizeHint; }
 
-	void SetFEModel(FEModel* pfem);
+	void SetFEModel(FEBioData* feb);
 
 	void SetBackgroundColor(double r, double g, double b);
 	void SetForegroundColor(double r, double g, double b);
@@ -59,10 +58,10 @@ private:
 	void initTextures();
 
 private:
-	FEModel*	m_pfem;
-	FESurface*	m_psurf;
-	GLMesh		m_glmesh;
-	QPoint		m_mousePos;
+	FEBioData*	m_feb;
+
+	FEBioApp::GLMesh*	m_mesh;
+	QPoint				m_mousePos;
 
 	double		m_zmin, m_zmax;
 	QSize		m_sizeHint;

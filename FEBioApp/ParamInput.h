@@ -1,5 +1,5 @@
 #pragma once
-#include <FECore/FEParam.h>
+#include <FEBioAppLib/FEBioParam.h>
 #include <string>
 #include <QtCore/QVariant>
 #include <QWidget>
@@ -37,7 +37,7 @@ private:
 };
 
 //-----------------------------------------------------------------------------
-//! This class connects an FE model parameter to an input field.
+//! This class connects an FEBio model parameter to an input field.
 class CParamInput
 {
 public:
@@ -59,7 +59,7 @@ public:
 	void SetWidget(QCheckBox* pw) { m_pcheck = pw; }
 	void SetWidget(CFloatSlider* pw) { m_slider = pw; }
 
-	void SetParameter(const string& name, const FEParamValue& val);
+	void SetParameter(const FEBioParam& val);
 
 	// update the parameter based on the UI value
 	void UpdateParameter();
@@ -72,7 +72,6 @@ private:
 	QCheckBox*		m_pcheck;
 	CFloatSlider*	m_slider;
 
-	FEParamValue	m_val;
-	string			m_name;
+	FEBioParam		m_val;
 	QVariant		m_initVal;
 };

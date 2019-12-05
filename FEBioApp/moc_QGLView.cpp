@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'QGLView.h'
 **
-** Created by: The Qt Meta Object Compiler version 67 (Qt 5.8.0)
+** Created by: The Qt Meta Object Compiler version 67 (Qt 5.12.5)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
@@ -12,7 +12,7 @@
 #if !defined(Q_MOC_OUTPUT_REVISION)
 #error "The header file 'QGLView.h' doesn't include <QObject>."
 #elif Q_MOC_OUTPUT_REVISION != 67
-#error "This file was generated using the moc from 5.8.0. It"
+#error "This file was generated using the moc from 5.12.5. It"
 #error "cannot be used with the include files from this version of Qt."
 #error "(The moc has changed too much.)"
 #endif
@@ -43,7 +43,7 @@ QT_MOC_LITERAL(2, 25, 0) // ""
 static const uint qt_meta_data_QGLView[] = {
 
  // content:
-       7,       // revision
+       8,       // revision
        0,       // classname
        0,    0, // classinfo
        1,   14, // methods
@@ -65,7 +65,7 @@ static const uint qt_meta_data_QGLView[] = {
 void QGLView::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
     if (_c == QMetaObject::InvokeMetaMethod) {
-        QGLView *_t = static_cast<QGLView *>(_o);
+        auto *_t = static_cast<QGLView *>(_o);
         Q_UNUSED(_t)
         switch (_id) {
         case 0: _t->OnActivateShader(); break;
@@ -75,10 +75,14 @@ void QGLView::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, voi
     Q_UNUSED(_a);
 }
 
-const QMetaObject QGLView::staticMetaObject = {
-    { &QOpenGLWidget::staticMetaObject, qt_meta_stringdata_QGLView.data,
-      qt_meta_data_QGLView,  qt_static_metacall, Q_NULLPTR, Q_NULLPTR}
-};
+QT_INIT_METAOBJECT const QMetaObject QGLView::staticMetaObject = { {
+    &QOpenGLWidget::staticMetaObject,
+    qt_meta_stringdata_QGLView.data,
+    qt_meta_data_QGLView,
+    qt_static_metacall,
+    nullptr,
+    nullptr
+} };
 
 
 const QMetaObject *QGLView::metaObject() const
@@ -88,9 +92,9 @@ const QMetaObject *QGLView::metaObject() const
 
 void *QGLView::qt_metacast(const char *_clname)
 {
-    if (!_clname) return Q_NULLPTR;
+    if (!_clname) return nullptr;
     if (!strcmp(_clname, qt_meta_stringdata_QGLView.stringdata0))
-        return static_cast<void*>(const_cast< QGLView*>(this));
+        return static_cast<void*>(this);
     return QOpenGLWidget::qt_metacast(_clname);
 }
 

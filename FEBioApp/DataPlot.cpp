@@ -27,7 +27,7 @@ void CDataPlot::Reset()
 }
 
 //-----------------------------------------------------------------------------
-void CDataPlot::Update(FEModel& fem)
+void CDataPlot::Update()
 {
 	for (int i = 0; i<plots(); ++i)
 	{
@@ -47,7 +47,7 @@ void CDataPlot::UpdatePlots(bool bclear)
 
 		CDataSource& data = *m_data[i];
 
-		int N = data.m_data.size();
+		size_t N = data.m_data.size();
 		for (int j=0; j<N; ++j)
 		{
 			plot.addPoint(data.m_data[j].x(), data.m_data[j].y());

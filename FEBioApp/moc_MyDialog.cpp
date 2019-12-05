@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'MyDialog.h'
 **
-** Created by: The Qt Meta Object Compiler version 67 (Qt 5.12.0)
+** Created by: The Qt Meta Object Compiler version 67 (Qt 5.12.5)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
@@ -12,7 +12,7 @@
 #if !defined(Q_MOC_OUTPUT_REVISION)
 #error "The header file 'MyDialog.h' doesn't include <QObject>."
 #elif Q_MOC_OUTPUT_REVISION != 67
-#error "This file was generated using the moc from 5.12.0. It"
+#error "This file was generated using the moc from 5.12.5. It"
 #error "cannot be used with the include files from this version of Qt."
 #error "(The moc has changed too much.)"
 #endif
@@ -74,7 +74,7 @@ static const uint qt_meta_data_CActionButton[] = {
 void CActionButton::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
     if (_c == QMetaObject::InvokeMetaMethod) {
-        CActionButton *_t = static_cast<CActionButton *>(_o);
+        auto *_t = static_cast<CActionButton *>(_o);
         Q_UNUSED(_t)
         switch (_id) {
         case 0: _t->doAction((*reinterpret_cast< int(*)>(_a[1]))); break;
@@ -140,8 +140,8 @@ void CActionButton::doAction(int _t1)
     QMetaObject::activate(this, &staticMetaObject, 0, _a);
 }
 struct qt_meta_stringdata_MyDialog_t {
-    QByteArrayData data[12];
-    char stringdata0[86];
+    QByteArrayData data[14];
+    char stringdata0[115];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -161,12 +161,15 @@ QT_MOC_LITERAL(7, 49, 4), // "Quit"
 QT_MOC_LITERAL(8, 54, 5), // "Pause"
 QT_MOC_LITERAL(9, 60, 8), // "Continue"
 QT_MOC_LITERAL(10, 69, 8), // "doAction"
-QT_MOC_LITERAL(11, 78, 7) // "naction"
+QT_MOC_LITERAL(11, 78, 7), // "naction"
+QT_MOC_LITERAL(12, 86, 12), // "on_modelInit"
+QT_MOC_LITERAL(13, 99, 15) // "on_timeStepDone"
 
     },
     "MyDialog\0ResetDlg\0\0Run\0RunTask\0"
     "paramChanged\0Stop\0Quit\0Pause\0Continue\0"
-    "doAction\0naction"
+    "doAction\0naction\0on_modelInit\0"
+    "on_timeStepDone"
 };
 #undef QT_MOC_LITERAL
 
@@ -176,7 +179,7 @@ static const uint qt_meta_data_MyDialog[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-       9,   14, // methods
+      11,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -184,15 +187,17 @@ static const uint qt_meta_data_MyDialog[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    0,   59,    2, 0x0a /* Public */,
-       3,    0,   60,    2, 0x0a /* Public */,
-       4,    0,   61,    2, 0x0a /* Public */,
-       5,    0,   62,    2, 0x0a /* Public */,
-       6,    0,   63,    2, 0x0a /* Public */,
-       7,    0,   64,    2, 0x0a /* Public */,
-       8,    0,   65,    2, 0x0a /* Public */,
-       9,    0,   66,    2, 0x0a /* Public */,
-      10,    1,   67,    2, 0x0a /* Public */,
+       1,    0,   69,    2, 0x0a /* Public */,
+       3,    0,   70,    2, 0x0a /* Public */,
+       4,    0,   71,    2, 0x0a /* Public */,
+       5,    0,   72,    2, 0x0a /* Public */,
+       6,    0,   73,    2, 0x0a /* Public */,
+       7,    0,   74,    2, 0x0a /* Public */,
+       8,    0,   75,    2, 0x0a /* Public */,
+       9,    0,   76,    2, 0x0a /* Public */,
+      10,    1,   77,    2, 0x0a /* Public */,
+      12,    0,   80,    2, 0x0a /* Public */,
+      13,    0,   81,    2, 0x0a /* Public */,
 
  // slots: parameters
     QMetaType::Void,
@@ -204,6 +209,8 @@ static const uint qt_meta_data_MyDialog[] = {
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void, QMetaType::Int,   11,
+    QMetaType::Void,
+    QMetaType::Void,
 
        0        // eod
 };
@@ -211,7 +218,7 @@ static const uint qt_meta_data_MyDialog[] = {
 void MyDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
     if (_c == QMetaObject::InvokeMetaMethod) {
-        MyDialog *_t = static_cast<MyDialog *>(_o);
+        auto *_t = static_cast<MyDialog *>(_o);
         Q_UNUSED(_t)
         switch (_id) {
         case 0: _t->ResetDlg(); break;
@@ -223,6 +230,8 @@ void MyDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, vo
         case 6: _t->Pause(); break;
         case 7: _t->Continue(); break;
         case 8: _t->doAction((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 9: _t->on_modelInit(); break;
+        case 10: _t->on_timeStepDone(); break;
         default: ;
         }
     }
@@ -257,13 +266,13 @@ int MyDialog::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 9)
+        if (_id < 11)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 9;
+        _id -= 11;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 9)
+        if (_id < 11)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 9;
+        _id -= 11;
     }
     return _id;
 }

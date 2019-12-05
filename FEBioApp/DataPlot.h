@@ -1,7 +1,6 @@
 #pragma once
 #include "PlotWidget.h"
-#include <FECore/FEParam.h>
-#include <FECore/FEModel.h>
+#include <FEBioAppLib/FEBioParam.h>
 
 class CDataSource
 {
@@ -21,8 +20,8 @@ public:
 class CParamDataSource : public CDataSource
 {
 public:
-	FEParamValue	m_x;
-	FEParamValue	m_y;
+	FEBioParam	m_x;
+	FEBioParam	m_y;
 
 	void Reset()
 	{ 
@@ -32,8 +31,8 @@ public:
 	void Update()
 	{
 		QPointF p;
-		p.setX(m_x.value<double>());
-		p.setY(m_y.value<double>());
+		p.setX(m_x.GetDouble());
+		p.setY(m_y.GetDouble());
 		m_data.push_back(p);
 	}
 };
@@ -50,7 +49,7 @@ class CDataPlot : public CPlotWidget
 public:
 	CDataPlot(QWidget* parent = 0);
 
-	void Update(FEModel& fem);
+	void Update();
 
 	void Reset();
 

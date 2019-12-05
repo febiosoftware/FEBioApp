@@ -70,15 +70,14 @@ CParamInput::CParamInput()
 }
 
 //-----------------------------------------------------------------------------
-void CParamInput::SetParameter(const string& name, const FEParamValue& val)
+void CParamInput::SetParameter(const FEBioParam& val)
 {
-	m_name = name;
 	m_val = val;
-	if (val.isValid())
+	if (val.IsValid())
 	{
-		if (val.type() == FE_PARAM_DOUBLE)
+		if (val.IsType(FEBioParam::TYPE_DOUBLE))
 		{
-			double d = val.value<double>();
+			double d = val.GetDouble();
 			if (m_pedit)
 			{
 				m_pedit->setText(QString::number(d));
@@ -90,15 +89,15 @@ void CParamInput::SetParameter(const string& name, const FEParamValue& val)
 				m_initVal = m_slider->getFloatValue();
 			}
 		}
-		else if (val.type() == FE_PARAM_BOOL)
+		else if (val.IsType(FEBioParam::TYPE_BOOL))
 		{
-			bool b = val.value<bool>();
+			bool b = val.GetBool();
 			if (m_pcheck) m_pcheck->setChecked(b);
 			m_initVal = b;
 		}
-		else if (val.type() == FE_PARAM_INT)
+		else if (val.IsType(FEBioParam::TYPE_INT))
 		{
-			int n = val.value<int>();
+			int n = val.GetInt();
 			if (m_pedit) m_pedit->setText(QString::number(n));
 			m_initVal = n;
 		}
@@ -108,36 +107,37 @@ void CParamInput::SetParameter(const string& name, const FEParamValue& val)
 //-----------------------------------------------------------------------------
 void CParamInput::UpdateParameter()
 {
-	if (m_val.isValid())
+	if (m_val.IsValid())
 	{
-		if (m_val.type() == FE_PARAM_DOUBLE)
+		const char* szname = m_val.Name().c_str();
+		if (m_val.IsType(FEBioParam::TYPE_DOUBLE))
 		{
 			if (m_pedit)
 			{
 				QString s = m_pedit->text();
 				double f = s.toDouble();
-				m_val.value<double>() = f;
-				printf("Setting parameter %s to %lg\n", m_name.c_str(), f);
+				m_val.SetDouble(f);
+				printf("Setting parameter %s to %lg\n", szname, f);
 			}
 			else if (m_slider)
 			{
 				double f = m_slider->getFloatValue();
-				m_val.value<double>() = f;
-				printf("Setting parameter %s to %lg\n", m_name.c_str(), f);
+				m_val.SetDouble(f);
+				printf("Setting parameter %s to %lg\n", szname, f);
 			}
 		}
-		else if ((m_val.type() == FE_PARAM_BOOL) && m_pcheck)
+		else if ((m_val.IsType(FEBioParam::TYPE_BOOL)) && m_pcheck)
 		{
 			bool b = m_pcheck->isChecked();
-			m_val.value<bool>() = b;
-			printf("Setting parameter %s to %s\n", m_name.c_str(), (b ? "true" : "false"));
+			m_val.SetBool(b);
+			printf("Setting parameter %s to %s\n", szname, (b ? "true" : "false"));
 		}
-		if ((m_val.type() == FE_PARAM_INT) && m_pedit)
+		if ((m_val.IsType(FEBioParam::TYPE_INT)) && m_pedit)
 		{
 			QString s = m_pedit->text();
 			int n = s.toInt();
-			m_val.value<int>() = n;
-			printf("Setting parameter %s to %d\n", m_name.c_str(), n);
+			m_val.SetInt(n);
+			printf("Setting parameter %s to %d\n", szname, n);
 		}
 	}
 }
@@ -145,17 +145,17 @@ void CParamInput::UpdateParameter()
 //-----------------------------------------------------------------------------
 void CParamInput::ResetParameter()
 {
-	if (m_val.isValid())
+	if (m_val.IsValid())
 	{
-		if (m_val.type() == FE_PARAM_DOUBLE)
+		if (m_val.IsType(FEBioParam::TYPE_DOUBLE))
 		{
 			if (m_pedit) m_pedit->setText(QString::number(m_initVal.toDouble()));
 		}
-		else if (m_val.type() == FE_PARAM_BOOL)
+		else if (m_val.IsType(FEBioParam::TYPE_BOOL))
 		{
 			if (m_pcheck) m_pcheck->setChecked(m_initVal.toBool());
 		}
-		else if (m_val.type() == FE_PARAM_INT)
+		else if (m_val.IsType(FEBioParam::TYPE_INT))
 		{
 			if (m_pedit) m_pedit->setText(QString::number(m_initVal.toInt()));
 		}

@@ -1,8 +1,11 @@
-#include "stdafx.h"
+//#include "stdafx.h"
 #include "GLMesh.h"
 #include <Windows.h>
 #include <gl/GL.h>
 #include <stack>
+#include <assert.h>
+
+using namespace FEBioApp;
 
 GLMesh::GLMesh()
 {
@@ -15,23 +18,15 @@ void GLMesh::Clear()
 
 void GLMesh::Create(int faces)
 {
-	if (faces > 0) 
+	if (faces > 0)
 	{
-		int nodes = faces*3;
-		m_Node.resize(nodes);
-		m_Norm.resize(nodes);
-		
-		m_Tex.resize(nodes);
-		for (size_t i=0; i<m_Tex.size(); ++i) m_Tex[i] = 0.0;
-
 		m_Face.resize(faces);
-		for (int i=0; i<faces; ++i)
-		{
-			FACE& f = m_Face[i];
-			f.lnode[0] = 3*i  ;
-			f.lnode[1] = 3*i+1;
-			f.lnode[2] = 3*i+2;
-		}
+		for (int i = 0; i < faces; ++i) m_Face[i].fid = i;
+
+		int nodes = 3 * faces;
+		m_Node.resize(3*nodes);
+		m_Norm.resize(3*nodes);
+		m_Tex.resize(nodes, 0.0);
 	}
 }
 
@@ -44,11 +39,11 @@ void GLMesh::Render()
 		glEnableClientState(GL_NORMAL_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-		glVertexPointer(3, GL_FLOAT, 0, &m_Node[0]);
-		glNormalPointer(GL_FLOAT, 0, &m_Norm[0]);
+		glVertexPointer(3, GL_DOUBLE, 0, &m_Node[0]);
+		glNormalPointer(GL_DOUBLE, 0, &m_Norm[0]);
 		glTexCoordPointer(1, GL_DOUBLE, 0, &m_Tex[0]);
 
-		glDrawArrays(GL_TRIANGLES, 0, m_Node.size());
+		glDrawArrays(GL_TRIANGLES, 0, 3*m_Face.size());
 
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glDisableClientState(GL_NORMAL_ARRAY);
@@ -128,6 +123,29 @@ void GLMesh::UpdateFaces()
 	}	
 }
 
+GLMesh::POINT NormalToPlane(const GLMesh::POINT& a, const GLMesh::POINT& b, const GLMesh::POINT& c)
+{
+	GLMesh::POINT e1 = { b.x - a.x, b.y - a.y, b.z - a.z };
+	GLMesh::POINT e2 = { c.x - a.x, c.y - a.y, c.z - a.z };
+
+	GLMesh::POINT n = { 
+		e1.y*e2.z - e1.z*e2.y, 
+		e1.z*e2.x - e1.x*e2.z,
+		e1.x*e2.y - e1.y*e2.x
+	};
+
+	double L = sqrt(dot(n, n));
+	if (L != 0.0) { n.x /= L; n.y /= L; n.z /= L; }
+
+	return n;
+}
+
+void Normalize(GLMesh::POINT& n)
+{
+	double L = sqrt(dot(n, n));
+	if (L != 0.0) { n.x /= L; n.y /= L; n.z /= L; }
+}
+
 void GLMesh::PartitionFaces(double wAngle)
 {
 	const double tol = cos(wAngle*3.1415926/180.0);
@@ -142,14 +160,11 @@ void GLMesh::PartitionFaces(double wAngle)
 	{
 		FACE& f = Face(i);
 
-		vec3f& r0 = m_Node[f.lnode[0]];
-		vec3f& r1 = m_Node[f.lnode[1]];
-		vec3f& r2 = m_Node[f.lnode[2]];
+		POINT r0 = GetNodePosition(i*3  );
+		POINT r1 = GetNodePosition(i*3+1);
+		POINT r2 = GetNodePosition(i*3+2);
 
-		vec3f faceNorm = (r1 - r0) ^ (r2 - r0);
-		faceNorm.Normalize();
-
-		f.fnorm = faceNorm;
+		f.faceNormal = NormalToPlane(r0, r1, r2);
 	}
 
 	// assign partitions
@@ -174,7 +189,7 @@ void GLMesh::PartitionFaces(double wAngle)
 					FACE* pf2 = &Face(pf->nbr[i]);
 					if (pf2->pid == -1)
 					{
-						double w = pf->fnorm*pf2->fnorm;
+						double w = dot(pf->faceNormal, pf2->faceNormal);
 						if (w > tol)
 						{
 							pf2->pid = ng;
@@ -206,33 +221,29 @@ void GLMesh::UpdateNormals()
 	const int NF = Faces();
 
 	// update face normals first
-	for (int i=0; i<NF; ++i)
+	for (int i = 0; i<NF; ++i)
 	{
 		FACE& f = Face(i);
 
-		vec3f& r0 = m_Node[f.lnode[0]];
-		vec3f& r1 = m_Node[f.lnode[1]];
-		vec3f& r2 = m_Node[f.lnode[2]];
+		POINT r0 = GetNodePosition(i * 3);
+		POINT r1 = GetNodePosition(i * 3 + 1);
+		POINT r2 = GetNodePosition(i * 3 + 2);
 
-		vec3f faceNorm = (r1 - r0) ^ (r2 - r0);
-		faceNorm.Normalize();
-
-		f.fnorm = faceNorm;
+		f.faceNormal = NormalToPlane(r0, r1, r2);
 	}
 
 	// clear all node normals
-	const int NN = m_Norm.size();
-	for (int i=0; i<NN; ++i) m_Norm[i] = vec3f(0,0,0);
+	m_Norm.assign(m_Norm.size(), 0.0);
 
 	// assign node normals
 	stack<FACE*> faceStack;
 	vector<int> tag(NF);
 	int ng = 0;
 	int faceIndex = 0;
-	vector<vec3f> norm;
+	vector<POINT> norm;
 	while (faceIndex < NF)
 	{
-		norm.assign(3*NF, vec3f(0,0,0));
+		norm.assign(3*NF, POINT(0,0,0));
 		tag.assign(NF, 0);
 		FACE* pf = &Face(faceIndex);
 		tag[faceIndex] = 1;
@@ -240,11 +251,11 @@ void GLMesh::UpdateNormals()
 		while (faceStack.empty() == false)
 		{
 			pf = faceStack.top(); faceStack.pop();
-			vec3f& ni = pf->fnorm;
+			POINT& ni = pf->faceNormal;
 
-			norm[pf->nid[0]] += ni;
-			norm[pf->nid[1]] += ni;
-			norm[pf->nid[2]] += ni;
+			norm[3*pf->fid  ] += ni;
+			norm[3*pf->fid+1] += ni;
+			norm[3*pf->fid+2] += ni;
 
 			// push neighbors
 			for (int i=0; i<3; ++i)
@@ -254,6 +265,20 @@ void GLMesh::UpdateNormals()
 					FACE* pf2 = &Face(pf->nbr[i]);
 					if ((pf2->pid == pf->pid) && (tag[pf->nbr[i]] == 0))
 					{
+/*						POINT& nj = pf2->faceNormal;
+
+						int m = -1;
+						if ((pf2->nbr[0] == pf->fid)) m = 0;
+						if ((pf2->nbr[1] == pf->fid)) m = 1;
+						if ((pf2->nbr[2] == pf->fid)) m = 2;
+						assert(m != -1);
+
+						norm[3*pf->fid + i        ] += nj;
+						norm[3*pf->fid + ((i+1)%3)] += nj;
+
+						norm[3*pf2->fid + m        ] += ni;
+						norm[3*pf2->fid + ((m+2)%3)] += ni;
+*/
 						tag[pf->nbr[i]] = 1;
 						faceStack.push(pf2);
 					}
@@ -266,10 +291,9 @@ void GLMesh::UpdateNormals()
 		{
 			if (tag[i] == 1)
 			{
-				FACE& fi = Face(i);
-				m_Norm[fi.lnode[0]] = norm[fi.nid[0]];
-				m_Norm[fi.lnode[1]] = norm[fi.nid[1]];
-				m_Norm[fi.lnode[2]] = norm[fi.nid[2]];
+				SetNodeNormal(3*i  , norm[3*i    ]);
+				SetNodeNormal(3*i+1, norm[3*i + 1]);
+				SetNodeNormal(3*i+2, norm[3*i + 2]);
 			}
 		}
 
@@ -281,5 +305,68 @@ void GLMesh::UpdateNormals()
 	}
 
 	// normalize node normals
-	for (int i=0; i<NN; ++i) m_Norm[i].Normalize();
+	for (int i = 0; i < NF; ++i)
+	{
+		for (int j = 0; j < 3; ++j)
+		{
+			POINT n = GetNodeNormal(3 * i + j);
+			Normalize(n);
+			SetNodeNormal(3 * i + j, n);
+		}
+	}
+}
+
+double FEBioApp::MeshSize(const GLMesh& mesh)
+{
+	int NN = mesh.Nodes();
+	if (NN == 0) return 0.0;
+
+	GLMesh::POINT p0, p1;
+	p0 = p1 = mesh.GetNodePosition(0);
+
+	for (int i = 0; i < 3*mesh.Faces(); ++i)
+	{
+		GLMesh::POINT p = mesh.GetNodePosition(i);
+
+		if (p.x < p0.x) p0.x = p.x;
+		if (p.y < p0.y) p0.y = p.y;
+		if (p.z < p0.z) p0.z = p.z;
+
+		if (p.x > p1.x) p1.x = p.x;
+		if (p.y > p1.y) p1.y = p.y;
+		if (p.z > p1.z) p1.z = p.z;
+	}
+
+	double dx = p1.x - p0.x;
+	double dy = p1.y - p0.y;
+	double dz = p1.z - p0.z;
+
+	double r = (dx > dy ? dx : dy);
+	r = (r > dz ? r : dz);
+
+	return r;
+}
+
+FEBioApp::GLMesh::POINT FEBioApp::MeshCenter(const GLMesh& mesh)
+{
+	int NN = mesh.Nodes();
+	if (NN == 0) return GLMesh::POINT(0,0,0);
+
+	GLMesh::POINT p0, p1;
+	p0 = p1 = mesh.GetNodePosition(0);
+
+	for (int i = 0; i < 3 * mesh.Faces(); ++i)
+	{
+		GLMesh::POINT p = mesh.GetNodePosition(i);
+
+		if (p.x < p0.x) p0.x = p.x;
+		if (p.y < p0.y) p0.y = p.y;
+		if (p.z < p0.z) p0.z = p.z;
+
+		if (p.x > p1.x) p1.x = p.x;
+		if (p.y > p1.y) p1.y = p.y;
+		if (p.z > p1.z) p1.z = p.z;
+	}
+
+	return GLMesh::POINT(0.5*(p0.x + p1.x), 0.5*(p0.y + p1.y), 0.5*(p0.z + p1.z));
 }

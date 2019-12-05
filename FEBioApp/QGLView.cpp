@@ -3,21 +3,18 @@
 #include "QGLView.h"
 #include <gl/GL.h>
 #include <gl/GLU.h>
-#include <FECore/FEModel.h>
-#include <FECore/FEBox.h>
-#include <FECore/FEElemElemList.h>
-#include <FECore/FESurface.h>
 #include <QMouseEvent>
 #include <QMessageBox>
 #include <QMenu>
 #include <QPainter>
 #include <GLWLib/GLWidgetManager.h>
-#include <PostViewLib/color.h>
+#include <FSCore/color.h>
+#include <MathLib/math3d.h>
+#include <FEBioAppLib/FEBioData.h>
 
 //-----------------------------------------------------------------------------
 QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 {
-	m_psurf = 0;
 	if (w < 200) w = 200;
 	if (h < 200) h = 200;
 	m_sizeHint = QSize(w, h);
@@ -28,7 +25,7 @@ QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 	m_smoothingAngle = 60;
 
 	m_cam.SetTargetDistance(5.f);
-	m_cam.GetOrientation() = quat4f(-1, vec3f(1,0,0));
+	m_cam.GetOrientation() = quatd(-1, vec3d(1,0,0));
 	m_cam.Update(true);
 
 	QSurfaceFormat f = format();
@@ -50,6 +47,8 @@ QGLView::QGLView(QWidget* parent, int w, int h) : QOpenGLWidget(parent)
 	Post::ColorMapManager::Initialize();
 
 	m_col = new Post::CColorTexture;
+
+	m_mesh = nullptr;
 
 	CGLWidgetManager* wm = CGLWidgetManager::GetInstance();
 	wm->AttachToView(this);
@@ -104,60 +103,16 @@ void QGLView::SetTimeFormat(int nformat)
 }
 
 //-----------------------------------------------------------------------------
-void QGLView::SetFEModel(FEModel* pfem)
+void QGLView::SetFEModel(FEBioData* feb)
 {
-	m_pfem = pfem;
+	m_feb = feb;
 
 	// rebuild the FE surface
-	if (m_psurf) delete m_psurf;
-	m_psurf = m_pfem->GetMesh().ElementBoundarySurface();
-
-	// Create the GL mesh
-	int NN = m_psurf->Nodes();
-	int NE = m_psurf->Elements();
-
-	int NF = 0;
-	for (int i=0; i<NE; ++i)
-	{
-		FESurfaceElement& el = m_psurf->Element(i);
-		if (el.Nodes() == 3) NF++; 
-		else if (el.Nodes() == 4) NF += 2;
-	}
-	m_glmesh.Create(NF);
-
-	// create the connectivity
-	NF = 0;
-	for (int i=0; i<NE; ++i)
-	{
-		FESurfaceElement& el = m_psurf->Element(i);
-		GLMesh::FACE& f1 = m_glmesh.Face(NF++);
-		f1.nid[0] = el.m_lnode[0];
-		f1.nid[1] = el.m_lnode[1];
-		f1.nid[2] = el.m_lnode[2];
-
-		if (el.Nodes() == 4)
-		{
-			GLMesh::FACE& f2 = m_glmesh.Face(NF++);
-			f2.nid[0] = el.m_lnode[2];
-			f2.nid[1] = el.m_lnode[3];
-			f2.nid[2] = el.m_lnode[0];
-		}
-	}
-
-	// copy initial nodal coordinates
-	for (int i=0; i<NF; ++i)
-	{
-		GLMesh::FACE& f = m_glmesh.Face(i);
-		vec3d& r0 = m_psurf->Node(f.nid[0]).m_rt; m_glmesh.nodePosition(f.lnode[0]) = vec3f(r0.x, r0.y, r0.z);
-		vec3d& r1 = m_psurf->Node(f.nid[1]).m_rt; m_glmesh.nodePosition(f.lnode[1]) = vec3f(r1.x, r1.y, r1.z);
-		vec3d& r2 = m_psurf->Node(f.nid[2]).m_rt; m_glmesh.nodePosition(f.lnode[2]) = vec3f(r2.x, r2.y, r2.z);
-	}
-
-	// find the face neighbors
-	m_glmesh.UpdateFaces();
+	if (m_mesh) delete m_mesh;
+	m_mesh = m_feb->BuildGLMesh();
 
 	// partition the surface
-	m_glmesh.PartitionFaces(m_smoothingAngle);
+	m_mesh->PartitionFaces(m_smoothingAngle);
 
 	Update();
 }
@@ -180,7 +135,7 @@ void QGLView::SetDataRange(double vmin, double vmax)
 void QGLView::SetRotation(double eulerX, double eulerY, double eulerZ)
 {
 	const double D2R = 3.1415926 / 180.0;
-	quat4f q;
+	quatd q;
 	q.SetEuler(eulerX*D2R, eulerY*D2R, eulerZ*D2R);
 	m_cam.SetOrientation(q);
 
@@ -197,118 +152,23 @@ void QGLView::SetSmoothingAngle(double w)
 void QGLView::Update(bool bzoom)
 {
 	// find the center of the box
-	if (m_psurf == 0) return;
+	if (m_mesh == 0) return;
 
 	if (bzoom)
 	{
-		FEBox box(*m_psurf);
-		vec3d r = box.center();
-		m_cam.SetTarget(vec3f(r.x, r.y, r.z));
-		double D = box.maxsize()*1.5;
+		FEBioApp::GLMesh::POINT p = MeshCenter(*m_mesh);
+		m_cam.SetTarget(vec3d(p.x, p.y, p.z));
+		double D = MeshSize(*m_mesh)*1.5;
 		m_cam.SetTargetDistance(D);
 		m_zmax = 2*D;
 		m_zmin = 1e-4*D;
 	}
 
-	// copy nodal coordinates
-	int NF = m_glmesh.Faces();
-	for (int i=0; i<NF; ++i)
-	{
-		GLMesh::FACE& f = m_glmesh.Face(i);
-		vec3d& r0 = m_psurf->Node(f.nid[0]).m_rt; m_glmesh.nodePosition(f.lnode[0]) = vec3f(r0.x, r0.y, r0.z);
-		vec3d& r1 = m_psurf->Node(f.nid[1]).m_rt; m_glmesh.nodePosition(f.lnode[1]) = vec3f(r1.x, r1.y, r1.z);
-		vec3d& r2 = m_psurf->Node(f.nid[2]).m_rt; m_glmesh.nodePosition(f.lnode[2]) = vec3f(r2.x, r2.y, r2.z);
-	}
+	// update the gl mesh
+	m_feb->UpdateGLMesh(m_mesh, m_map);
 
-	int NN = m_psurf->Nodes();
-	if (m_val.size() != NN) m_val.resize(NN, 0.0);
-
-	if (m_map.empty() == false)
-	{
-		DOFS& dofs = m_pfem->GetDOFS();
-		int nvar = dofs.GetVariableIndex(m_map.c_str());
-		if (nvar >= 0)
-		{
-			int ndof = dofs.GetVariableSize(nvar);
-			int dof0 = dofs.GetDOF(nvar, 0);
-
-			// evaluate data range
-			double Dmin = 1e99, Dmax = -1e99;
-			if (m_userRange)
-			{
-				Dmin = m_rng[0];
-				Dmax = m_rng[1];
-			}
-			else
-			{
-				FEMesh* pm = m_psurf->GetMesh();
-				for (int i=0; i<pm->Nodes(); ++i)
-				{
-					FENode& ni = pm->Node(i);
-
-					double D = 0;
-					if (ndof == 1)
-					{
-						D = ni.get(dof0);
-					}
-					else
-					{
-						for (int j = 0; j<ndof; ++j)
-						{
-							double dn = ni.get(dof0 + j);
-							D += dn*dn;
-						}
-					}
-
-					if (D < Dmin) Dmin = D;
-					else if (D > Dmax) Dmax = D;
-				}
-			}
-
-			if (Dmax == Dmin) Dmax++;
-			m_rng[0] = Dmin;
-			m_rng[1] = Dmax;
-
-			// evaluate surface values
-			for (int i=0; i<m_psurf->Nodes(); ++i)
-			{
-				FENode& ni = m_psurf->Node(i);
-
-				double D = 0;
-				if (ndof == 1)
-				{
-					D = ni.get(dof0);
-				}
-				else
-				{
-					for (int j=0; j<ndof; ++j)
-					{
-						double dn = ni.get(dof0 + j);
-						D += dn*dn;
-					}
-				}
-
-				m_val[i] = D;
-			}
-
-			if (m_legend) m_legend->SetRange(m_rng[0], m_rng[1]);
-
-			// normalize textture coordinates
-			for (int i=0; i<NN; ++i) m_val[i] = (m_val[i] - Dmin) / (Dmax - Dmin);
-		}
-	}
-
-	// then, assign texture coordinates
-	for (int i = 0; i<NF; ++i)
-	{
-		GLMesh::FACE& f = m_glmesh.Face(i);
-		m_glmesh.nodeTexCoord1D(f.lnode[0]) = m_val[f.nid[0]];
-		m_glmesh.nodeTexCoord1D(f.lnode[1]) = m_val[f.nid[1]];
-		m_glmesh.nodeTexCoord1D(f.lnode[2]) = m_val[f.nid[2]];
-	}
-
-	// recalculate normals
-	m_glmesh.UpdateNormals();
+	m_feb->GetDataRange(m_rng);
+	if (m_legend) m_legend->SetRange(m_rng[0], m_rng[1]);
 
 	repaint();
 }
@@ -343,13 +203,13 @@ void QGLView::mouseMoveEvent(QMouseEvent* ev)
 		if (balt)
 		{
 			// rotate in-plane
-			quat4f qz = quat4f((y - yp)*0.01, vec3f(0, 0, 1));
+			quatd qz = quatd((y - yp)*0.01, vec3d(0, 0, 1));
 			m_cam.Orbit(qz);
 		}
 		else
 		{
-			quat4f qx = quat4f((y - yp)*0.01, vec3f(1, 0, 0));
-			quat4f qy = quat4f((x - xp)*0.01, vec3f(0, 1, 0));
+			quatd qx = quatd((y - yp)*0.01, vec3d(1, 0, 0));
+			quatd qy = quatd((x - xp)*0.01, vec3d(0, 1, 0));
 			m_cam.Orbit(qx);
 			m_cam.Orbit(qy);
 		}
@@ -357,7 +217,7 @@ void QGLView::mouseMoveEvent(QMouseEvent* ev)
 	}
 	else if ((but2) || (but3 && balt))
 	{
-		vec3f r = vec3f(-(float)(x - xp), (float)(y - yp), 0.f);
+		vec3d r = vec3d(-(float)(x - xp), (float)(y - yp), 0.f);
 
 		double h = (double) height(); if (h==0) h = 1;
 		double w = (double) width();
@@ -552,13 +412,13 @@ void QGLView::paintGL()
 
 	m_cam.Transform();
 
-	if (m_psurf==0) return;
+	if (m_mesh==0) return;
 
 	glColor3ub(236, 212, 212);
 	glEnable(GL_TEXTURE_1D);
 	glEnable(GL_DEPTH_TEST);
 	m_col->GetTexture().MakeCurrent();
-	m_glmesh.Render();
+	m_mesh->Render();
 
 	glUseProgram(0);
 	if (m_bshader) glUseProgram(myProgram);
@@ -573,9 +433,9 @@ void QGLView::paintGL()
 
 	glDisable(GL_TEXTURE_1D);
 
-	if (m_pfem)
+	if (m_feb)
 	{
-		double time = m_pfem->GetTime().currentTime;
+		double time = m_feb->GetSimulationTime();
 
 		if (m_timeFormat == 1)
 		{

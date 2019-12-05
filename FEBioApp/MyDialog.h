@@ -4,29 +4,14 @@
 #include <QCheckBox>
 #include <QSlider>
 #include <QPushButton>
-#include <FEBioLib/FEBioModel.h>
 #include "PlotWidget.h"
 #include "QGLView.h"
 #include "DataPlot.h"
 #include "ParamInput.h"
-#include <FECore/FECoreTask.h>
+#include <FEBioAppLib\FEBioData.h>
+#include <time.h>
 
-class XMLTag;
-class FEModel;
 class QBoxLayout;
-
-//-----------------------------------------------------------------------------
-class ModelData
-{
-public:
-	FEBioModel		m_fem;
-	FECoreTask*		m_task;
-	std::string 	m_taskFile;
-
-	ModelData::ModelData() : m_task(0) {}
-
-	ModelData::~ModelData() { if (m_task) delete m_task; m_task = 0; }
-};
 
 //-----------------------------------------------------------------------------
 class CActionButton : public QPushButton
@@ -67,8 +52,6 @@ public:
 
 	void AddPlot3D(QGLView* plot3d) { m_gl.push_back(plot3d); }
 
-	bool IsRunning() const { return m_brunning; }
-
 	void closeEvent(QCloseEvent* ev) override;
 
 public slots:
@@ -83,19 +66,15 @@ public slots:
 
 	void doAction(int naction);
 
+	void on_modelInit();
+	void on_timeStepDone();
+
 private:
-	static bool cb(FEModel* pfem, unsigned int nwhen, void* pd)
-	{
-		MyDialog* pThis = (MyDialog*) pd;
-		return pThis->FECallback(*pfem, nwhen);
-	}
-
-	bool FECallback(FEModel& fem, unsigned int nwhen);
-
 	void UpdateModelParameters();
+	void UpdatePlots(bool breset);
 
 private:
-	ModelData				m_model;	//!< The model data
+	FEBioData				m_data;	//!< The model data
 	vector<QGLView*>		m_gl;
 	vector<CDataPlot*>		m_plot;
 	vector<CParamInput*>	m_in;
@@ -103,7 +82,8 @@ private:
 	QString		m_fileName;
 
 	bool	m_bupdateParams;	//!< a parameter has changed
-	bool	m_bforceStop;		//!< stop the model to run
-	bool	m_brunning;			//!< is model running
-	bool	m_bpaused;			//!< is model paused
+
+	bool	m_bforceStop;
+
+	clock_t	m_startTime, m_lastTime;
 };

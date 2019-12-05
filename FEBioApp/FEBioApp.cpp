@@ -4,26 +4,15 @@
 #include "stdafx.h"
 #include <QApplication>
 #include "MyDialog.h"
-#include <FEBioLib/febio.h>
-#include <FEBioLib/version.h>
 #include <QSurfaceFormat>
 #include <iostream>
 
-bool configure();
-
 int main(int argc, char* argv[])
 {
-	// initialize the FEBio library
-	febio::InitLibrary();
-
-#ifdef _DEBUG
-	printf("FEBio version %d.%d.%d\n\n", VERSION, SUBVERSION, SUBSUBVERSION);
-#endif
-
-	// read the configuration file
-	if (configure() == false)
+	// initialize FEBio
+	if (FEBioData::InitFEBio() == false)
 	{
-		printf("ERROR: Failed reading configuration file.\n");
+		printf("ERROR: Failed to initialize FEBio.\n");
 	}
 
 	// create the application
@@ -58,23 +47,4 @@ int main(int argc, char* argv[])
 		std::cout << "\nUsage: febioapp.exe inputfile\n\n";
 		return 0;
 	}
-}
-
-bool configure()
-{
-	char szpath[1024] = { 0 };
-	if (febio::get_app_path(szpath, 1023) == 0)
-	{
-		char sz[1024] = { 0 };
-
-		char* ch = strrchr(szpath, '\\');
-		if (ch == 0) ch = strrchr(szpath, '/');
-		if (ch) ch[1] = 0;
-
-		sprintf(sz, "%sfebio.xml", szpath);
-
-		return febio::Configure(sz);
-	}
-
-	return false;
 }

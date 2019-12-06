@@ -396,7 +396,7 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 
 					pg->AddData(src, szname);
 
-					xml.SkipTag(tag);
+					++tag;
 				}
 				else if (strcmp(sztype, "static") == 0)
 				{

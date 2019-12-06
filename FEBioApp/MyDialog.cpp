@@ -90,7 +90,7 @@ void MyDialog::on_timeStepDone()
 
 	if (sec > 0.05)
 	{
-		UpdatePlots(false);
+		UpdatePlots(true);
 
 		if (m_bupdateParams) UpdateModelParameters();
 
@@ -98,6 +98,7 @@ void MyDialog::on_timeStepDone()
 
 		QCoreApplication::processEvents();
 	}
+	else UpdatePlots(false);
 }
 
 void MyDialog::UpdatePlots(bool breset)

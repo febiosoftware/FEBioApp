@@ -138,12 +138,15 @@ bool FEBioData::SetFEBioTask(const char* sztaskName, const char* sztaskFile)
 
 bool FEBioData::FEBioCallback(unsigned int nwhen)
 {
-	if (im->m_runStatus == FEBioData::STOPPED) return false;
-
 	switch (nwhen)
 	{
 	case CB_INIT       : emit modelInit   (); break;
 	case CB_MAJOR_ITERS: emit timeStepDone(); break;
+	}
+
+	if (nwhen != CB_INIT)
+	{
+		if (im->m_runStatus == FEBioData::STOPPED) return false;
 	}
 
 	return true;
@@ -239,17 +242,12 @@ FEBioApp::GLMesh* FEBioData::BuildGLMesh()
 	for (int i = 0; i<NF; ++i)
 	{
 		FEBioApp::GLMesh::FACE& f = mesh->Face(i);
-		vec3d& r0 = febMesh.Node(f.nid[0]).m_rt; mesh->SetNodePosition(3*i  , FEBioApp::GLMesh::POINT(r0.x, r0.y, r0.z));
-		vec3d& r1 = febMesh.Node(f.nid[1]).m_rt; mesh->SetNodePosition(3*i+1, FEBioApp::GLMesh::POINT(r1.x, r1.y, r1.z));
-		vec3d& r2 = febMesh.Node(f.nid[2]).m_rt; mesh->SetNodePosition(3*i+2, FEBioApp::GLMesh::POINT(r2.x, r2.y, r2.z));
+		vec3d& r0 = febMesh.Node(f.nid[0]).m_rt; mesh->SetVertexPosition(3*i  , FEBioApp::GLMesh::POINT(r0.x, r0.y, r0.z));
+		vec3d& r1 = febMesh.Node(f.nid[1]).m_rt; mesh->SetVertexPosition(3*i+1, FEBioApp::GLMesh::POINT(r1.x, r1.y, r1.z));
+		vec3d& r2 = febMesh.Node(f.nid[2]).m_rt; mesh->SetVertexPosition(3*i+2, FEBioApp::GLMesh::POINT(r2.x, r2.y, r2.z));
 	}
 
-	// find the face neighbors
-	mesh->UpdateFaces();
-
-	mesh->PartitionFaces();
-
-	mesh->UpdateNormals();
+	mesh->Update();
 
 	return mesh;
 }
@@ -263,16 +261,16 @@ void FEBioData::UpdateGLMesh(FEBioApp::GLMesh* mesh, const std::string& map)
 	for (int i = 0; i<NF; ++i)
 	{
 		FEBioApp::GLMesh::FACE& f = mesh->Face(i);
-		vec3d& r0 = febioMesh.Node(f.nid[0]).m_rt; mesh->SetNodePosition(3*i  , FEBioApp::GLMesh::POINT(r0.x, r0.y, r0.z));
-		vec3d& r1 = febioMesh.Node(f.nid[1]).m_rt; mesh->SetNodePosition(3*i+1, FEBioApp::GLMesh::POINT(r1.x, r1.y, r1.z));
-		vec3d& r2 = febioMesh.Node(f.nid[2]).m_rt; mesh->SetNodePosition(3*i+2, FEBioApp::GLMesh::POINT(r2.x, r2.y, r2.z));
+		vec3d& r0 = febioMesh.Node(f.nid[0]).m_rt; mesh->SetVertexPosition(3*i  , FEBioApp::GLMesh::POINT(r0.x, r0.y, r0.z));
+		vec3d& r1 = febioMesh.Node(f.nid[1]).m_rt; mesh->SetVertexPosition(3*i+1, FEBioApp::GLMesh::POINT(r1.x, r1.y, r1.z));
+		vec3d& r2 = febioMesh.Node(f.nid[2]).m_rt; mesh->SetVertexPosition(3*i+2, FEBioApp::GLMesh::POINT(r2.x, r2.y, r2.z));
 	}
 
-	int NN = mesh->Nodes();
+	int NN = mesh->Vertices();
 
 	if (map.empty())
 	{
-		for (int i = 0; i < NN; ++i) mesh->SetNodeTexCoord1D(i, 0.0);
+		for (int i = 0; i < NN; ++i) mesh->SetVertexTexCoord1D(i, 0.0);
 	}
 	else
 	{
@@ -332,7 +330,7 @@ void FEBioData::UpdateGLMesh(FEBioApp::GLMesh* mesh, const std::string& map)
 						}
 					}
 
-					mesh->SetNodeTexCoord1D(3 * i + j, D);
+					mesh->SetVertexTexCoord1D(3 * i + j, D);
 				}
 			}
 
@@ -342,9 +340,9 @@ void FEBioData::UpdateGLMesh(FEBioApp::GLMesh* mesh, const std::string& map)
 			// normalize texture coordinates
 			for (int i = 0; i < NN; ++i)
 			{
-				double v = mesh->GetNodeTexCoord1D(i);
+				double v = mesh->GetVertexTexCoord1D(i);
 				v = (v - Dmin) / (Dmax - Dmin);
-				mesh->SetNodeTexCoord1D(i, v);
+				mesh->SetVertexTexCoord1D(i, v);
 			}
 		}
 	}

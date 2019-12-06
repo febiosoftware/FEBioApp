@@ -35,11 +35,11 @@ public:
 public:
 	struct FACE
 	{
-		int		fid;		// the face ID (index into face array)
 		int		pid;		// parition number (used for smoothing)
 		int		nbr[3];		// indices to neighbors (or -1 if no neighbor)
 
 		int		nid[3];		// node IDs into FEBio mesh
+		int		lid[3];		// local IDs into Node array
 		POINT	faceNormal;
 	};
 
@@ -53,6 +53,7 @@ public:
 	void Render();
 
 public:
+	void Update();
 
 	// find the face neighbors
 	void UpdateFaces();
@@ -63,50 +64,55 @@ public:
 	// update face normals
 	void UpdateNormals();
 
-	void SetNodePosition(int node, const POINT& p)
+	void SetVertexPosition(int node, const POINT& p)
 	{
-		m_Node[3 * node  ] = p.x;
-		m_Node[3 * node+1] = p.y;
-		m_Node[3 * node+2] = p.z;
+		m_Vert[3 * node  ] = p.x;
+		m_Vert[3 * node+1] = p.y;
+		m_Vert[3 * node+2] = p.z;
 	}
 
-	POINT GetNodePosition(int node) const
+	POINT GetVertexPosition(int node) const
 	{
-		POINT p = { m_Node[3 * node], m_Node[3 * node + 1], m_Node[3 * node + 2] };
+		POINT p = { m_Vert[3 * node], m_Vert[3 * node + 1], m_Vert[3 * node + 2] };
 		return p;
 	}
 
-	void SetNodeNormal(int node, const POINT& n)
+	void SetVertexNormal(int node, const POINT& n)
 	{
 		m_Norm[3*node  ] = n.x;
 		m_Norm[3*node+1] = n.y;
 		m_Norm[3*node+2] = n.z;
 	}
 
-	POINT GetNodeNormal(int node) const
+	POINT GetVertexNormal(int node) const
 	{
 		POINT n = { m_Norm[3 * node], m_Norm[3 * node + 1], m_Norm[3 * node + 2] };
 		return n;
 	}
 
-	void SetNodeTexCoord1D(int node, double v) { m_Tex[node] = v; }
+	void SetVertexTexCoord1D(int node, double v) { m_Tex[node] = v; }
 
-	double GetNodeTexCoord1D(int node) { return m_Tex[node]; }
+	double GetVertexTexCoord1D(int node) { return m_Tex[node]; }
 
 public:
 	int Faces() const { return (int) m_Face.size(); }
 
-	int Nodes() const { return 3 * Faces(); }
+	int Vertices() const { return 3 * Faces(); }
 
 	FACE& Face(int i) { return m_Face[i]; }
 	const FACE& Face(int i) const { return m_Face[i]; }
 
 private:
+	void BuildNodeList();
+
+private:
 	vector<FACE>	m_Face;
 
-	vector<double>	m_Node;
+	vector<double>	m_Vert;
 	vector<double>	m_Norm;
 	vector<double>	m_Tex;
+
+	vector<int>		m_Node;	// unique node list
 };
 
 inline double dot(const GLMesh::POINT& a, const GLMesh::POINT& b)

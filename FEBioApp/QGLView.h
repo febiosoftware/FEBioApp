@@ -26,7 +26,9 @@ public:
 	void SetBackgroundColor(double r, double g, double b);
 	void SetForegroundColor(double r, double g, double b);
 
-	void Update(bool bzoom = true);
+	void Update(bool breset = true);
+
+	void Zoom();
 
 	void SetDataSource(const char* szdata);
 

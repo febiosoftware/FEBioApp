@@ -115,6 +115,7 @@ void QGLView::SetFEModel(FEBioData* feb)
 	m_mesh->PartitionFaces(m_smoothingAngle);
 
 	Update();
+	Zoom();
 }
 
 //-----------------------------------------------------------------------------
@@ -149,27 +150,32 @@ void QGLView::SetSmoothingAngle(double w)
 }
 
 //-----------------------------------------------------------------------------
-void QGLView::Update(bool bzoom)
+void QGLView::Update(bool breset)
 {
 	// find the center of the box
 	if (m_mesh == 0) return;
 
-	if (bzoom)
+	if (breset)
 	{
-		FEBioApp::GLMesh::POINT p = MeshCenter(*m_mesh);
-		m_cam.SetTarget(vec3d(p.x, p.y, p.z));
-		double D = MeshSize(*m_mesh)*1.5;
-		m_cam.SetTargetDistance(D);
-		m_zmax = 2*D;
-		m_zmin = 1e-4*D;
+		// update the gl mesh
+		m_feb->UpdateGLMesh(m_mesh, m_map);
+
+		m_feb->GetDataRange(m_rng);
+		if (m_legend) m_legend->SetRange(m_rng[0], m_rng[1]);
+
+		repaint();
 	}
+}
 
-	// update the gl mesh
-	m_feb->UpdateGLMesh(m_mesh, m_map);
-
-	m_feb->GetDataRange(m_rng);
-	if (m_legend) m_legend->SetRange(m_rng[0], m_rng[1]);
-
+//-----------------------------------------------------------------------------
+void QGLView::Zoom()
+{
+	FEBioApp::GLMesh::POINT p = MeshCenter(*m_mesh);
+	m_cam.SetTarget(vec3d(p.x, p.y, p.z));
+	double D = MeshSize(*m_mesh)*1.5;
+	m_cam.SetTargetDistance(D);
+	m_zmax = 2 * D;
+	m_zmin = 1e-4*D;
 	repaint();
 }
 

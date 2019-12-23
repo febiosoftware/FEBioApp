@@ -258,30 +258,31 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 	int nact[2] = {-1, -1};
 	char sz[2][256] = {0};
 
-	const char* sztitle = tag.AttributeValue("title", true);
-	if (sztitle) strcpy(sz[0], sztitle);
+	if (tag.isleaf())
+	{
+		const char* sztitle = tag.AttributeValue("text", true);
+		if (sztitle) strcpy(sz[0], sztitle);
 
-	XMLReader& xml = *tag.m_preader;
-
-	if (!tag.isempty())
+		const char* szaction = tag.AttributeValue("action");
+		nact[0] = getAction(szaction);
+	}
+	else
 	{
 		++tag;
+		int index = 0;
 		do
 		{
 			if (tag == "action")
 			{
-				const char* sza = tag.szvalue();
-				int naction = getAction(sza);
-				nact[index] = naction;
+				const char* sztxt = tag.AttributeValue("text");
+				const char* szact = tag.szvalue();
 
-				const char* szt = tag.AttributeValue("title", true);
-				if (szt) strcpy(sz[index], szt);
+				nact[index] = getAction(szact);
+				strcpy(sz[index], sztxt);
 
 				index++;
-
-				++tag;
 			}
-			else xml.SkipTag(tag);
+			++tag;
 		}
 		while (!tag.isend());
 	}
@@ -302,7 +303,7 @@ void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 void UIBuilder::parseLabel(XMLTag& tag, QBoxLayout* playout)
 {
 	char sz[256] = {0};
-	strcpy(sz, tag.AttributeValue("title"));
+	strcpy(sz, tag.AttributeValue("text"));
 
 	XMLReader& xml = *tag.m_preader;
 
@@ -624,9 +625,11 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 
 void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 {
+	// read the title
 	char sz[256] = {0};
-	strcpy(sz, tag.AttributeValue("title"));
+	strcpy(sz, tag.AttributeValue("text"));
 
+	// read the align
 	int nalign = CParamInput::ALIGN_LEFT;
 	const char* szalign = tag.AttributeValue("align", true);
 	if (szalign)
@@ -642,51 +645,34 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 		else printf("WARNING: Unknown align value %s\n", szalign);
 	}
 
-	XMLReader& xml = *tag.m_preader;
-
-	string paramLabel;
-	string paramName = "";
-	FEBioParam param;
-	bool brange = false;
-	double rng[3];
-	if (tag.isleaf())
-	{
-		paramName = tag.szvalue();
-		param = m_data->GetFEBioParameter(paramName);
-	}
-	else
-	{
-		++tag;
-		do
-		{
-			if (tag == "param")
-			{
-				paramName = tag.szvalue();
-				param = m_data->GetFEBioParameter(paramName);
-				++tag;
-			}
-			else if (tag == "range")
-			{
-				tag.value(rng, 3);
-				brange = true;
-				++tag;
-			}
-			else if (tag == "label")
-			{
-				paramLabel = tag.szvalue();
-				++tag;
-			}
-			else xml.SkipTag(tag);
-		}
-		while (!tag.isend());
-	}
-	if (param.IsValid() == false) 
+	// read the parameter
+	string paramName;
+	const char* szparam = tag.AttributeValue("param");
+	paramName = szparam;
+	FEBioParam param = m_data->GetFEBioParameter(paramName);
+	if (param.IsValid() == false)
 	{
 		printf("ERROR: Failed finding parameter %s\n", paramName.c_str());
 		return;
 	}
 
+	// read the range
+	double rng[3];
+	bool brange = false;
+	XMLAtt* rngAtt = tag.AttributePtr("range");
+	if (rngAtt)
+	{
+		rngAtt->value(rng, 3);
+		brange = true;
+	}	
+
+	// read the label
+	string paramLabel;
+	const char* szlabel = tag.AttributeValue("label", true);
+	if (szlabel) paramLabel = szlabel;
 	if (paramLabel.empty()) paramLabel = sz;
+
+	assert(tag.isempty());
 
 	QBoxLayout* pl = 0;
 

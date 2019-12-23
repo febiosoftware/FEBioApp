@@ -4,29 +4,29 @@
 		<file>ex03.feb</file>
 	</Model>
 	<GUI title="$(filename)">
-		<label title="Beam Bending Example"/>
+		<label text="Beam Bending Example"/>
 		<hgroup>
 			<vgroup>
 				<group title="Material Parameters" align="vertical">
-					<input title="Young's Modulus">
-						<param>fem.material[0].E</param>
-					</input>
-					<input title="Poisson's ratio">
-						<param>fem.material("Mat1").v</param>
-					</input>
+					<input 	text="Young's Modulus"
+							param="fem.material[0].E"/>
+
+					<input	text="Poisson's ratio"
+							param="fem.material('Mat1').v"/>
+
 				</group>
 				<group title="Pressure Load" align="vertical">
-					<input title="Pressure">
-						<param>fem.surface_load("pressure").pressure</param>
-					</input>
-					<input title="Linear">
-						<param>fem.surface_load("pressure").linear</param>
-					</input>
+					<input	text="Pressure"
+							param="fem.surface_load('pressure').pressure"/>
+					
+					<input	text="Linear"
+							param="fem.surface_load('pressure').linear"/>
+					
 				</group>
 				<stretch/>
-				<button title="Solve">
-					<action>fem.solve()</action>
-				</button>
+				<button	text="Solve"
+						action="fem.solve()"/>
+
 			</vgroup>
 			<plot3d title="view1">
 				<size>640, 480</size>
@@ -34,8 +34,9 @@
 				<map type="displacement"/>
 			</plot3d>
 		</hgroup>
-		<button title="Quit">
-			<action>app.quit()</action>
-		</button>
+		
+		<button text="Quit">
+				action="app.quit()"/>
+
 	</GUI>
 </febio_app>

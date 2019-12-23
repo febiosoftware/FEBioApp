@@ -4,18 +4,25 @@
 		<file>ex02.feb</file>
 	</Model>
 	<GUI title="$(filename)">
-		<label title="Viscoelastic Demo"/>
+		<label text="Viscoelastic Demo"/>
 		<group align="horizontal">
 			<group align="vertical">
 				<vgroup title="Visco params">
-					<input title="G1">fem.material[0].g1</input>
-					<input title="t1">fem.material[0].t1</input>
+					<input 	text="G1"
+							param="fem.material[0].g1"/>
+							
+					<input 	text="t1"
+							param="fem.material[0].t1"/>
+							
 				</vgroup>
+				
 				<input_list title="Elastic params">fem.material[0].elastic</input_list>
+				
 				<stretch/>
-				<button title="Solve">
-					<action>fem.solve()</action>
-				</button>
+				
+				<button text="Solve"
+						action="fem.solve()"/>
+
 			</group>
 			<tab_group>
 				<tab title="Graph1">
@@ -38,8 +45,9 @@
 				</tab>
 			</tab_group>
 		</group>
-		<button title="Quit">
-			<action>app.quit()</action>
-		</button>
+		
+		<button text="Quit"
+				action="app.quit()"/>
+
 	</GUI>
 </febio_app>

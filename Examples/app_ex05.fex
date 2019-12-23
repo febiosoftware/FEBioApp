@@ -4,34 +4,38 @@
 		<file>ex05.feb</file>
 	</Model>
 	<GUI title="$(filename)">
-		<label title="Simple man"/>
+		<label text="Simple man"/>
 		<hgroup>
 			<vgroup>
 				<group title="Parameters" align="vertical">
-					<input title="Ta" align="topleft">
-						<param>fem.surface_load("flux").Ta</param>
-						<label>Ambient temperature (C):</label>
-					</input>
-					<input title="hc" align="topleft">
-						<param>fem.surface_load("flux").hc</param>
-						<label>Heat transfer coeff (W/(m^2.K)):</label>
-					</input>
-					<input title="Q" align="topleft">
-						<param>fem.body_load("heatSource").Q</param>
-						<range>0, 1000, 50</range>
-						<label>Heat source (W/m^3):</label>
-					</input>
+				
+					<input	text="Ta"
+							align="topleft"
+							param="fem.surface_load('flux').Ta"
+							label="Ambient temperature (C):"/>
+
+					<input 	text="hc"
+							align="topleft"
+							param="fem.surface_load('flux').hc"
+							label="Heat transfer coeff (W/(m^2.K)):"/>
+
+					<input 	text="Q"
+							align="topleft"
+							param="fem.body_load('heatSource').Q"
+							range="0, 1000, 50"
+							label="Heat source (W/m^3):"/>
+
 				</group>
 				<stretch/>
 				<hgroup>
 					<stretch/>
 					<button>
-						<action title="Run">fem.solve()</action>
-						<action title="Stop">fem.stop()</action>
+						<action text="Run">fem.solve()</action>
+						<action text="Stop">fem.stop()</action>
 					</button>
 					<button>
-						<action title="Pause">fem.pause()</action>
-						<action title="Continue">fem.continue()</action>
+						<action text="Pause">fem.pause()</action>
+						<action text="Continue">fem.continue()</action>
 					</button>
 				</hgroup>
 			</vgroup>
@@ -49,8 +53,7 @@
 				<time_format>1</time_format>
 			</plot3d>
 		</hgroup>
-		<button title="Quit">
-			<action>app.quit()</action>
-		</button>
+		<button	text="Quit"
+				action="app.quit()"/>
 	</GUI>
 </febio_app>

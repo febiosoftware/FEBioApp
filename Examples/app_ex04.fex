@@ -4,24 +4,23 @@
 		<file>ex04.feb</file>
 	</Model>
 	<GUI title="$(filename)">
-		<label title="Beam Bending Example"/>
+		<label text="Beam Bending Example"/>
 		<hgroup>
 			<vgroup>
 				<group title="Pressure Load" align="vertical">
-					<input title="Pressure">
-						<param>fem.surface_load("pressure").pressure</param>
-						<range>-5, 5, 1</range>
-					</input>
+					<input 	text="Pressure"
+							param="fem.surface_load('pressure').pressure"
+							range="-5, 5, 1"/>
+
 				</group>
 				<stretch/>
 				<hgroup>
 					<stretch/>
-					<button title="Run">
-						<action>fem.solve()</action>
-					</button>
-					<button title="Stop">
-						<action>fem.stop()</action>
-					</button>
+					<button text="Run"
+							action="fem.solve()"/>
+
+					<button text="Stop"
+							action="fem.stop()"/>
 				</hgroup>
 			</vgroup>
 			<plot3d title="view1">
@@ -33,8 +32,9 @@
 				</map>
 			</plot3d>
 		</hgroup>
-		<button title="Quit">
-			<action>app.quit()</action>
-		</button>
+		
+		<button text="Quit"
+				action="app.quit()"/>
+
 	</GUI>
 </febio_app>

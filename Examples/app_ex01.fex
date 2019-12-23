@@ -4,24 +4,25 @@
 		<file>ex01.feb</file>
 	</Model>
 	<GUI title="$(filename)">
-		<label title="My First FEBio App"/>
-		<input title="Young's Modulus">
-			<param>fem.material('Mat1').E</param>
-		</input>
-		<input title="Poisson's ratio">
-			<param>fem.material("Mat1").v</param>
-		</input>
-		<button title="Solve">
-			<action>fem.solve()</action>
-		</button>
+		<label text="My First FEBio App"/>
+		
+		<input	text ="Young's Modulus"
+				param="fem.material('Mat1').E"/>
+				
+		<input	text ="Poisson's ratio"
+				param="fem.material('Mat1').v"/>
+
+		<button	text  ="Solve"
+				action="fem.solve()"/>
+		
 		<graph title="stress-strain">
 			<data title="sx">
 				<x>fem.data("Ex").value[0]</x>
 				<y>fem.data("sx").value[0]</y>
 			</data>
 		</graph>
-		<button title="Quit">
-			<action>app.quit()</action>
+		<button	text  ="Quit"
+				action="app.quit()"/>
 		</button>
 	</GUI>
 </febio_app>

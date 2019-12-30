@@ -103,13 +103,13 @@ void QGLView::SetTimeFormat(int nformat)
 }
 
 //-----------------------------------------------------------------------------
-void QGLView::SetFEModel(FEBioData* feb)
+void QGLView::SetFEModel(FEBioData* feb, int modelIndex)
 {
 	m_feb = feb;
 
 	// rebuild the FE surface
 	if (m_mesh) delete m_mesh;
-	m_mesh = m_feb->BuildGLMesh();
+	m_mesh = m_feb->BuildGLMesh(modelIndex);
 
 	// partition the surface
 	m_mesh->PartitionFaces(m_smoothingAngle);
@@ -160,7 +160,7 @@ void QGLView::Update(bool breset)
 		// update the gl mesh
 		m_feb->UpdateGLMesh(m_mesh, m_map);
 
-		m_feb->GetDataRange(m_rng);
+		m_feb->GetDataRange(m_mesh->GetModelId(), m_rng);
 		if (m_legend) m_legend->SetRange(m_rng[0], m_rng[1]);
 
 		repaint();
@@ -441,7 +441,7 @@ void QGLView::paintGL()
 
 	if (m_feb)
 	{
-		double time = m_feb->GetSimulationTime();
+		double time = m_feb->GetSimulationTime(m_mesh->GetModelId());
 
 		if (m_timeFormat == 1)
 		{

@@ -30,10 +30,10 @@ bool UIBuilder::BuildUI(MyDialog* dlg, FEBioData& data, const char* szfile)
 	XMLReader xml;
 	if (xml.Open(szfile) == false) return false;
 
+	m_fileName = szfile;
+
 	m_dlg = dlg;
 	m_data = &data;
-
-	strcpy(m_szfile, szfile);
 
 	XMLTag tag;
 	if (xml.FindTag("febio_app", tag) == false) return false;
@@ -62,41 +62,29 @@ bool UIBuilder::BuildUI(MyDialog* dlg, FEBioData& data, const char* szfile)
 bool UIBuilder::parseModel(XMLTag& tag)
 {
 	XMLReader& xml = *tag.m_preader;
-	++tag;
-	do
+
+	const char* szid = tag.AttributeValue("id", true);
+	if (szid == nullptr) szid = "fem";
+
+	const char* szfile = tag.AttributeValue("file");
+
+	const char* sztask = tag.AttributeValue("task", true);
+
+	assert(tag.isleaf());
+
+	// add the new model
+	bool b = m_data->AddModel(szid, szfile, sztask);
+
+	// Try to load the FE model file
+	if (b)
 	{
-		if (tag == "file")
-		{
-			strcpy(m_szfile, tag.szvalue());
-
-			// Try to load the FE model file
-			if (m_data->ReadFEBioFile(m_szfile))
-			{
-				printf("Success loading input file %s\n", m_szfile);
-			}
-			else
-			{
-				printf("Failed loading input file %s\n", m_szfile);
-				return false;
-			}
-
-			++tag;
-		}
-		else if (tag == "task")
-		{
-			const char* sztype = tag.AttributeValue("type");
-			if (sztype == 0) return false;
-
-			if (m_data->SetFEBioTask(sztype, tag.szvalue()) == false)
-			{
-				return false;
-			}
-
-			++tag;
-		}
-		else xml.SkipTag(tag);
+		printf("Success loading input file %s\n", szfile);
 	}
-	while (!tag.isend());
+	else
+	{
+		printf("Failed loading input file %s\n", szfile);
+		return false;
+	}
 
 	return true;
 }
@@ -109,9 +97,8 @@ bool UIBuilder::parseGUI(XMLTag& tag)
 	char sz[256] = {0};
 	strcpy(sz, tag.AttributeValue("title"));
 
-	if (strcmp(sz, "$(filename)") == 0) strcmp(sz, m_szfile);
+	if (strcmp(sz, "$(filename)") == 0) strcmp(sz, m_fileName.c_str());
 	else m_dlg->setWindowTitle(sz);
-
 
 	return parseTags(tag, playout);
 }
@@ -237,87 +224,53 @@ void UIBuilder::parseTabGroup(XMLTag& tag, QBoxLayout* playout)
 	playout->addWidget(ptab);
 }
 
-int getAction(const char* szaction)
-{
-	int nact = -1;
-	if      (strcmp(szaction, "fem.solve()"   ) == 0) nact = 0;
-	else if (strcmp(szaction, "app.quit()"    ) == 0) nact = 1;
-	else if (strcmp(szaction, "app.reset()"   ) == 0) nact = 2;
-	else if (strcmp(szaction, "task.run()"    ) == 0) nact = 3;
-	else if (strcmp(szaction, "fem.stop()"    ) == 0) nact = 4;
-	else if (strcmp(szaction, "fem.pause()"   ) == 0) nact = 5;
-	else if (strcmp(szaction, "fem.continue()") == 0) nact = 6;
-	else printf("ERROR: Do not understand action %s\n", szaction);
-
-	return nact;
-}
-
 void UIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 {
-	int index = 0;
 	int nact[2] = {-1, -1};
 	char sz[2][256] = {0};
 
-	if (tag.isleaf())
-	{
-		const char* sztitle = tag.AttributeValue("text", true);
-		if (sztitle) strcpy(sz[0], sztitle);
+	const char* szaction = nullptr;
 
-		const char* szaction = tag.AttributeValue("action");
-		nact[0] = getAction(szaction);
-	}
-	else
-	{
-		++tag;
-		int index = 0;
-		do
-		{
-			if (tag == "action")
-			{
-				const char* sztxt = tag.AttributeValue("text");
-				const char* szact = tag.szvalue();
+	assert(tag.isleaf());
 
-				nact[index] = getAction(szact);
-				strcpy(sz[index], sztxt);
+	const char* sztitle = tag.AttributeValue("text", true);
+	if (sztitle) strcpy(sz[0], sztitle);
 
-				index++;
-			}
-			++tag;
-		}
-		while (!tag.isend());
-	}
-
-	QHBoxLayout* pl = new QHBoxLayout;
+	szaction = tag.AttributeValue("onClick");
+		
 	CActionButton* pb = new CActionButton();
+	pb->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-	if (nact[0] != -1) pb->setAction(nact[0], sz[0], 0);
-	if (nact[1] != -1) pb->setAction(nact[1], sz[1], 1);
+	if (szaction)
+	{
+		pb->setText(QString(sztitle));
+		pb->setCode(szaction);
+	}
 
-	playout->addLayout(pl);
-	pl->addStretch();
-	pl->addWidget(pb);
+	playout->addWidget(pb);
 
-	QObject::connect(pb, SIGNAL(doAction(int)), m_dlg, SLOT(doAction(int)));
+	QObject::connect(pb, SIGNAL(runCode(QString&)), m_dlg, SLOT(RunCode(QString&)));
 }
 
 void UIBuilder::parseLabel(XMLTag& tag, QBoxLayout* playout)
 {
-	char sz[256] = {0};
-	strcpy(sz, tag.AttributeValue("text"));
-
-	XMLReader& xml = *tag.m_preader;
-
-	if (!tag.isempty())
+	string name, id;
+	for (int i = 0; i < tag.m_natt; ++i)
 	{
-		++tag;
-		do
+		XMLAtt& att = tag.m_att[i];
+
+		if (strcmp(att.m_sztag, "text") == 0)
 		{
-			xml.SkipTag(tag);
+			name = att.cvalue();
 		}
-		while (!tag.isend());
+		else if (strcmp(att.m_sztag, "id") == 0)
+		{
+			id = att.cvalue();
+		}
 	}
 
-	QLabel* plabel = new QLabel(sz);
+	QLabel* plabel = new QLabel(QString::fromStdString(name));
+	if (id.empty() == false) plabel->setObjectName(QString::fromStdString(id));
 	QFont f("Times", 14, QFont::Bold);
 	plabel->setFont(f);
 	plabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -446,6 +399,7 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 	double w[3] = { 0, 0, 0 };
 	double smoothingAngle = 60.0;
 	int timeFormat = 0;
+	int modelId = -1;
 	if (!tag.isleaf())
 	{
 		++tag;
@@ -460,6 +414,13 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 					if (user_size[0] > 100) size[0] = user_size[0];
 					if (user_size[1] > 100) size[1] = user_size[1];
 				}
+				++tag;
+			}
+			else if (tag == "model")
+			{
+				const char* szmodel = tag.szvalue();
+				modelId = m_data->GetModelIndex(szmodel); assert(modelId >= 0);
+				if (modelId < 0) throw 1;
 				++tag;
 			}
 			else if (tag == "bg_color")
@@ -523,7 +484,7 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 
 	pgl->SetTimeFormat(timeFormat);
 	pgl->SetSmoothingAngle(smoothingAngle);	// must be set before SetFEModel is called
-	pgl->SetFEModel(m_data);
+	pgl->SetFEModel(m_data, modelId);
 	pgl->SetDataSource(szmap);
 	pgl->SetRotation(w[0], w[1], w[2]);
 	if (brange) pgl->SetDataRange(rng[0], rng[1]);
@@ -534,35 +495,16 @@ void UIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 
 void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 {
-	const char* sztitle = tag.AttributeValue("title", true);
+	const char* sztitle = tag.AttributeValue("text", true);
+
+	const char* szparams = tag.AttributeValue("params");
+
+	assert(tag.isleaf());
 
 	int naction = -1;
 
 	vector<FEBioParam> paramList;
-
-	if (tag.isleaf())
-	{
-		paramList = m_data->GetFEBioParameterList(tag.szvalue());
-	}
-	else
-	{
-		++tag;
-		do
-		{
-			if (tag == "params")
-			{
-				paramList = m_data->GetFEBioParameterList(tag.szvalue());
-			}
-			else if (tag == "action")
-			{
-				const char* szaction = tag.szvalue();
-				if (strcmp(szaction, "fem.solve()") == 0) naction = 0;
-			}
-			
-			++tag;
-		}
-		while (!tag.isend());
-	}
+	paramList = m_data->GetFEBioParameterList(szparams);
 
 	if (!paramList.empty())
 	{
@@ -583,7 +525,6 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 				pin = new CParamInput;
 				pin->SetWidget(pedit = new QLineEdit);
 				pw = pedit;
-				if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
 			}
 
 			if (pi.IsType(FEBioParam::TYPE_BOOL))
@@ -591,7 +532,6 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 				pin = new CParamInput;
 				pin->SetWidget(pcheck = new QCheckBox);
 				pw = pcheck;
-				if (naction == 0) QObject::connect(pcheck, SIGNAL(stateChanged(int)), m_dlg, SLOT(Run()));
 			}
 
 			if (pi.IsType(FEBioParam::TYPE_INT))
@@ -599,7 +539,6 @@ void UIBuilder::parseInputList(XMLTag& tag, QBoxLayout* playout)
 				pin = new CParamInput;
 				pin->SetWidget(pedit = new QLineEdit);
 				pw = pedit;
-				if (naction == 0) QObject::connect(pedit, SIGNAL(editingFinished()), m_dlg, SLOT(Run()));
 			}
 
 			if (pin)
@@ -666,12 +605,6 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 		brange = true;
 	}	
 
-	// read the label
-	string paramLabel;
-	const char* szlabel = tag.AttributeValue("label", true);
-	if (szlabel) paramLabel = szlabel;
-	if (paramLabel.empty()) paramLabel = sz;
-
 	assert(tag.isempty());
 
 	QBoxLayout* pl = 0;
@@ -679,7 +612,7 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 	if ((nalign==CParamInput::ALIGN_LEFT)||(nalign==CParamInput::ALIGN_RIGHT)) pl = new QHBoxLayout;
 	else pl = new QVBoxLayout;
 
-	QLabel* plabel = new QLabel(QString::fromStdString(paramLabel));
+	QLabel* plabel = new QLabel(sz);
 //	plabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	CParamInput* pi = new CParamInput;
 	QWidget* pw = 0;
@@ -691,7 +624,6 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 			slider->setFloatRange(rng[0], rng[1], rng[2]);
 			pw = slider;
 			pi->SetWidget(slider);
-			QObject::connect(slider, SIGNAL(valueChanged(double)), m_dlg, SLOT(paramChanged()));
 		}
 		else
 		{
@@ -699,7 +631,6 @@ void UIBuilder::parseInput(XMLTag& tag, QBoxLayout* playout)
 			edit->setValidator(new QDoubleValidator);
 			pi->SetWidget(edit);
 			pw = edit; 
-			QObject::connect(edit, SIGNAL(textEdited(const QString&)), m_dlg, SLOT(paramChanged()));
 		}
 	}
 	if (param.IsType(FEBioParam::TYPE_BOOL))

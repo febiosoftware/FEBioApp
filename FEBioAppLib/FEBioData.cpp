@@ -12,44 +12,113 @@
 #include <FEBioLib/version.h>
 #include "GLMesh.h"
 
+class FEBioAppModel
+{
+public:
+	FEBioModel		m_fem;
+	std::string		m_fileName;
+	FECoreTask*		m_task;
+	std::string		m_taskFile;
+	double			m_dataRange[2];
+	FEBioData::FEBIO_STATUS	m_runStatus;
+	bool			m_modelInitialized;
+	bool			m_bforceStop;
+	FEBioData*		m_data;
+	int				m_id;
+
+	FEBioAppModel(FEBioData* data) : m_task(0), m_data(data)
+	{
+		m_runStatus = FEBioData::STOPPED;
+		m_dataRange[0] = 0.0;
+		m_dataRange[1] = 1.0;
+		m_modelInitialized = false;
+		m_id = -1;
+	}
+
+	~FEBioAppModel()
+	{
+		if (m_task) delete m_task; m_task = 0;
+	}
+
+	bool InitModel()
+	{
+		m_fem.SetLogLevel(0);
+		if (m_fem.Init() == false) return false;
+		return true;
+	}
+
+	bool febio_cb(unsigned int nwhen)
+	{
+		m_data->FEBioCallback(m_id, nwhen);
+		if (nwhen != CB_INIT)
+		{
+			if (m_runStatus == FEBioData::STOPPED) return false;
+		}
+		return true;
+	}
+};
+
 bool febio_cb(FEModel* pfem, unsigned int nwhen, void* pd)
 {
-	FEBioData* pThis = (FEBioData*)pd;
-	return pThis->FEBioCallback(nwhen);
+	FEBioAppModel* pThis = (FEBioAppModel*)pd;
+	return pThis->febio_cb(nwhen);
 }
+
 
 //-----------------------------------------------------------------------------
 class FEBioData::Imp
 {
 public:
-	FEBioModel		m_fem;
-	FECoreTask*		m_task;
-	std::string 	m_taskFile;
+	vector<FEBioAppModel*>	m_modelList;
 
-	double		m_dataRange[2];
-
-	FEBioData::FEBIO_STATUS	m_runStatus;
-
-	Imp() : m_task(0) 
+	Imp()
 	{ 
-		m_runStatus = FEBioData::STOPPED; 
-		m_dataRange[0] = 0.0;
-		m_dataRange[1] = 1.0;
+		for (int i = 0; i < m_modelList.size(); ++i) delete m_modelList[i];
+		m_modelList.clear();
 	}
 
-	~Imp() { if (m_task) delete m_task; m_task = 0; }
+	~Imp() { }
 };
 
 //-----------------------------------------------------------------------------
-FEBioData::FEBioData() : im(new FEBioData::Imp)
+FEBioData::FEBioData() : im(*(new FEBioData::Imp))
 {
-	im->m_fem.AddCallback(febio_cb, CB_ALWAYS, this);
+
 }
 
 FEBioData::~FEBioData()
 {
-	delete im;
-	im = nullptr;
+	delete &im;
+}
+
+bool FEBioData::AddModel(const std::string& modelId, const std::string& fileName, const char* sztask)
+{
+	FEBioAppModel* m = new FEBioAppModel(this);
+	m->m_id = (int)im.m_modelList.size();
+	im.m_modelList.push_back(m);
+
+	m->m_fem.SetName(modelId);
+	m->m_fileName = fileName;
+
+	m->m_fem.AddCallback(febio_cb, CB_ALWAYS, m);
+
+//	if (sztask) m->m_task = sztask;
+
+	return m->m_fem.Input(fileName.c_str());
+}
+
+int FEBioData::Models()
+{
+	return (int)im.m_modelList.size();
+}
+
+int FEBioData::GetModelIndex(const std::string& modelId)
+{
+	for (int i = 0; i < Models(); ++i)
+	{
+		if (im.m_modelList[i]->m_fem.GetName() == modelId) return i;
+	}
+	return -1;
 }
 
 bool FEBioData::InitFEBio()
@@ -84,15 +153,17 @@ bool FEBioData::InitFEBio()
 
 }
 
-bool FEBioData::HasTask() const
+bool FEBioData::HasTask(int index) const
 {
-	return (im->m_task != nullptr);
+	return (im.m_modelList[index]->m_task != nullptr);
 }
 
-bool FEBioData::InitModel()
+bool FEBioData::InitModel(int index)
 {
-	im->m_fem.SetLogLevel(0);
-	if (im->m_fem.Init() == false) return false;
+	im.m_modelList[index]->m_fem.SetLogLevel(0);
+	bool b = im.m_modelList[index]->m_fem.Init();
+
+	im.m_modelList[index]->m_modelInitialized = b;
 
 /*	if (im->m_task == nullptr)
 	{
@@ -102,105 +173,102 @@ bool FEBioData::InitModel()
 
 	return im->m_task->Init(im->m_taskFile.c_str());
 */
-	return true;
+	return b;
 }
 
-bool FEBioData::ResetModel()
+bool FEBioData::ResetModel(int index)
 {
-	return im->m_fem.Reset();
+	return im.m_modelList[index]->m_fem.Reset();
 }
 
-bool FEBioData::RunModel()
+bool FEBioData::SolveModel(int index)
 {
-	return im->m_task->Run();
-}
-
-bool FEBioData::SolveModel()
-{
-	im->m_runStatus = FEBioData::RUNNING;
-	bool bret = im->m_fem.Solve();
-	im->m_runStatus = FEBioData::STOPPED;
+	im.m_modelList[index]->m_runStatus = FEBioData::RUNNING;
+	bool bret = im.m_modelList[index]->m_fem.Solve();
+	im.m_modelList[index]->m_runStatus = FEBioData::STOPPED;
 	return bret;
 }
 
-bool FEBioData::ReadFEBioFile(const char* szfile)
-{
-	return im->m_fem.Input(szfile);
-}
-
-bool FEBioData::SetFEBioTask(const char* sztaskName, const char* sztaskFile)
-{
-	im->m_task = fecore_new<FECoreTask>(FETASK_ID, sztaskName, &im->m_fem);
-	if (im->m_task == 0) return false;
-	im->m_taskFile = sztaskFile;
-	return true;
-}
-
-bool FEBioData::FEBioCallback(unsigned int nwhen)
+void FEBioData::FEBioCallback(int modelIndex, unsigned int nwhen)
 {
 	switch (nwhen)
 	{
-	case CB_INIT       : emit modelInit   (); break;
-	case CB_MAJOR_ITERS: emit timeStepDone(); break;
+	case CB_INIT       : emit modelInit   (modelIndex); break;
+	case CB_MAJOR_ITERS: emit timeStepDone(modelIndex); break;
 	}
-
-	if (nwhen != CB_INIT)
-	{
-		if (im->m_runStatus == FEBioData::STOPPED) return false;
-	}
-
-	return true;
 }
 
 FEBioParam FEBioData::GetFEBioParameter(const std::string& paramName)
 {
 	ParamString ps(paramName.c_str());
-	FEParamValue val = im->m_fem.GetParameterValue(ps);
-	FEBioParam param;
-	param.SetParameter(paramName, val);
-	return param;
+
+	int N = Models();
+	for (int i = 0; i < N; ++i)
+	{
+		string modelName = im.m_modelList[i]->m_fem.GetName();
+		if (ps == modelName)
+		{
+			FEParamValue val = im.m_modelList[i]->m_fem.GetParameterValue(ps);
+			FEBioParam param;
+			param.SetParameter(paramName, val);
+			return param;
+		}
+	}
+
+	return FEBioParam();
 }
 
 
 std::vector<FEBioParam>	FEBioData::GetFEBioParameterList(const std::string& name)
 {
-	ParamString ps(name.c_str());
-	FECoreBase* pc = im->m_fem.FindComponent(ps);
-
 	std::vector<FEBioParam> paramList;
 
-	FEParameterList& pl = pc->GetParameterList();
-	int n = pl.Parameters();
-	list<FEParam>::iterator it = pl.first();
-	for (int i = 0; i < n; ++i, ++it)
+	ParamString ps(name.c_str());
+
+	int N = Models();
+	for (int i = 0; i < N; ++i)
 	{
-		FEParam& pi = *it;
-
-		if (pi.dim() == 1)
+		string modelName = im.m_modelList[i]->m_fem.GetName();
+		if (ps == modelName)
 		{
-			FEParamValue val = pi.paramValue();
+			FECoreBase* pc = im.m_modelList[i]->m_fem.FindComponent(ps);
 
-			switch (val.type())
+			FEParameterList& pl = pc->GetParameterList();
+			int n = pl.Parameters();
+			list<FEParam>::iterator it = pl.first();
+			for (int i = 0; i < n; ++i, ++it)
 			{
-			case FE_PARAM_DOUBLE:
-			case FE_PARAM_INT:
-			case FE_PARAM_BOOL:
+				FEParam& pi = *it;
+
+				if (pi.dim() == 1)
 				{
-					FEBioParam p;
-					p.SetParameter(pi.name(), val);
-					paramList.push_back(p);
+					FEParamValue val = pi.paramValue();
+
+					switch (val.type())
+					{
+					case FE_PARAM_DOUBLE:
+					case FE_PARAM_INT:
+					case FE_PARAM_BOOL:
+					{
+						FEBioParam p;
+						p.SetParameter(pi.name(), val);
+						paramList.push_back(p);
+					}
+					break;
+					}
 				}
-				break;
 			}
+
+			return paramList;
 		}
 	}
 
 	return paramList;
 }
 
-FEBioApp::GLMesh* FEBioData::BuildGLMesh()
+FEBioApp::GLMesh* FEBioData::BuildGLMesh(int modelIndex)
 {
-	FEModel& fem = im->m_fem;
+	FEModel& fem = im.m_modelList[modelIndex]->m_fem;
 
 	FEMesh& febMesh = fem.GetMesh();
 	FESurface* surf = febMesh.ElementBoundarySurface();
@@ -217,6 +285,7 @@ FEBioApp::GLMesh* FEBioData::BuildGLMesh()
 	}
 
 	FEBioApp::GLMesh* mesh = new FEBioApp::GLMesh;
+	mesh->SetModelId(modelIndex);
 	mesh->Create(NF);
 
 	// create the connectivity
@@ -254,7 +323,9 @@ FEBioApp::GLMesh* FEBioData::BuildGLMesh()
 
 void FEBioData::UpdateGLMesh(FEBioApp::GLMesh* mesh, const std::string& map)
 {
-	FEMesh& febioMesh = im->m_fem.GetMesh();
+	int modelId = mesh->GetModelId();
+
+	FEMesh& febioMesh = im.m_modelList[modelId]->m_fem.GetMesh();
 
 	// copy nodal coordinates
 	int NF = mesh->Faces();
@@ -274,7 +345,7 @@ void FEBioData::UpdateGLMesh(FEBioApp::GLMesh* mesh, const std::string& map)
 	}
 	else
 	{
-		FEModel& fem = im->m_fem;
+		FEModel& fem = im.m_modelList[modelId]->m_fem;
 		DOFS& dofs = fem.GetDOFS();
 		int nvar = dofs.GetVariableIndex(map.c_str());
 		if (nvar >= 0)
@@ -334,8 +405,8 @@ void FEBioData::UpdateGLMesh(FEBioApp::GLMesh* mesh, const std::string& map)
 				}
 			}
 
-			im->m_dataRange[0] = Dmin;
-			im->m_dataRange[1] = Dmax;
+			im.m_modelList[modelId]->m_dataRange[0] = Dmin;
+			im.m_modelList[modelId]->m_dataRange[1] = Dmax;
 
 			// normalize texture coordinates
 			for (int i = 0; i < NN; ++i)
@@ -351,23 +422,54 @@ void FEBioData::UpdateGLMesh(FEBioApp::GLMesh* mesh, const std::string& map)
 	mesh->UpdateNormals();
 }
 
-double FEBioData::GetSimulationTime() const
+double FEBioData::GetSimulationTime(int index) const
 {
-	return im->m_fem.GetTime().currentTime;
+	return im.m_modelList[index]->m_fem.GetTime().currentTime;
 }
 
-int FEBioData::GetFEBioStatus() const
+int FEBioData::GetFEBioStatus(int index) const
 {
-	return im->m_runStatus;
+	return im.m_modelList[index]->m_runStatus;
 }
 
-void FEBioData::SetFEBioStatus(FEBIO_STATUS s)
+void FEBioData::GetDataRange(int index, double rng[2])
 {
-	im->m_runStatus = s;
+	rng[0] = im.m_modelList[index]->m_dataRange[0];
+	rng[1] = im.m_modelList[index]->m_dataRange[1];
 }
 
-void FEBioData::GetDataRange(double rng[2])
+void FEBioData::SetModelId(int index, const std::string& id)
 {
-	rng[0] = im->m_dataRange[0];
-	rng[1] = im->m_dataRange[1];
+	im.m_modelList[index]->m_fem.SetName(id);
+}
+
+std::string FEBioData::GetModelId(int i)
+{
+	return im.m_modelList[i]->m_fem.GetName();
+}
+
+bool FEBioData::IsModelInitialized(int i)
+{
+	return im.m_modelList[i]->m_modelInitialized;
+}
+
+std::string FEBioData::GetModelFile(int i)
+{
+	return im.m_modelList[i]->m_fileName;
+}
+
+void FEBioData::StopModel(int index)
+{
+	im.m_modelList[index]->m_bforceStop = true;
+	im.m_modelList[index]->m_runStatus = FEBioData::STOPPED;
+}
+
+void FEBioData::StopAll()
+{
+	for (int i = 0; i < Models(); ++i) StopModel(i);
+}
+
+bool FEBioData::ForceStop(int index)
+{
+	return im.m_modelList[index]->m_bforceStop;
 }

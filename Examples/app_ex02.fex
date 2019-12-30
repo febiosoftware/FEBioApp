@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <febio_app version="0.1">
-	<Model name="fem">
-		<file>ex02.feb</file>
-	</Model>
+	<Model 	id  ="fem"
+			file="ex02.feb"/>
+
 	<GUI title="$(filename)">
 		<label text="Viscoelastic Demo"/>
 		<group align="horizontal">
@@ -16,12 +16,13 @@
 							
 				</vgroup>
 				
-				<input_list title="Elastic params">fem.material[0].elastic</input_list>
+				<input_list text="Elastic params"
+							params="fem.material[0].elastic"/>
 				
 				<stretch/>
 				
 				<button text="Solve"
-						action="fem.solve()"/>
+						onClick="fem.solve()"/>
 
 			</group>
 			<tab_group>
@@ -46,8 +47,10 @@
 			</tab_group>
 		</group>
 		
-		<button text="Quit"
-				action="app.quit()"/>
-
+		<hgroup>
+			<stretch/>
+			<button text="Quit"
+					onClick="app.quit()"/>
+		</hgroup>
 	</GUI>
 </febio_app>

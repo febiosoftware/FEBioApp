@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include "UIBuilder.h"
 #include <QtCore/QCoreApplication>
+#include "Interpreter.h"
 
 #ifdef GetCurrentTime
 #undef GetCurrentTime
@@ -30,37 +31,33 @@ void qt_info(const char* sz)
 //-----------------------------------------------------------------------------
 CActionButton::CActionButton(QWidget* parent) : QPushButton(parent)
 {
-	m_naction[0] = m_naction[1] = -1;
-	m_index = 0;
 	QObject::connect(this, SIGNAL(clicked()), this, SLOT(onClicked()));
 }
 
-void CActionButton::onClicked()
+void CActionButton::setCode(const QString& code)
 {
-	int naction = m_naction[m_index];
-	
-	if (m_index == 0)
-	{
-		if (m_naction[1] != -1) 
-		{
-			m_index = 1;
-			setText(m_label[m_index]);
-		}
-	}
-	else 
-	{
-		m_index = 0;
-		setText(m_label[m_index]);
-	}
-
-	emit doAction(naction);
+	m_code = code;
 }
 
-void CActionButton::setAction(int naction, const QString& label, int index)
+class ButtonVariable : public Code::Variable
 {
-	m_naction[index] = naction;
-	m_label[index] = label;
-	if (index == 0) setText(label);
+public:
+	ButtonVariable(QPushButton* b) : m_pb(b) {}
+
+	std::string get() override { return m_pb->text().toStdString(); }
+
+	void set(const std::string& s) override { m_pb->setText(QString::fromStdString(s)); }
+
+private:
+	QPushButton* m_pb;
+};
+
+void CActionButton::onClicked()
+{
+	Code::Interpreter interpreter;
+	ButtonVariable v(this);
+	interpreter.addVar("this.text", &v);
+	emit runCode(m_code);
 }
 
 //-----------------------------------------------------------------------------
@@ -68,21 +65,17 @@ MyDialog::MyDialog()
 {
 	setLayout(new QVBoxLayout);
 
-	m_bupdateParams = true;
-
-	m_bforceStop = false;
-
-	QObject::connect(&m_data, SIGNAL(modelInit()), this, SLOT(on_modelInit()));
-	QObject::connect(&m_data, SIGNAL(timeStepDone()), this, SLOT(on_timeStepDone()));
+	QObject::connect(&m_data, SIGNAL(modelInit(int)), this, SLOT(on_modelInit(int)));
+	QObject::connect(&m_data, SIGNAL(timeStepDone(int)), this, SLOT(on_timeStepDone(int)));
 }
 
-void MyDialog::on_modelInit()
+void MyDialog::on_modelInit(int index)
 {
 	m_startTime = m_lastTime = clock();
 	UpdatePlots(true);
 }
 
-void MyDialog::on_timeStepDone()
+void MyDialog::on_timeStepDone(int index)
 {
 	clock_t t1 = clock();
 
@@ -91,8 +84,6 @@ void MyDialog::on_timeStepDone()
 	if (sec > 0.05)
 	{
 		UpdatePlots(true);
-
-		if (m_bupdateParams) UpdateModelParameters();
 
 		m_lastTime = t1;
 
@@ -111,40 +102,86 @@ void MyDialog::UpdatePlots(bool breset)
 
 }
 
-void MyDialog::UpdateModelParameters()
+void MyDialog::doAction(int id, int naction)
 {
-	for (int i = 0; i<(int)m_in.size(); ++i)
+	if (id == -1)
 	{
-		m_in[i]->UpdateParameter();
+		if (naction == 0) Quit();
+		if (naction == 1) ResetDlg();
 	}
-
-	m_bupdateParams = false;
-}
-
-void MyDialog::doAction(int naction)
-{
-	switch (naction)
+	else
 	{
-	case 0: Run(); break;
-	case 1: Quit(); break;
-	case 2: ResetDlg(); break;
-	case 3: RunTask(); break;
-	case 4: Stop(); break;
-	case 5: Pause(); break;
-	case 6: Continue(); break;
+		switch (naction)
+		{
+		case 0: RunModel(id); break;
+		case 1: Stop(id); break;
+		case 2: Pause(id); break;
+		case 3: Continue(id); break;
+		}
 	}
 }
 
-void MyDialog::Stop()
+void MyDialog::RunCode(QString& codeBlock)
 {
-	m_bforceStop = true;
-	m_data.SetFEBioStatus(FEBioData::STOPPED);
+	// clear all plots
+	// TODO: remove this. I want the plots detect automatically when they need to reset
+	for (int i = 0; i<(int)m_plot.size(); ++i) m_plot[i]->Reset();
+
+	// get the script to run
+	std::string code = codeBlock.toStdString();
+
+	// create the interpreter object
+	Code::Interpreter interpreter;
+
+	// build the function table
+	Code::Interpreter::clearFunctions();
+
+	Code::Interpreter::addFunction("app.quit" , [=]() { this->doAction(-1, 0); });
+	Code::Interpreter::addFunction("app.reset", [=]() { this->doAction(-1, 1); });
+
+	int models = m_data.Models();
+	for (int i = 0; i < models; ++i)
+	{
+		std::string fem = m_data.GetModelId(i);
+
+		std::string solve = fem + ".solve";
+		std::string stop  = fem + ".stop";
+		std::string pause = fem + ".pause";
+		std::string conti = fem + ".continue";
+
+		Code::Interpreter::addFunction(solve, [=]() { this->doAction(i, 0); });
+		Code::Interpreter::addFunction(stop , [=]() { this->doAction(i, 1); });
+		Code::Interpreter::addFunction(pause, [=]() { this->doAction(i, 2); });
+		Code::Interpreter::addFunction(conti, [=]() { this->doAction(i, 3); });
+	}
+
+	try {
+		interpreter.runCode(code);
+	}
+	catch (...)
+	{
+		QMessageBox::critical(this, "FEBioApp", "Failed running code");
+	}
+
+	// resize all graphs
+	for (int i = 0; i<(int)m_plot.size(); ++i) m_plot[i]->UpdatePlots();
+
+	// update all 3D plots
+	for (int i = 0; i<(int)m_gl.size(); ++i) m_gl[i]->Update();
+
+	// update GUI
+	repaint();
+}
+
+void MyDialog::Stop(int modelIndex)
+{
+	m_data.StopModel(modelIndex);
 }
 
 void MyDialog::Quit()
 {
 	// stop the model if it is running
-	Stop();
+	m_data.StopAll();
 
 	// close the dialog box
 	accept();
@@ -153,50 +190,42 @@ void MyDialog::Quit()
 void MyDialog::closeEvent(QCloseEvent* ev)
 {
 	// stop the model if it's running
-	Stop();
+	m_data.StopAll();
 }
 
-void MyDialog::Run()
+void MyDialog::RunModel(int modelIndex)
 {
-	if (m_data.GetFEBioStatus() == FEBioData::RUNNING) return;
-
-	static bool modelInitialized = false;
-
-	m_bforceStop = false;
-
-	// update input values
-	UpdateModelParameters();
-
-	// clear all plots
-	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->Reset();
+	if (m_data.GetFEBioStatus(modelIndex) == FEBioData::RUNNING) return;
 
 	// do initialization
-	if (modelInitialized == false)
+	bool init = true;
+	if (m_data.IsModelInitialized(modelIndex) == false)
 	{
-		modelInitialized = m_data.InitModel();
+		init = m_data.InitModel(modelIndex);
 	}
 	else 
 	{
-		m_data.ResetModel();
+		init = m_data.ResetModel(modelIndex);
 	}
 
-	if (modelInitialized == false)
+	if (init == false)
 	{
 		QMessageBox::critical(this, "FEBioApp", "Failed to initialize the model. Aborting run.");
 		return;
 	}
 
 	// solve the model
-	setWindowTitle(m_fileName + " (Running)");
+	QString fileName = QString::fromStdString(m_data.GetModelFile(modelIndex));
+	setWindowTitle(QString::fromStdString(m_fileName) + " (Running:" + fileName + ")");
 
 	printf("Calling FEBio ... ");
-	if (m_data.SolveModel())
+	if (m_data.SolveModel(modelIndex))
 	{
 		printf("NORMAL TERMINATION\n");
 	}
 	else
 	{
-		if (m_bforceStop == false)
+		if (m_data.ForceStop(modelIndex) == false)
 		{
 			printf("ERROR TERMINATION\n");
 			qt_error("ERROR TERMINATION\n");
@@ -206,21 +235,12 @@ void MyDialog::Run()
 			printf("USER TERMINATION\n");
 		}
 	}
-	setWindowTitle(m_fileName);
-
-	// resize all graphs
-	for (int i=0; i<(int) m_plot.size(); ++i) m_plot[i]->UpdatePlots();
-
-	// update all 3D plots
-	for (int i=0; i<(int) m_gl.size(); ++i) m_gl[i]->Update();
-
-	// update GUI
-	repaint();
+	setWindowTitle(QString::fromStdString(m_fileName));
 }
 
 void MyDialog::RunTask()
 {
-	static bool bfirst = true;
+/*	static bool bfirst = true;
 
 	// make sure there is a task
 	if (m_data.HasTask() == false)
@@ -254,6 +274,7 @@ void MyDialog::RunTask()
 		printf("ERROR TERMINATION\n");
 		qt_error("ERROR TERMINATION\n");
 	}
+*/
 }
 
 bool MyDialog::BuildGUI(const char* szfile)
@@ -269,6 +290,7 @@ bool MyDialog::BuildGUI(const char* szfile)
 	else fileTitle++;
 
 	m_fileName = fileTitle;
+
 	setWindowTitle(fileTitle);
 
 	UIBuilder ui;
@@ -296,12 +318,7 @@ void MyDialog::ResetDlg()
 	repaint();
 }
 
-void MyDialog::paramChanged()
-{
-	m_bupdateParams = true;
-}
-
-void MyDialog::Pause()
+void MyDialog::Pause(int modelIndex)
 {
 //	if (m_brunning)
 //	{
@@ -309,7 +326,7 @@ void MyDialog::Pause()
 //	}
 }
 
-void MyDialog::Continue()
+void MyDialog::Continue(int modelIndex)
 {
 //	if (m_brunning && m_bpaused)
 //	{

@@ -149,6 +149,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\FEBioApp\DataPlot.h" />
+    <ClInclude Include="..\..\FEBioApp\Interpreter.h" />
     <ClInclude Include="..\..\FEBioApp\UIBuilder.h" />
     <CustomBuild Include="..\..\FEBioApp\MyDialog.h">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT512DIR)\bin\moc.exe "%(FullPath)" -o "%(RootDir)%(Directory)moc_%(Filename).cpp</Command>
@@ -176,6 +177,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\FEBioApp\DataPlot.cpp" />
     <ClCompile Include="..\..\FEBioApp\FEBioApp.cpp" />
+    <ClCompile Include="..\..\FEBioApp\Interpreter.cpp" />
     <ClCompile Include="..\..\FEBioApp\moc_MyDialog.cpp" />
     <ClCompile Include="..\..\FEBioApp\moc_ParamInput.cpp" />
     <ClCompile Include="..\..\FEBioApp\moc_PlotWidget.cpp" />

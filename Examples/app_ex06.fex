@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<febio_app version="0.1">
+	<Model 	id   = "cc"
+			file = "ex06_cc.feb"/>
+
+	<Model	id = "ucc"
+			file = "ex06_uc.feb"/>
+	
+	<GUI title="$(filename)">
+		<label 	id   = "title"
+				text = "Confined vs unconfined compression"/>
+		
+		<graph title="stress">
+			<data title="cc">
+				<x>cc.time</x>
+				<y>cc.data("sx").value[0]</y>
+			</data>
+			<data title="ucc">
+				<x>ucc.time</x>
+				<y>ucc.data("sx").value[0]</y>
+			</data>
+		</graph>
+
+		<hgroup>
+			<stretch/>
+			<button	text    = "Solve"
+					onClick = "cc.solve(); ucc.solve()"/>
+
+			<button	text    = "Quit"
+					onClick = "app.quit()"/>
+		</hgroup>
+	</GUI>
+</febio_app>

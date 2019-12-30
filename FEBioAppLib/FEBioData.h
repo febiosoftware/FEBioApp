@@ -30,43 +30,56 @@ public:
 	static bool InitFEBio();
 
 public:
-	bool HasTask() const;
-
-	bool InitModel();
-
-	bool ResetModel();
-
-	bool RunModel();
-
-	bool SolveModel();
-
-	bool ReadFEBioFile(const char* szfile);
-
-	bool SetFEBioTask(const char* sztaskName, const char* sztaskFile);
-
-	FEBioApp::GLMesh* BuildGLMesh();
+	FEBioApp::GLMesh* BuildGLMesh(int modelIndex);
 
 	void UpdateGLMesh(FEBioApp::GLMesh* mesh, const std::string& map);
 
-	double GetSimulationTime() const;
+public:
+	bool AddModel(const std::string& modelId, const std::string& fileName, const char* sztask = nullptr);
 
-	int GetFEBioStatus() const;
+	int Models();
 
-	void SetFEBioStatus(FEBIO_STATUS s);
+	int GetModelIndex(const std::string& modelId);
 
-	void GetDataRange(double rng[2]);
+	void SetModelId(int index, const std::string& id);
+
+	std::string GetModelId(int i);
+
+	std::string GetModelFile(int i);
+
+	bool IsModelInitialized(int i);
+
+	bool InitModel(int index);
+
+	bool ResetModel(int index);
+
+	bool SolveModel(int index);
+
+	void StopModel(int index);
+
+	bool HasTask(int index) const;
+
+	int GetFEBioStatus(int index) const;
+
+	void StopAll();
+
+	double GetSimulationTime(int index) const;
+
+	void GetDataRange(int index, double rng[2]);
+
+	bool ForceStop(int index);
 
 public:
-	bool FEBioCallback(unsigned int nwhen);
+	void FEBioCallback(int modelIndex, unsigned int nwhen);
 
 	FEBioParam	GetFEBioParameter(const std::string& paramName);
 
 	std::vector<FEBioParam>	GetFEBioParameterList(const std::string& name);
 
 signals:
-	void modelInit();
-	void timeStepDone();
+	void modelInit(int index);
+	void timeStepDone(int index);
 
 private:
-	Imp*	im;
+	Imp&	im;
 };

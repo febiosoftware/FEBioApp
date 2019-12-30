@@ -1,42 +1,37 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <febio_app version="0.1">
-	<Model name="fem">
-		<file>ex05.feb</file>
-	</Model>
+	<Model 	id  ="fem"
+			file="ex05.feb"/>
+
 	<GUI title="$(filename)">
 		<label text="Simple man"/>
 		<hgroup>
 			<vgroup>
 				<group title="Parameters" align="vertical">
 				
-					<input	text="Ta"
+					<input	text="Ambient temperature (C):"
 							align="topleft"
-							param="fem.surface_load('flux').Ta"
-							label="Ambient temperature (C):"/>
+							param="fem.surface_load('flux').Ta"/>
 
-					<input 	text="hc"
+					<input 	text="Heat transfer coeff (W/(m^2.K)):"
 							align="topleft"
-							param="fem.surface_load('flux').hc"
-							label="Heat transfer coeff (W/(m^2.K)):"/>
+							param="fem.surface_load('flux').hc"/>
 
-					<input 	text="Q"
+					<input 	text="Heat source (W/m^3):"
 							align="topleft"
 							param="fem.body_load('heatSource').Q"
-							range="0, 1000, 50"
-							label="Heat source (W/m^3):"/>
+							range="0, 1000, 50"/>
 
 				</group>
 				<stretch/>
 				<hgroup>
 					<stretch/>
-					<button>
-						<action text="Run">fem.solve()</action>
-						<action text="Stop">fem.stop()</action>
-					</button>
-					<button>
-						<action text="Pause">fem.pause()</action>
-						<action text="Continue">fem.continue()</action>
-					</button>
+					<button text="Run"
+							onClick="if (this.text=='Run') { this.text='Stop'; fem.solve(); } else { this.text='Run'; fem.stop(); }"/>
+
+					<button text="Pause"
+							onClick="if (this.text=='Pause') { this.text='Continue'; fem.pause(); } else { this.text='Pause'; fem.continue(); }"/>
+
 				</hgroup>
 			</vgroup>
 			<plot3d title="view1">
@@ -53,7 +48,11 @@
 				<time_format>1</time_format>
 			</plot3d>
 		</hgroup>
-		<button	text="Quit"
-				action="app.quit()"/>
+		
+		<hgroup>
+			<stretch/>
+			<button text="Quit"
+					onClick="app.quit()"/>
+		</hgroup>
 	</GUI>
 </febio_app>

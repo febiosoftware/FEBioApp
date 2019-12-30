@@ -52,6 +52,9 @@ public:
 
 	void Render();
 
+	void SetModelId(int id);
+	int GetModelId() const;
+
 public:
 	void Update();
 
@@ -106,6 +109,7 @@ private:
 	void BuildNodeList();
 
 private:
+	int				m_modelId;
 	vector<FACE>	m_Face;
 
 	vector<double>	m_Vert;

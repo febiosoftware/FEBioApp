@@ -21,7 +21,7 @@ public:
 	QSize minimumSizeHint() const { return QSize(200, 200); }
 	QSize sizeHint() const { return m_sizeHint; }
 
-	void SetFEModel(FEBioData* feb);
+	void SetFEModel(FEBioData* feb, int modelIndex);
 
 	void SetBackgroundColor(double r, double g, double b);
 	void SetForegroundColor(double r, double g, double b);

@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 class MyDialog;
 class XMLTag;
@@ -29,6 +30,6 @@ private: // helper functions for parsing app file
 	void parseInputList(XMLTag& tag, QBoxLayout* playout);
 
 	FEBioData*	m_data;			//!< the FE model we're processing
-	char		m_szfile[512];	//!< FE model input file name
+	std::string	m_fileName;		//!< the app file
 	MyDialog*	m_dlg;			//!< the dialog we're building
 };

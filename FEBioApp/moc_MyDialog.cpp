@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_CActionButton_t {
-    QByteArrayData data[5];
-    char stringdata0[42];
+    QByteArrayData data[6];
+    char stringdata0[47];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -32,13 +32,14 @@ struct qt_meta_stringdata_CActionButton_t {
 static const qt_meta_stringdata_CActionButton_t qt_meta_stringdata_CActionButton = {
     {
 QT_MOC_LITERAL(0, 0, 13), // "CActionButton"
-QT_MOC_LITERAL(1, 14, 8), // "doAction"
-QT_MOC_LITERAL(2, 23, 0), // ""
-QT_MOC_LITERAL(3, 24, 7), // "naction"
-QT_MOC_LITERAL(4, 32, 9) // "onClicked"
+QT_MOC_LITERAL(1, 14, 7), // "runCode"
+QT_MOC_LITERAL(2, 22, 0), // ""
+QT_MOC_LITERAL(3, 23, 8), // "QString&"
+QT_MOC_LITERAL(4, 32, 4), // "code"
+QT_MOC_LITERAL(5, 37, 9) // "onClicked"
 
     },
-    "CActionButton\0doAction\0\0naction\0"
+    "CActionButton\0runCode\0\0QString&\0code\0"
     "onClicked"
 };
 #undef QT_MOC_LITERAL
@@ -60,10 +61,10 @@ static const uint qt_meta_data_CActionButton[] = {
        1,    1,   24,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-       4,    0,   27,    2, 0x09 /* Protected */,
+       5,    0,   27,    2, 0x09 /* Protected */,
 
  // signals: parameters
-    QMetaType::Void, QMetaType::Int,    3,
+    QMetaType::Void, 0x80000000 | 3,    4,
 
  // slots: parameters
     QMetaType::Void,
@@ -77,15 +78,15 @@ void CActionButton::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
         auto *_t = static_cast<CActionButton *>(_o);
         Q_UNUSED(_t)
         switch (_id) {
-        case 0: _t->doAction((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 0: _t->runCode((*reinterpret_cast< QString(*)>(_a[1]))); break;
         case 1: _t->onClicked(); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
         int *result = reinterpret_cast<int *>(_a[0]);
         {
-            using _t = void (CActionButton::*)(int );
-            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&CActionButton::doAction)) {
+            using _t = void (CActionButton::*)(QString & );
+            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&CActionButton::runCode)) {
                 *result = 0;
                 return;
             }
@@ -134,14 +135,14 @@ int CActionButton::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 }
 
 // SIGNAL 0
-void CActionButton::doAction(int _t1)
+void CActionButton::runCode(QString & _t1)
 {
     void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(&_t1)) };
     QMetaObject::activate(this, &staticMetaObject, 0, _a);
 }
 struct qt_meta_stringdata_MyDialog_t {
-    QByteArrayData data[14];
-    char stringdata0[115];
+    QByteArrayData data[19];
+    char stringdata0[149];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -153,23 +154,28 @@ static const qt_meta_stringdata_MyDialog_t qt_meta_stringdata_MyDialog = {
 QT_MOC_LITERAL(0, 0, 8), // "MyDialog"
 QT_MOC_LITERAL(1, 9, 8), // "ResetDlg"
 QT_MOC_LITERAL(2, 18, 0), // ""
-QT_MOC_LITERAL(3, 19, 3), // "Run"
-QT_MOC_LITERAL(4, 23, 7), // "RunTask"
-QT_MOC_LITERAL(5, 31, 12), // "paramChanged"
-QT_MOC_LITERAL(6, 44, 4), // "Stop"
-QT_MOC_LITERAL(7, 49, 4), // "Quit"
-QT_MOC_LITERAL(8, 54, 5), // "Pause"
-QT_MOC_LITERAL(9, 60, 8), // "Continue"
-QT_MOC_LITERAL(10, 69, 8), // "doAction"
-QT_MOC_LITERAL(11, 78, 7), // "naction"
-QT_MOC_LITERAL(12, 86, 12), // "on_modelInit"
-QT_MOC_LITERAL(13, 99, 15) // "on_timeStepDone"
+QT_MOC_LITERAL(3, 19, 8), // "RunModel"
+QT_MOC_LITERAL(4, 28, 10), // "modelIndex"
+QT_MOC_LITERAL(5, 39, 7), // "RunTask"
+QT_MOC_LITERAL(6, 47, 4), // "Stop"
+QT_MOC_LITERAL(7, 52, 4), // "Quit"
+QT_MOC_LITERAL(8, 57, 5), // "Pause"
+QT_MOC_LITERAL(9, 63, 8), // "Continue"
+QT_MOC_LITERAL(10, 72, 8), // "doAction"
+QT_MOC_LITERAL(11, 81, 2), // "id"
+QT_MOC_LITERAL(12, 84, 7), // "naction"
+QT_MOC_LITERAL(13, 92, 7), // "RunCode"
+QT_MOC_LITERAL(14, 100, 8), // "QString&"
+QT_MOC_LITERAL(15, 109, 4), // "code"
+QT_MOC_LITERAL(16, 114, 12), // "on_modelInit"
+QT_MOC_LITERAL(17, 127, 5), // "index"
+QT_MOC_LITERAL(18, 133, 15) // "on_timeStepDone"
 
     },
-    "MyDialog\0ResetDlg\0\0Run\0RunTask\0"
-    "paramChanged\0Stop\0Quit\0Pause\0Continue\0"
-    "doAction\0naction\0on_modelInit\0"
-    "on_timeStepDone"
+    "MyDialog\0ResetDlg\0\0RunModel\0modelIndex\0"
+    "RunTask\0Stop\0Quit\0Pause\0Continue\0"
+    "doAction\0id\0naction\0RunCode\0QString&\0"
+    "code\0on_modelInit\0index\0on_timeStepDone"
 };
 #undef QT_MOC_LITERAL
 
@@ -188,29 +194,29 @@ static const uint qt_meta_data_MyDialog[] = {
 
  // slots: name, argc, parameters, tag, flags
        1,    0,   69,    2, 0x0a /* Public */,
-       3,    0,   70,    2, 0x0a /* Public */,
-       4,    0,   71,    2, 0x0a /* Public */,
-       5,    0,   72,    2, 0x0a /* Public */,
-       6,    0,   73,    2, 0x0a /* Public */,
-       7,    0,   74,    2, 0x0a /* Public */,
-       8,    0,   75,    2, 0x0a /* Public */,
-       9,    0,   76,    2, 0x0a /* Public */,
-      10,    1,   77,    2, 0x0a /* Public */,
-      12,    0,   80,    2, 0x0a /* Public */,
-      13,    0,   81,    2, 0x0a /* Public */,
+       3,    1,   70,    2, 0x0a /* Public */,
+       5,    0,   73,    2, 0x0a /* Public */,
+       6,    1,   74,    2, 0x0a /* Public */,
+       7,    0,   77,    2, 0x0a /* Public */,
+       8,    1,   78,    2, 0x0a /* Public */,
+       9,    1,   81,    2, 0x0a /* Public */,
+      10,    2,   84,    2, 0x0a /* Public */,
+      13,    1,   89,    2, 0x0a /* Public */,
+      16,    1,   92,    2, 0x0a /* Public */,
+      18,    1,   95,    2, 0x0a /* Public */,
 
  // slots: parameters
     QMetaType::Void,
+    QMetaType::Void, QMetaType::Int,    4,
     QMetaType::Void,
+    QMetaType::Void, QMetaType::Int,    4,
     QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void, QMetaType::Int,   11,
-    QMetaType::Void,
-    QMetaType::Void,
+    QMetaType::Void, QMetaType::Int,    4,
+    QMetaType::Void, QMetaType::Int,    4,
+    QMetaType::Void, QMetaType::Int, QMetaType::Int,   11,   12,
+    QMetaType::Void, 0x80000000 | 14,   15,
+    QMetaType::Void, QMetaType::Int,   17,
+    QMetaType::Void, QMetaType::Int,   17,
 
        0        // eod
 };
@@ -222,16 +228,16 @@ void MyDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, vo
         Q_UNUSED(_t)
         switch (_id) {
         case 0: _t->ResetDlg(); break;
-        case 1: _t->Run(); break;
+        case 1: _t->RunModel((*reinterpret_cast< int(*)>(_a[1]))); break;
         case 2: _t->RunTask(); break;
-        case 3: _t->paramChanged(); break;
-        case 4: _t->Stop(); break;
-        case 5: _t->Quit(); break;
-        case 6: _t->Pause(); break;
-        case 7: _t->Continue(); break;
-        case 8: _t->doAction((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 9: _t->on_modelInit(); break;
-        case 10: _t->on_timeStepDone(); break;
+        case 3: _t->Stop((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 4: _t->Quit(); break;
+        case 5: _t->Pause((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 6: _t->Continue((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 7: _t->doAction((*reinterpret_cast< int(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
+        case 8: _t->RunCode((*reinterpret_cast< QString(*)>(_a[1]))); break;
+        case 9: _t->on_modelInit((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 10: _t->on_timeStepDone((*reinterpret_cast< int(*)>(_a[1]))); break;
         default: ;
         }
     }

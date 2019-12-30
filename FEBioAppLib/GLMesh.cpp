@@ -9,11 +9,22 @@ using namespace FEBioApp;
 
 GLMesh::GLMesh()
 {
+	m_modelId = -1;
 }
 
 void GLMesh::Clear()
 {
 	m_Face.clear();
+}
+
+void GLMesh::SetModelId(int id)
+{
+	m_modelId = id;
+}
+
+int GLMesh::GetModelId() const
+{
+	return m_modelId;
 }
 
 void GLMesh::Create(int faces)

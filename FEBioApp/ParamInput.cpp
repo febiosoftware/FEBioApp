@@ -70,6 +70,30 @@ CParamInput::CParamInput()
 }
 
 //-----------------------------------------------------------------------------
+void CParamInput::SetWidget(QLineEdit* pw)
+{ 
+	m_pedit = pw; 
+	QObject::connect(pw, SIGNAL(editingFinished()), this, SLOT(onChanged()));
+}
+
+void CParamInput::SetWidget(QCheckBox* pw)
+{ 
+	m_pcheck = pw; 
+	QObject::connect(pw, SIGNAL(clicked(bool)), this, SLOT(onChanged()));
+}
+
+void CParamInput::SetWidget(CFloatSlider* pw)
+{ 
+	m_slider = pw; 
+	QObject::connect(pw, SIGNAL(valueChanged(double)), this, SLOT(onChanged()));
+}
+
+void CParamInput::onChanged()
+{
+	UpdateParameter();
+}
+
+//-----------------------------------------------------------------------------
 void CParamInput::SetParameter(const FEBioParam& val)
 {
 	m_val = val;

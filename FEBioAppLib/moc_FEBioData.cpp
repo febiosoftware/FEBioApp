@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_FEBioData_t {
-    QByteArrayData data[4];
-    char stringdata0[34];
+    QByteArrayData data[5];
+    char stringdata0[40];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -34,10 +34,11 @@ static const qt_meta_stringdata_FEBioData_t qt_meta_stringdata_FEBioData = {
 QT_MOC_LITERAL(0, 0, 9), // "FEBioData"
 QT_MOC_LITERAL(1, 10, 9), // "modelInit"
 QT_MOC_LITERAL(2, 20, 0), // ""
-QT_MOC_LITERAL(3, 21, 12) // "timeStepDone"
+QT_MOC_LITERAL(3, 21, 5), // "index"
+QT_MOC_LITERAL(4, 27, 12) // "timeStepDone"
 
     },
-    "FEBioData\0modelInit\0\0timeStepDone"
+    "FEBioData\0modelInit\0\0index\0timeStepDone"
 };
 #undef QT_MOC_LITERAL
 
@@ -55,12 +56,12 @@ static const uint qt_meta_data_FEBioData[] = {
        2,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    0,   24,    2, 0x06 /* Public */,
-       3,    0,   25,    2, 0x06 /* Public */,
+       1,    1,   24,    2, 0x06 /* Public */,
+       4,    1,   27,    2, 0x06 /* Public */,
 
  // signals: parameters
-    QMetaType::Void,
-    QMetaType::Void,
+    QMetaType::Void, QMetaType::Int,    3,
+    QMetaType::Void, QMetaType::Int,    3,
 
        0        // eod
 };
@@ -71,28 +72,27 @@ void FEBioData::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, v
         auto *_t = static_cast<FEBioData *>(_o);
         Q_UNUSED(_t)
         switch (_id) {
-        case 0: _t->modelInit(); break;
-        case 1: _t->timeStepDone(); break;
+        case 0: _t->modelInit((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 1: _t->timeStepDone((*reinterpret_cast< int(*)>(_a[1]))); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
         int *result = reinterpret_cast<int *>(_a[0]);
         {
-            using _t = void (FEBioData::*)();
+            using _t = void (FEBioData::*)(int );
             if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&FEBioData::modelInit)) {
                 *result = 0;
                 return;
             }
         }
         {
-            using _t = void (FEBioData::*)();
+            using _t = void (FEBioData::*)(int );
             if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&FEBioData::timeStepDone)) {
                 *result = 1;
                 return;
             }
         }
     }
-    Q_UNUSED(_a);
 }
 
 QT_INIT_METAOBJECT const QMetaObject FEBioData::staticMetaObject = { {
@@ -136,15 +136,17 @@ int FEBioData::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 }
 
 // SIGNAL 0
-void FEBioData::modelInit()
+void FEBioData::modelInit(int _t1)
 {
-    QMetaObject::activate(this, &staticMetaObject, 0, nullptr);
+    void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(&_t1)) };
+    QMetaObject::activate(this, &staticMetaObject, 0, _a);
 }
 
 // SIGNAL 1
-void FEBioData::timeStepDone()
+void FEBioData::timeStepDone(int _t1)
 {
-    QMetaObject::activate(this, &staticMetaObject, 1, nullptr);
+    void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(&_t1)) };
+    QMetaObject::activate(this, &staticMetaObject, 1, _a);
 }
 QT_WARNING_POP
 QT_END_MOC_NAMESPACE

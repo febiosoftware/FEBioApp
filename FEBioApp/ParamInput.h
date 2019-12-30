@@ -38,8 +38,10 @@ private:
 
 //-----------------------------------------------------------------------------
 //! This class connects an FEBio model parameter to an input field.
-class CParamInput
+class CParamInput : QObject
 {
+	Q_OBJECT
+
 public:
 	enum {
 		ALIGN_LEFT,
@@ -55,9 +57,9 @@ public:
 public:
 	CParamInput();
 
-	void SetWidget(QLineEdit* pw) { m_pedit = pw; }
-	void SetWidget(QCheckBox* pw) { m_pcheck = pw; }
-	void SetWidget(CFloatSlider* pw) { m_slider = pw; }
+	void SetWidget(QLineEdit* pw);
+	void SetWidget(QCheckBox* pw);
+	void SetWidget(CFloatSlider* pw);
 
 	void SetParameter(const FEBioParam& val);
 
@@ -66,6 +68,9 @@ public:
 
 	// reset UI to initial value
 	void ResetParameter();
+
+public slots:
+	void onChanged();
 
 private:
 	QLineEdit*		m_pedit;

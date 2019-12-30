@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <febio_app version="0.1">
-	<Model name="fem">
-		<file>ex01.feb</file>
-	</Model>
+	<Model 	id   = "fem"
+			file = "ex01.feb"/>
+	
 	<GUI title="$(filename)">
-		<label text="My First FEBio App"/>
+		<label 	id   = "title"
+				text = "My First FEBio App"/>
 		
-		<input	text ="Young's Modulus"
-				param="fem.material('Mat1').E"/>
+		<input_list	text   = "Material parameters"
+					params = "fem.material('Mat1')"/>
 				
-		<input	text ="Poisson's ratio"
-				param="fem.material('Mat1').v"/>
-
-		<button	text  ="Solve"
-				action="fem.solve()"/>
+		<button	text    = "Solve"
+				onClick = "fem.solve()"/>
 		
 		<graph title="stress-strain">
 			<data title="sx">
@@ -22,7 +20,7 @@
 			</data>
 		</graph>
 		<button	text  ="Quit"
-				action="app.quit()"/>
+				onClick="app.quit()"/>
 		</button>
 	</GUI>
 </febio_app>

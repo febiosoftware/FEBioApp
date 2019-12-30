@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <febio_app version="0.1">
-	<Model name="fem">
-		<file>ex03.feb</file>
-	</Model>
+	<Model 	id  ="fem"
+			file="ex03.feb"/>
+
 	<GUI title="$(filename)">
 		<label text="Beam Bending Example"/>
 		<hgroup>
@@ -25,7 +25,7 @@
 				</group>
 				<stretch/>
 				<button	text="Solve"
-						action="fem.solve()"/>
+						onClick="fem.solve()"/>
 
 			</vgroup>
 			<plot3d title="view1">
@@ -35,8 +35,11 @@
 			</plot3d>
 		</hgroup>
 		
-		<button text="Quit">
-				action="app.quit()"/>
+		<hgroup>
+			<stretch/>
+			<button text="Quit"
+					onClick="app.quit()"/>
+		</hgroup>
 
 	</GUI>
 </febio_app>

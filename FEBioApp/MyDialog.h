@@ -21,18 +21,16 @@ class CActionButton : public QPushButton
 public:
 	CActionButton(QWidget* parent = 0);
 
-	void setAction(int naction, const QString& label, int index = 0);
+	void setCode(const QString& code);
 
 signals:
-	void doAction(int naction);
+	void runCode(QString& code);
 
 protected slots:
 	void onClicked();
 
 private:
-	int			m_index;
-	int			m_naction[2];
-	QString		m_label[2];
+	QString		m_code;
 };
 
 //-----------------------------------------------------------------------------
@@ -56,21 +54,20 @@ public:
 
 public slots:
 	void ResetDlg();
-	void Run();
+	void RunModel(int modelIndex);
 	void RunTask();
-	void paramChanged();
-	void Stop();
+	void Stop(int modelIndex);
 	void Quit();
-	void Pause();
-	void Continue();
+	void Pause(int modelIndex);
+	void Continue(int modelIndex);
 
-	void doAction(int naction);
+	void doAction(int id, int naction);
+	void RunCode(QString& code);
 
-	void on_modelInit();
-	void on_timeStepDone();
+	void on_modelInit(int index);
+	void on_timeStepDone(int index);
 
 private:
-	void UpdateModelParameters();
 	void UpdatePlots(bool breset);
 
 private:
@@ -79,11 +76,7 @@ private:
 	vector<CDataPlot*>		m_plot;
 	vector<CParamInput*>	m_in;
 
-	QString		m_fileName;
-
-	bool	m_bupdateParams;	//!< a parameter has changed
-
-	bool	m_bforceStop;
+	std::string		m_fileName;
 
 	clock_t	m_startTime, m_lastTime;
 };

@@ -67,12 +67,20 @@ MyDialog::MyDialog()
 
 	QObject::connect(&m_data, SIGNAL(modelInit(int)), this, SLOT(on_modelInit(int)));
 	QObject::connect(&m_data, SIGNAL(timeStepDone(int)), this, SLOT(on_timeStepDone(int)));
+	QObject::connect(&m_data, SIGNAL(modelReset(int)), this, SLOT(on_modelReset(int)));
 }
 
 void MyDialog::on_modelInit(int index)
 {
 	m_startTime = m_lastTime = clock();
 	UpdatePlots(true);
+}
+
+void MyDialog::on_modelReset(int index)
+{
+	// clear all plots
+	// TODO: remove this. I want the plots detect automatically when they need to reset
+	for (int i = 0; i<(int)m_plot.size(); ++i) m_plot[i]->Reset();
 }
 
 void MyDialog::on_timeStepDone(int index)
@@ -236,45 +244,6 @@ void MyDialog::RunModel(int modelIndex)
 		}
 	}
 	setWindowTitle(QString::fromStdString(m_fileName));
-}
-
-void MyDialog::RunTask()
-{
-/*	static bool bfirst = true;
-
-	// make sure there is a task
-	if (m_data.HasTask() == false)
-	{
-		printf("No task defined.");
-		qt_error("No task defined");
-		return;
-	}
-
-	// first time we get here, we need to do some initialization
-	if (bfirst)
-	{	
-		bfirst = false;
-		
-		// initialize the model
-		if (m_data.InitModel() == false)
-		{
-			qt_error("Model failed to initialize");
-		}
-	}
-	else m_data.ResetModel();
-
-	// run the task
-	printf("Calling FEBio ... ");
-	if (m_data.RunModel())
-	{
-		printf("NORMAL TERMINATION\n");
-	}
-	else
-	{
-		printf("ERROR TERMINATION\n");
-		qt_error("ERROR TERMINATION\n");
-	}
-*/
 }
 
 bool MyDialog::BuildGUI(const char* szfile)

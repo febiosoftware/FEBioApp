@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+	TODO: Can I print the optimized parameter values?
+-->
+<febio_app version="0.1">
+	<Model 	id   = "fem"
+			file = "ex07_in.feb"
+			task = "optimize:ex07_opt.feb"/>
+	
+	<GUI title="$(filename)">
+		<label 	id   = "title"
+				text = "Optimization example"/>
+		
+		<button	text    = "Solve"
+				onClick = "fem.solve()"/>
+		
+		<graph title="stress">
+			<data title="sx">
+				<x>fem.time</x>
+				<y>fem.data("sx").value[0]</y>
+			</data>
+			<data title="target" type="static">
+				<point>0,	0</point>
+				<point>0.1,	0.259824</point>
+				<point>0.2,	0.350244</point>
+				<point>0.3,	0.485639</point>
+				<point>0.4,	0.789294</point>
+				<point>0.5,	0.956576</point>
+				<point>0.6,	1.2775</point>
+				<point>0.7,	1.48285</point>
+				<point>0.8,	1.39322</point>
+				<point>0.9,	1.60909</point>
+				<point>1,	2.13083</point>
+			</data>
+		</graph>
+		<button	text  ="Quit"
+				onClick="app.quit()"/>
+		</button>
+	</GUI>
+</febio_app>

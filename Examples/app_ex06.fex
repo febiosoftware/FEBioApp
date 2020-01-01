@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+	TODO: Add mechanism for changing both model's parameters via a single input field.
+-->
 <febio_app version="0.1">
 	<Model 	id   = "cc"
 			file = "ex06_cc.feb"/>

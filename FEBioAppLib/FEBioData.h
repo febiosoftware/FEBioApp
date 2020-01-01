@@ -79,6 +79,7 @@ public:
 signals:
 	void modelInit(int index);
 	void timeStepDone(int index);
+	void modelReset(int index);
 
 private:
 	Imp&	im;

@@ -42,9 +42,28 @@ public:
 
 	bool InitModel()
 	{
-		m_fem.SetLogLevel(0);
-		if (m_fem.Init() == false) return false;
+		if (m_task)
+		{
+			return m_task->Init(m_taskFile.c_str());
+		}
+		else
+		{
+			m_fem.SetLogLevel(0);
+			if (m_fem.Init() == false) return false;
+		}
 		return true;
+	}
+
+	bool Solve()
+	{
+		if (m_task)
+		{
+			return m_task->Run();
+		}
+		else
+		{
+			return m_fem.Solve();
+		}
 	}
 
 	bool febio_cb(unsigned int nwhen)
@@ -102,7 +121,19 @@ bool FEBioData::AddModel(const std::string& modelId, const std::string& fileName
 
 	m->m_fem.AddCallback(febio_cb, CB_ALWAYS, m);
 
-//	if (sztask) m->m_task = sztask;
+	if (sztask)
+	{
+		char sz[256] = { 0 };
+		strcpy(sz, sztask);
+		char* c = strchr(sz, ':');
+		if (c)
+		{
+			*c++ = 0;
+			m->m_taskFile = c;
+		}
+
+		m->m_task = fecore_new<FECoreTask>(sz, &m->m_fem);
+	}
 
 	return m->m_fem.Input(fileName.c_str());
 }
@@ -161,18 +192,10 @@ bool FEBioData::HasTask(int index) const
 bool FEBioData::InitModel(int index)
 {
 	im.m_modelList[index]->m_fem.SetLogLevel(0);
-	bool b = im.m_modelList[index]->m_fem.Init();
+	bool b = im.m_modelList[index]->InitModel();
 
 	im.m_modelList[index]->m_modelInitialized = b;
 
-/*	if (im->m_task == nullptr)
-	{
-		im->m_task = fecore_new<FECoreTask>("solve", &im->m_fem);
-		if (im->m_task == nullptr) return false;
-	}
-
-	return im->m_task->Init(im->m_taskFile.c_str());
-*/
 	return b;
 }
 
@@ -184,7 +207,7 @@ bool FEBioData::ResetModel(int index)
 bool FEBioData::SolveModel(int index)
 {
 	im.m_modelList[index]->m_runStatus = FEBioData::RUNNING;
-	bool bret = im.m_modelList[index]->m_fem.Solve();
+	bool bret = im.m_modelList[index]->Solve();
 	im.m_modelList[index]->m_runStatus = FEBioData::STOPPED;
 	return bret;
 }
@@ -195,6 +218,7 @@ void FEBioData::FEBioCallback(int modelIndex, unsigned int nwhen)
 	{
 	case CB_INIT       : emit modelInit   (modelIndex); break;
 	case CB_MAJOR_ITERS: emit timeStepDone(modelIndex); break;
+	case CB_RESET      : emit modelReset  (modelIndex); break;
 	}
 }
 

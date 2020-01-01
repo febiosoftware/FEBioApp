@@ -142,7 +142,7 @@ void CActionButton::runCode(QString & _t1)
 }
 struct qt_meta_stringdata_MyDialog_t {
     QByteArrayData data[19];
-    char stringdata0[149];
+    char stringdata0[155];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -156,26 +156,27 @@ QT_MOC_LITERAL(1, 9, 8), // "ResetDlg"
 QT_MOC_LITERAL(2, 18, 0), // ""
 QT_MOC_LITERAL(3, 19, 8), // "RunModel"
 QT_MOC_LITERAL(4, 28, 10), // "modelIndex"
-QT_MOC_LITERAL(5, 39, 7), // "RunTask"
-QT_MOC_LITERAL(6, 47, 4), // "Stop"
-QT_MOC_LITERAL(7, 52, 4), // "Quit"
-QT_MOC_LITERAL(8, 57, 5), // "Pause"
-QT_MOC_LITERAL(9, 63, 8), // "Continue"
-QT_MOC_LITERAL(10, 72, 8), // "doAction"
-QT_MOC_LITERAL(11, 81, 2), // "id"
-QT_MOC_LITERAL(12, 84, 7), // "naction"
-QT_MOC_LITERAL(13, 92, 7), // "RunCode"
-QT_MOC_LITERAL(14, 100, 8), // "QString&"
-QT_MOC_LITERAL(15, 109, 4), // "code"
-QT_MOC_LITERAL(16, 114, 12), // "on_modelInit"
-QT_MOC_LITERAL(17, 127, 5), // "index"
-QT_MOC_LITERAL(18, 133, 15) // "on_timeStepDone"
+QT_MOC_LITERAL(5, 39, 4), // "Stop"
+QT_MOC_LITERAL(6, 44, 4), // "Quit"
+QT_MOC_LITERAL(7, 49, 5), // "Pause"
+QT_MOC_LITERAL(8, 55, 8), // "Continue"
+QT_MOC_LITERAL(9, 64, 8), // "doAction"
+QT_MOC_LITERAL(10, 73, 2), // "id"
+QT_MOC_LITERAL(11, 76, 7), // "naction"
+QT_MOC_LITERAL(12, 84, 7), // "RunCode"
+QT_MOC_LITERAL(13, 92, 8), // "QString&"
+QT_MOC_LITERAL(14, 101, 4), // "code"
+QT_MOC_LITERAL(15, 106, 12), // "on_modelInit"
+QT_MOC_LITERAL(16, 119, 5), // "index"
+QT_MOC_LITERAL(17, 125, 15), // "on_timeStepDone"
+QT_MOC_LITERAL(18, 141, 13) // "on_modelReset"
 
     },
     "MyDialog\0ResetDlg\0\0RunModel\0modelIndex\0"
-    "RunTask\0Stop\0Quit\0Pause\0Continue\0"
-    "doAction\0id\0naction\0RunCode\0QString&\0"
-    "code\0on_modelInit\0index\0on_timeStepDone"
+    "Stop\0Quit\0Pause\0Continue\0doAction\0id\0"
+    "naction\0RunCode\0QString&\0code\0"
+    "on_modelInit\0index\0on_timeStepDone\0"
+    "on_modelReset"
 };
 #undef QT_MOC_LITERAL
 
@@ -195,28 +196,28 @@ static const uint qt_meta_data_MyDialog[] = {
  // slots: name, argc, parameters, tag, flags
        1,    0,   69,    2, 0x0a /* Public */,
        3,    1,   70,    2, 0x0a /* Public */,
-       5,    0,   73,    2, 0x0a /* Public */,
-       6,    1,   74,    2, 0x0a /* Public */,
-       7,    0,   77,    2, 0x0a /* Public */,
-       8,    1,   78,    2, 0x0a /* Public */,
-       9,    1,   81,    2, 0x0a /* Public */,
-      10,    2,   84,    2, 0x0a /* Public */,
-      13,    1,   89,    2, 0x0a /* Public */,
-      16,    1,   92,    2, 0x0a /* Public */,
-      18,    1,   95,    2, 0x0a /* Public */,
+       5,    1,   73,    2, 0x0a /* Public */,
+       6,    0,   76,    2, 0x0a /* Public */,
+       7,    1,   77,    2, 0x0a /* Public */,
+       8,    1,   80,    2, 0x0a /* Public */,
+       9,    2,   83,    2, 0x0a /* Public */,
+      12,    1,   88,    2, 0x0a /* Public */,
+      15,    1,   91,    2, 0x0a /* Public */,
+      17,    1,   94,    2, 0x0a /* Public */,
+      18,    1,   97,    2, 0x0a /* Public */,
 
  // slots: parameters
     QMetaType::Void,
     QMetaType::Void, QMetaType::Int,    4,
-    QMetaType::Void,
     QMetaType::Void, QMetaType::Int,    4,
     QMetaType::Void,
     QMetaType::Void, QMetaType::Int,    4,
     QMetaType::Void, QMetaType::Int,    4,
-    QMetaType::Void, QMetaType::Int, QMetaType::Int,   11,   12,
-    QMetaType::Void, 0x80000000 | 14,   15,
-    QMetaType::Void, QMetaType::Int,   17,
-    QMetaType::Void, QMetaType::Int,   17,
+    QMetaType::Void, QMetaType::Int, QMetaType::Int,   10,   11,
+    QMetaType::Void, 0x80000000 | 13,   14,
+    QMetaType::Void, QMetaType::Int,   16,
+    QMetaType::Void, QMetaType::Int,   16,
+    QMetaType::Void, QMetaType::Int,   16,
 
        0        // eod
 };
@@ -229,15 +230,15 @@ void MyDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, vo
         switch (_id) {
         case 0: _t->ResetDlg(); break;
         case 1: _t->RunModel((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 2: _t->RunTask(); break;
-        case 3: _t->Stop((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 4: _t->Quit(); break;
-        case 5: _t->Pause((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 6: _t->Continue((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 7: _t->doAction((*reinterpret_cast< int(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
-        case 8: _t->RunCode((*reinterpret_cast< QString(*)>(_a[1]))); break;
-        case 9: _t->on_modelInit((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 10: _t->on_timeStepDone((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 2: _t->Stop((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 3: _t->Quit(); break;
+        case 4: _t->Pause((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 5: _t->Continue((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 6: _t->doAction((*reinterpret_cast< int(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
+        case 7: _t->RunCode((*reinterpret_cast< QString(*)>(_a[1]))); break;
+        case 8: _t->on_modelInit((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 9: _t->on_timeStepDone((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 10: _t->on_modelReset((*reinterpret_cast< int(*)>(_a[1]))); break;
         default: ;
         }
     }

@@ -55,7 +55,6 @@ public:
 public slots:
 	void ResetDlg();
 	void RunModel(int modelIndex);
-	void RunTask();
 	void Stop(int modelIndex);
 	void Quit();
 	void Pause(int modelIndex);
@@ -66,6 +65,7 @@ public slots:
 
 	void on_modelInit(int index);
 	void on_timeStepDone(int index);
+	void on_modelReset(int index);
 
 private:
 	void UpdatePlots(bool breset);

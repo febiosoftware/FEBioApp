@@ -6,6 +6,11 @@
 #include "MyDialog.h"
 #include <QSurfaceFormat>
 #include <iostream>
+#include "PlotWidget.h"
+#include "QGLView.h"
+#include "DataPlot.h"
+#include "ParamInput.h"
+#include <FEBioAppLib\FEBioData.h>
 
 int main(int argc, char* argv[])
 {

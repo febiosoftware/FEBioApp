@@ -16,6 +16,7 @@
 #include "ParamInput.h"
 #include "DataPlot.h"
 #include "MyDialog.h"
+#include <FEBioAppLib/FEBioData.h>
 
 UIBuilder::UIBuilder()
 {

@@ -4,14 +4,14 @@
 #include <QCheckBox>
 #include <QSlider>
 #include <QPushButton>
-#include "PlotWidget.h"
-#include "QGLView.h"
-#include "DataPlot.h"
-#include "ParamInput.h"
-#include <FEBioAppLib\FEBioData.h>
 #include <time.h>
+#include <vector>
 
 class QBoxLayout;
+class CParamInput;
+class CDataPlot;
+class QGLView;
+class FEBioData;
 
 //-----------------------------------------------------------------------------
 class CActionButton : public QPushButton
@@ -41,6 +41,7 @@ class MyDialog : public QDialog
 
 public:
 	MyDialog();
+	~MyDialog();
 
 	bool BuildGUI(const char* szfile);
 
@@ -71,10 +72,10 @@ private:
 	void UpdatePlots(bool breset);
 
 private:
-	FEBioData				m_data;	//!< The model data
-	vector<QGLView*>		m_gl;
-	vector<CDataPlot*>		m_plot;
-	vector<CParamInput*>	m_in;
+	FEBioData*					m_data;	//!< The model data
+	std::vector<QGLView*>		m_gl;
+	std::vector<CDataPlot*>		m_plot;
+	std::vector<CParamInput*>	m_in;
 
 	std::string		m_fileName;
 

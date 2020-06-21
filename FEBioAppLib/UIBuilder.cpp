@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "UIBuilder.h"
 #include <QDialog>
 #include <FEBioXML/XMLReader.h>
@@ -18,10 +17,10 @@
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QValidator>
-#include "PlotWidget.h"
-#include "QGLView.h"
-#include "ParamInput.h"
-#include "DataPlot.h"
+//#include "PlotWidget.h"
+//#include "QGLView.h"
+//#include "ParamInput.h"
+//#include "DataPlot.h"
 #include "MyDialog.h"
 
 UIBuilder::UIBuilder()

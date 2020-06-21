@@ -7,6 +7,10 @@
 #include "UIBuilder.h"
 #include <QtCore/QCoreApplication>
 #include "Interpreter.h"
+#include <FEBioAppLib/FEBioData.h>
+#include "DataPlot.h"
+#include "QGLView.h"
+#include "ParamInput.h"
 
 #ifdef GetCurrentTime
 #undef GetCurrentTime
@@ -63,12 +67,20 @@ void CActionButton::onClicked()
 //-----------------------------------------------------------------------------
 MyDialog::MyDialog()
 {
+	m_data = new FEBioData;
+
 	setLayout(new QVBoxLayout);
 
-	QObject::connect(&m_data, SIGNAL(modelInit(int)), this, SLOT(on_modelInit(int)));
-	QObject::connect(&m_data, SIGNAL(timeStepDone(int)), this, SLOT(on_timeStepDone(int)));
-	QObject::connect(&m_data, SIGNAL(modelReset(int)), this, SLOT(on_modelReset(int)));
+	QObject::connect(m_data, SIGNAL(modelInit(int)), this, SLOT(on_modelInit(int)));
+	QObject::connect(m_data, SIGNAL(timeStepDone(int)), this, SLOT(on_timeStepDone(int)));
+	QObject::connect(m_data, SIGNAL(modelReset(int)), this, SLOT(on_modelReset(int)));
 }
+
+MyDialog::~MyDialog()
+{
+	delete m_data;
+}
+
 
 void MyDialog::on_modelInit(int index)
 {
@@ -147,10 +159,10 @@ void MyDialog::RunCode(QString& codeBlock)
 	Code::Interpreter::addFunction("app.quit" , [=]() { this->doAction(-1, 0); });
 	Code::Interpreter::addFunction("app.reset", [=]() { this->doAction(-1, 1); });
 
-	int models = m_data.Models();
+	int models = m_data->Models();
 	for (int i = 0; i < models; ++i)
 	{
-		std::string fem = m_data.GetModelId(i);
+		std::string fem = m_data->GetModelId(i);
 
 		std::string solve = fem + ".solve";
 		std::string stop  = fem + ".stop";
@@ -183,13 +195,13 @@ void MyDialog::RunCode(QString& codeBlock)
 
 void MyDialog::Stop(int modelIndex)
 {
-	m_data.StopModel(modelIndex);
+	m_data->StopModel(modelIndex);
 }
 
 void MyDialog::Quit()
 {
 	// stop the model if it is running
-	m_data.StopAll();
+	m_data->StopAll();
 
 	// close the dialog box
 	accept();
@@ -198,22 +210,22 @@ void MyDialog::Quit()
 void MyDialog::closeEvent(QCloseEvent* ev)
 {
 	// stop the model if it's running
-	m_data.StopAll();
+	m_data->StopAll();
 }
 
 void MyDialog::RunModel(int modelIndex)
 {
-	if (m_data.GetFEBioStatus(modelIndex) == FEBioData::RUNNING) return;
+	if (m_data->GetFEBioStatus(modelIndex) == FEBioData::RUNNING) return;
 
 	// do initialization
 	bool init = true;
-	if (m_data.IsModelInitialized(modelIndex) == false)
+	if (m_data->IsModelInitialized(modelIndex) == false)
 	{
-		init = m_data.InitModel(modelIndex);
+		init = m_data->InitModel(modelIndex);
 	}
 	else 
 	{
-		init = m_data.ResetModel(modelIndex);
+		init = m_data->ResetModel(modelIndex);
 	}
 
 	if (init == false)
@@ -223,17 +235,17 @@ void MyDialog::RunModel(int modelIndex)
 	}
 
 	// solve the model
-	QString fileName = QString::fromStdString(m_data.GetModelFile(modelIndex));
+	QString fileName = QString::fromStdString(m_data->GetModelFile(modelIndex));
 	setWindowTitle(QString::fromStdString(m_fileName) + " (Running:" + fileName + ")");
 
 	printf("Calling FEBio ... ");
-	if (m_data.SolveModel(modelIndex))
+	if (m_data->SolveModel(modelIndex))
 	{
 		printf("NORMAL TERMINATION\n");
 	}
 	else
 	{
-		if (m_data.ForceStop(modelIndex) == false)
+		if (m_data->ForceStop(modelIndex) == false)
 		{
 			printf("ERROR TERMINATION\n");
 			qt_error("ERROR TERMINATION\n");
@@ -263,7 +275,7 @@ bool MyDialog::BuildGUI(const char* szfile)
 	setWindowTitle(fileTitle);
 
 	UIBuilder ui;
-	if (ui.BuildUI(this, m_data, szfile) == false)
+	if (ui.BuildUI(this, *m_data, szfile) == false)
 	{
 		QMessageBox::critical(this, "", "Failed building UI");
 		return false;

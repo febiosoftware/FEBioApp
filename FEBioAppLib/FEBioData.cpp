@@ -172,12 +172,15 @@ bool FEBioData::InitFEBio()
 
 		sprintf(sz, "%sfebio.xml", szpath);
 
-		bool b = febio::Configure(sz);
+		FEBioConfig config;
+		bool b = febio::Configure(sz, config);
 
 		if (b == false)
 		{
 			printf("ERROR: Failed to read configuration file.\n");
 		}
+
+		return b;
 	}
 
 	return false;

@@ -164,12 +164,14 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)moc_%(Filename).cpp</Outputs>
     </CustomBuild>
     <ClInclude Include="..\..\FEBioAppLib\FEBioParam.h" />
+    <ClInclude Include="..\..\FEBioAppLib\FEModelValuator.h" />
     <ClInclude Include="..\..\FEBioAppLib\GLMesh.h" />
     <ClInclude Include="framework.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\FEBioAppLib\FEBioData.cpp" />
     <ClCompile Include="..\..\FEBioAppLib\FEBioParam.cpp" />
+    <ClCompile Include="..\..\FEBioAppLib\FEModelValuator.cpp" />
     <ClCompile Include="..\..\FEBioAppLib\GLMesh.cpp" />
     <ClCompile Include="..\..\FEBioAppLib\moc_FEBioData.cpp" />
   </ItemGroup>

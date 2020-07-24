@@ -6,6 +6,8 @@ namespace FEBioApp {
 	class GLMesh;
 }
 
+#define FEMODEL_PTR void*
+
 //------------------------------------------------------------------
 // Class that manages the FEBio model data and interface
 // for interacting with FEBio
@@ -75,6 +77,8 @@ public:
 	FEBioParam	GetFEBioParameter(const std::string& paramName);
 
 	std::vector<FEBioParam>	GetFEBioParameterList(const std::string& name);
+
+	FEMODEL_PTR GetFEModel();
 
 signals:
 	void modelInit(int index);

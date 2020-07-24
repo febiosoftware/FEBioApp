@@ -289,8 +289,6 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 
 	int nplt = 0;
 
-	FEBioParam xparam, yparam;
-
 	CDataPlot* pg = new CDataPlot(0);
 	pg->setTitle(QString(sztitle));
 
@@ -319,6 +317,9 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 				if (sz) strcpy(szname, sz);
 				else sprintf(szname, "plot%d", nplt);
 
+				FEModelValuator* val_x = nullptr;
+				FEModelValuator* val_y = nullptr;
+
 				const char* sztype = tag.AttributeValue("type", true);
 				if (sztype == 0)
 				{
@@ -327,18 +328,58 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 					{
 						if (tag == "x")
 						{
-							xparam = m_data->GetFEBioParameter(tag.szvalue());
-							if (xparam.IsValid() == false)
+							const char* sztype = tag.AttributeValue("type", true);
+							if (sztype == nullptr) sztype = "param";
+
+							if (strcmp(sztype, "param") == 0)
 							{
-								printf("Failed to find parameter: %s\n", tag.szvalue());
+								FEBioParam xparam = m_data->GetFEBioParameter(tag.szvalue());
+								if (xparam.IsValid() == false)
+								{
+									printf("Failed to find parameter: %s\n", tag.szvalue());
+								}
+
+								FEParamValuator* vx = new FEParamValuator;
+								vx->SetParameter(xparam);
+								val_x = vx;
 							}
 						}
 						else if (tag == "y")
 						{
-							yparam = m_data->GetFEBioParameter(tag.szvalue());
-							if (yparam.IsValid() == false)
+							const char* sztype = tag.AttributeValue("type", true);
+							if (sztype == nullptr) sztype = "param";
+
+							if (strcmp(sztype, "param") == 0)
 							{
-								printf("Failed to find parameter: %s\n", tag.szvalue());
+								FEBioParam yparam = m_data->GetFEBioParameter(tag.szvalue());
+								if (yparam.IsValid() == false)
+								{
+									printf("Failed to find parameter: %s\n", tag.szvalue());
+								}
+								FEParamValuator* vy = new FEParamValuator;
+								vy->SetParameter(yparam);
+								val_y = vy;
+							}
+							else if (strcmp(sztype, "filter_sum") == 0)
+							{
+								++tag;
+								do
+								{
+									if (tag == "node_data")
+									{
+										const char* szdata = tag.AttributeValue("data");
+										const char* szset = tag.AttributeValue("node_set");
+
+										FENodeDataValuator* val = new FENodeDataValuator(m_data);
+										if (val->SetNodeData(szdata, szset) == false)
+										{
+											printf("Do you even know what you are doing??!!");
+										}
+
+										val_y = val;
+									}
+									++tag;
+								} while (!tag.isend());
 							}
 						}
 						++tag;
@@ -346,8 +387,8 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 					while (!tag.isend());
 
 					CParamDataSource* src = new CParamDataSource;
-					src->m_x = xparam;
-					src->m_y = yparam;
+					src->m_x = val_x;
+					src->m_y = val_y;
 
 					pg->AddData(src, szname);
 

@@ -27,6 +27,9 @@
     <ClInclude Include="..\..\FEBioAppLib\GLMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\FEBioAppLib\FEModelValuator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\FEBioAppLib\FEBioData.cpp">
@@ -39,6 +42,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\FEBioAppLib\moc_FEBioData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\FEBioAppLib\FEModelValuator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<febio_app version="0.1">
+	<Model 	id   = "fem"
+			file = "ex08.feb"/>
+	
+	<GUI title="$(filename)">
+		<label 	id   = "title"
+				text = "My First FEBio App"/>
+
+		<vgroup title="params">
+			<input	text   = "c1"
+					param = "fem.material('Mat1').c1"/>
+
+			<input	text   = "m1"
+					param = "fem.material('Mat1').m1"/>
+
+			<input	text   = "c2"
+					param = "fem.material('Mat1').c2"/>
+
+			<input	text   = "m2"
+					param = "fem.material('Mat1').m2"/>
+
+			<input	text   = "k"
+					param = "fem.material('Mat1').k"/>
+		</vgroup>
+		<button	text    = "Solve"
+				onClick = "fem.solve()"/>
+
+		<graph title="stress-strain">
+			<data title="sx">
+				<x>fem.data("Ex").value[0]</x>
+				<y>fem.data("sx").value[0]</y>
+			</data>
+		</graph>
+		<button	text  ="Quit"
+				onClick="app.quit()"/>
+		</button>
+	</GUI>
+</febio_app>

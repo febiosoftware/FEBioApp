@@ -500,3 +500,8 @@ bool FEBioData::ForceStop(int index)
 {
 	return im.m_modelList[index]->m_bforceStop;
 }
+
+FEMODEL_PTR FEBioData::GetFEModel()
+{
+	return (void*) (&im.m_modelList[0]->m_fem);
+}

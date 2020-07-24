@@ -1,6 +1,6 @@
 #pragma once
 #include "PlotWidget.h"
-#include <FEBioAppLib/FEBioParam.h>
+#include <FEBioAppLib/FEModelValuator.h>
 
 class CDataSource
 {
@@ -20,8 +20,8 @@ public:
 class CParamDataSource : public CDataSource
 {
 public:
-	FEBioParam	m_x;
-	FEBioParam	m_y;
+	FEModelValuator*	m_x;
+	FEModelValuator*	m_y;
 
 	void Reset()
 	{ 
@@ -30,9 +30,9 @@ public:
 
 	void Update()
 	{
-		QPointF p;
-		p.setX(m_x.GetDouble());
-		p.setY(m_y.GetDouble());
+		QPointF p(0., 0.);
+		if (m_x) p.setX(m_x->GetValue());
+		if (m_y) p.setY(m_y->GetValue());
 		m_data.push_back(p);
 	}
 };

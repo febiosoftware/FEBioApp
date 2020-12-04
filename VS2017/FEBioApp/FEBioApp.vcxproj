@@ -74,8 +74,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(QTVS2017)\include;$(QTVS2017)\include\QtGui;$(QTVS2017)\include\QtWidgets;$(FEBioStudioDir);$(GLEWDIR)\include\GL;$(SolutionDir)..;$(IncludePath)</IncludePath>
-    <LibraryPath>$(QTVS2017)\lib;$(GLEWDIR)\lib\Release\x64;$(FEBioStudioDir)\VS2017\x64\Debug;$(SolutionDir)x64\Debug;$(ZLIBDIR)\VS2017\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(QTVS2017)\include;$(QTVS2017)\include\QtGui;$(QTVS2017)\include\QtWidgets;$(FEBioStudioDir);$(GLEWDIR)\include\GL;$(SolutionDir)..;$(TetgenDir);$(IncludePath)</IncludePath>
+    <LibraryPath>$(QTVS2017)\lib;$(GLEWDIR)\lib\Release\x64;$(FEBioStudioDir)\VS2017\x64\Debug;$(SolutionDir)x64\Debug;$(ZLIBDIR)\VS2017\Debug;$(OCCDir)\win64\vc14\lib;$(TetgenDir)\x64\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -83,7 +83,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(QTVS2017)\include;$(QTVS2017)\include\QtGui;$(QTVS2017)\include\QtWidgets;$(FEBioStudioDir);$(GLEWDIR)\include\GL;$(SolutionDir)..;$(IncludePath)</IncludePath>
-    <LibraryPath>$(QTVS2017)\lib;$(GLEWDIR)\lib\Release\x64;$(FEBioStudioDir)\VS2017\x64\Release;$(SolutionDir)x64\Debug;$(ZLIBDIR)\VS2017\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(QTVS2017)\lib;$(GLEWDIR)\lib\Release\x64;$(FEBioStudioDir)\VS2017\x64\Release;$(SolutionDir)x64\Debug;$(ZLIBDIR)\VS2017\Release;$(OCCDir)\win64\vc14\lib;$(TetgenDir)\x64\Release;$(NETGENLIB)\vs2017\x64\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -109,7 +109,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Qt5Cored.lib;Qt5Guid.lib;Qt5Widgetsd.lib;opengl32.lib;glu32.lib;glew32.lib;GLWLib.lib;febioapplib.lib;mathlib.lib;gllib.lib;postlib.lib;fscore.lib;zlibstaticd.lib;meshlib.lib;xml.lib;meshtools.lib;geomlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Cored.lib;Qt5Guid.lib;Qt5Widgetsd.lib;opengl32.lib;glu32.lib;glew32.lib;GLWLib.lib;febioapplib.lib;mathlib.lib;gllib.lib;postlib.lib;femlib.lib;fscore.lib;zlibstaticd.lib;meshlib.lib;xml.lib;meshtools.lib;geomlib.lib;TKernel.lib;TKGeomBase.lib;TKTopAlgo.lib;TKPrim.lib;TKMesh.lib;TKMath.lib;TKBRep.lib;TKSTL.lib;TKFillet.lib;TKBO.lib;TKIGES.lib;TKSTEP.lib;TKSTEPBase.lib;TKXSBase.lib;TKG3d.lib;TKLCAF.lib;tetgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -144,7 +144,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;opengl32.lib;glu32.lib;glew32.lib;GLWLib.lib;febioapplib.lib;mathlib.lib;gllib.lib;postlib.lib;fscore.lib;zlibstatic.lib;meshlib.lib;xml.lib;meshtools.lib;geomlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;opengl32.lib;glu32.lib;glew32.lib;GLWLib.lib;febioapplib.lib;mathlib.lib;gllib.lib;postlib.lib;fscore.lib;zlibstatic.lib;meshlib.lib;xml.lib;meshtools.lib;geomlib.lib;femlib.lib;TKernel.lib;TKGeomBase.lib;TKTopAlgo.lib;TKPrim.lib;TKMesh.lib;TKMath.lib;TKBRep.lib;TKSTL.lib;TKFillet.lib;TKBO.lib;TKIGES.lib;TKSTEP.lib;TKSTEPBase.lib;TKXSBase.lib;TKG3d.lib;TKLCAF.lib;tetgen.lib;nglib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

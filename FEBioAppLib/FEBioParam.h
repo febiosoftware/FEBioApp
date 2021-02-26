@@ -2,6 +2,7 @@
 #include <string>
 #include "febioapp_api.h"
 class FEParamValue;
+class FEModel;
 
 class FEBIO_APP_API FEBioParam
 {
@@ -28,7 +29,8 @@ public:
 
 	bool IsType(Type type) const;
 
-	void SetParameter(const std::string& name, const FEParamValue& val);
+	void SetParameter(const std::string& name, FEModel* fem);
+	void SetParameter(const std::string& name, const FEParamValue& param);
 
 	double GetDouble() const;
 	int GetInt() const;

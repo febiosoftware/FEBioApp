@@ -235,9 +235,8 @@ FEBioParam FEBioData::GetFEBioParameter(const std::string& paramName)
 		string modelName = im.m_modelList[i]->m_fem.GetName();
 		if (ps == modelName)
 		{
-			FEParamValue val = im.m_modelList[i]->m_fem.GetParameterValue(ps);
 			FEBioParam param;
-			param.SetParameter(paramName, val);
+			param.SetParameter(paramName, &im.m_modelList[i]->m_fem);
 			return param;
 		}
 	}

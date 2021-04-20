@@ -1,5 +1,6 @@
 #pragma once
 #include "febioapp_api.h"
+#include <vector>
 
 class FEBioData;
 class FEBioParam;
@@ -11,7 +12,16 @@ public:
 	FEModelValuator();
 	virtual ~FEModelValuator();
 
-	virtual double GetValue() = 0;
+	virtual void Clear() { m_val.clear(); }
+
+	virtual void Update() = 0;
+
+	int Values() const { return (int)m_val.size(); }
+
+	double GetValue(int n) { return m_val[n]; }
+
+protected:
+	std::vector<double>	m_val;	// array of data values extracted during model run
 };
 
 class FEBIO_APP_API FENodeDataValuator : public FEModelValuator
@@ -23,7 +33,7 @@ public:
 
 	bool SetNodeData(const char* szdata, const char* szset);
 
-	double GetValue() override;
+	void Update() override;
 
 private:
 	Imp*	im;
@@ -37,7 +47,7 @@ public:
 
 	void SetParameter(FEBioParam& param);
 
-	double GetValue() override;
+	void Update() override;
 
 private:
 	Imp*	im;

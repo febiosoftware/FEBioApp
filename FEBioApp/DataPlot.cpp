@@ -1,14 +1,30 @@
 #include "stdafx.h"
 #include "DataPlot.h"
 
+//=============================================================================
+int CModelDataSource::Points() const
+{
+	int nx = m_x->Values();
+	int ny = m_y->Values();
+	int n = (nx < ny ? nx : ny);
+	return n;
+}
 //-----------------------------------------------------------------------------
+QPointF CModelDataSource::Point(int i) const
+{
+	double x = m_x->GetValue(i);
+	double y = m_y->GetValue(i);
+	return QPointF(x, y);
+}
+
+//=============================================================================
 CDataPlot::CDataPlot(QWidget* parent) : CPlotWidget(parent)
 {
 
 }
 
 //-----------------------------------------------------------------------------
-void CDataPlot::AddData(CDataSource* data, const QString& label)
+void CDataPlot::AddData(CDataPlotSource* data, const QString& label)
 {
 	m_data.push_back(data);
 	CLineChartData* d = new CLineChartData;
@@ -17,40 +33,21 @@ void CDataPlot::AddData(CDataSource* data, const QString& label)
 }
 
 //-----------------------------------------------------------------------------
-void CDataPlot::Reset()
+void CDataPlot::UpdatePlots()
 {
-	for (int i = 0; i<plots(); ++i)
-	{
-		CDataSource& data = *m_data[i];
-		data.Reset();
-	}
-}
-
-//-----------------------------------------------------------------------------
-void CDataPlot::Update()
-{
-	for (int i = 0; i<plots(); ++i)
-	{
-		CDataSource& data = *m_data[i];
-		data.Update();
-	}
-}
-
-//-----------------------------------------------------------------------------
-void CDataPlot::UpdatePlots(bool bclear)
-{
-	if (bclear) clearData();
+	clearData();
 
 	for (int i = 0; i<plots(); ++i)
 	{
 		CPlotData& plot = getPlotData(i);
 
-		CDataSource& data = *m_data[i];
+		CDataPlotSource& data = *m_data[i];
 
-		size_t N = data.m_data.size();
+		size_t N = data.Points();
 		for (int j=0; j<N; ++j)
 		{
-			plot.addPoint(data.m_data[j].x(), data.m_data[j].y());
+			QPointF p = data.Point(j);
+			plot.addPoint(p.x(), p.y());
 		}
 	}
 

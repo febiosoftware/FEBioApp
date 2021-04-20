@@ -23,7 +23,6 @@
 				<y>ucc.data("sx").value[0]</y>
 			</data>
 		</graph>
-
 		<hgroup>
 			<stretch/>
 			<button	text    = "Solve"

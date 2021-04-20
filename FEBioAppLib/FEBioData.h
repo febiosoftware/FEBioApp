@@ -6,6 +6,8 @@ namespace FEBioApp {
 	class GLMesh;
 }
 
+class FEModelValuator;
+
 #define FEMODEL_PTR void*
 
 //------------------------------------------------------------------
@@ -70,6 +72,9 @@ public:
 	void GetDataRange(int index, double rng[2]);
 
 	bool ForceStop(int index);
+
+public:
+	FEModelValuator* CreateParamValuator(const std::string& paramName);
 
 public:
 	void FEBioCallback(int modelIndex, unsigned int nwhen);

@@ -11,6 +11,7 @@
 #include <FEBioLib/febio.h>
 #include <FEBioLib/version.h>
 #include "GLMesh.h"
+#include "FEModelValuator.h"
 
 class FEBioAppModel
 {
@@ -26,6 +27,9 @@ public:
 	FEBioData*		m_data;
 	int				m_id;
 
+	// array of model valuators that depend on this model
+	vector<FEModelValuator*>	m_val;
+
 	FEBioAppModel(FEBioData* data) : m_task(0), m_data(data)
 	{
 		m_runStatus = FEBioData::STOPPED;
@@ -40,8 +44,16 @@ public:
 		if (m_task) delete m_task; m_task = 0;
 	}
 
+	void UpdateValuators()
+	{
+		for (int i = 0; i < m_val.size(); ++i) m_val[i]->Update();
+	}
+
 	bool InitModel()
 	{
+		// clear the model valuators
+		for (int i = 0; i < m_val.size(); ++i) m_val[i]->Clear();
+
 		if (m_task)
 		{
 			return m_task->Init(m_taskFile.c_str());
@@ -52,6 +64,15 @@ public:
 			if (m_fem.Init() == false) return false;
 		}
 		return true;
+	}
+
+	bool Reset()
+	{
+		// clear the model valuators
+		for (int i = 0; i < m_val.size(); ++i) m_val[i]->Clear();
+
+		// reset the model
+		return m_fem.Reset();
 	}
 
 	bool Solve()
@@ -204,7 +225,8 @@ bool FEBioData::InitModel(int index)
 
 bool FEBioData::ResetModel(int index)
 {
-	return im.m_modelList[index]->m_fem.Reset();
+	FEBioAppModel* fem = im.m_modelList[index];
+	return fem->Reset();
 }
 
 bool FEBioData::SolveModel(int index)
@@ -219,10 +241,41 @@ void FEBioData::FEBioCallback(int modelIndex, unsigned int nwhen)
 {
 	switch (nwhen)
 	{
-	case CB_INIT       : emit modelInit   (modelIndex); break;
-	case CB_MAJOR_ITERS: emit timeStepDone(modelIndex); break;
+	case CB_INIT       : 
+		im.m_modelList[modelIndex]->UpdateValuators();
+		emit modelInit   (modelIndex); 
+		break;
+	case CB_MAJOR_ITERS: 
+		im.m_modelList[modelIndex]->UpdateValuators();
+		emit timeStepDone(modelIndex); break;
 	case CB_RESET      : emit modelReset  (modelIndex); break;
 	}
+}
+
+FEModelValuator* FEBioData::CreateParamValuator(const std::string& paramName)
+{
+	FEBioParam param = GetFEBioParameter(paramName);
+	if (param.IsValid() == false)
+	{
+		return nullptr;
+	}
+
+	FEParamValuator* val = new FEParamValuator;
+	val->SetParameter(param);
+
+	// get the femodel
+	FEModel* fem = param.GetFEModel();
+	// attach this valuator to the corresponding model
+	for (int i = 0; i < Models(); ++i)
+	{
+		if (&im.m_modelList[i]->m_fem == fem)
+		{
+			im.m_modelList[i]->m_val.push_back(val);
+			break;
+		}
+	}	
+
+	return val;
 }
 
 FEBioParam FEBioData::GetFEBioParameter(const std::string& paramName)

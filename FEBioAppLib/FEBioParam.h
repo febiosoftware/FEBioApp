@@ -40,6 +40,8 @@ public:
 	void SetInt(int v);
 	void SetBool(bool v);
 
+	FEModel* GetFEModel();
+
 private:
 	Imp*	im;
 };

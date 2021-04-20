@@ -333,15 +333,11 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 
 							if (strcmp(sztype, "param") == 0)
 							{
-								FEBioParam xparam = m_data->GetFEBioParameter(tag.szvalue());
-								if (xparam.IsValid() == false)
+								val_x = m_data->CreateParamValuator(tag.szvalue());
+								if (val_x == nullptr)
 								{
 									printf("Failed to find parameter: %s\n", tag.szvalue());
 								}
-
-								FEParamValuator* vx = new FEParamValuator;
-								vx->SetParameter(xparam);
-								val_x = vx;
 							}
 						}
 						else if (tag == "y")
@@ -351,14 +347,11 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 
 							if (strcmp(sztype, "param") == 0)
 							{
-								FEBioParam yparam = m_data->GetFEBioParameter(tag.szvalue());
-								if (yparam.IsValid() == false)
+								val_y = m_data->CreateParamValuator(tag.szvalue());
+								if (val_y == nullptr)
 								{
 									printf("Failed to find parameter: %s\n", tag.szvalue());
 								}
-								FEParamValuator* vy = new FEParamValuator;
-								vy->SetParameter(yparam);
-								val_y = vy;
 							}
 							else if (strcmp(sztype, "filter_sum") == 0)
 							{
@@ -373,7 +366,7 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 										FENodeDataValuator* val = new FENodeDataValuator(m_data);
 										if (val->SetNodeData(szdata, szset) == false)
 										{
-											printf("Do you even know what you are doing??!!");
+											printf("Failed initializing node data");
 										}
 
 										val_y = val;
@@ -386,7 +379,7 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 					}
 					while (!tag.isend());
 
-					CParamDataSource* src = new CParamDataSource;
+					CModelDataSource* src = new CModelDataSource;
 					src->m_x = val_x;
 					src->m_y = val_y;
 
@@ -403,7 +396,7 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 						double p[2];
 						tag.value(p, 2);
 
-						src->m_data.push_back(QPointF(p[0], p[1]));
+						src->AddPoint(QPointF(p[0], p[1]));
 						++tag;
 					}
 					while (!tag.isend());

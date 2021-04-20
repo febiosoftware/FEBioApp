@@ -90,9 +90,7 @@ void MyDialog::on_modelInit(int index)
 
 void MyDialog::on_modelReset(int index)
 {
-	// clear all plots
-	// TODO: remove this. I want the plots detect automatically when they need to reset
-	for (int i = 0; i<(int)m_plot.size(); ++i) m_plot[i]->Reset();
+	UpdatePlots(true);
 }
 
 void MyDialog::on_timeStepDone(int index)
@@ -115,11 +113,10 @@ void MyDialog::on_timeStepDone(int index)
 void MyDialog::UpdatePlots(bool breset)
 {
 	// update the plots
-	for (int i = 0; i<(int)m_plot.size(); ++i) m_plot[i]->Update();
+	for (int i = 0; i<(int)m_plot.size(); ++i) m_plot[i]->UpdatePlots();
 
 	// update all 3D plots
 	for (int i = 0; i<(int)m_gl.size(); ++i) m_gl[i]->Update(breset);
-
 }
 
 void MyDialog::doAction(int id, int naction)
@@ -143,10 +140,6 @@ void MyDialog::doAction(int id, int naction)
 
 void MyDialog::RunCode(QString& codeBlock)
 {
-	// clear all plots
-	// TODO: remove this. I want the plots detect automatically when they need to reset
-	for (int i = 0; i<(int)m_plot.size(); ++i) m_plot[i]->Reset();
-
 	// get the script to run
 	std::string code = codeBlock.toStdString();
 

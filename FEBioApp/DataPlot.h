@@ -2,44 +2,45 @@
 #include "PlotWidget.h"
 #include <FEBioAppLib/FEModelValuator.h>
 
-class CDataSource
+class CDataPlotSource
 {
 public:
-	CDataSource() {}
-	virtual ~CDataSource() {}
-
-	virtual void Update() {}
-
-	virtual void Reset() {}
+	CDataPlotSource() {}
+	virtual ~CDataPlotSource() {}
 
 public:
+	virtual int Points() const = 0;
+
+	virtual QPointF Point(int i) const = 0;
+
+protected:
 	vector<QPointF>	m_data;
 };
 
 //-----------------------------------------------------------------------------
-class CParamDataSource : public CDataSource
+class CModelDataSource : public CDataPlotSource
 {
 public:
 	FEModelValuator*	m_x;
 	FEModelValuator*	m_y;
 
-	void Reset()
-	{ 
-		m_data.clear(); 
-	}
-
-	void Update()
-	{
-		QPointF p(0., 0.);
-		if (m_x) p.setX(m_x->GetValue());
-		if (m_y) p.setY(m_y->GetValue());
-		m_data.push_back(p);
-	}
+	int Points() const override;
+	QPointF Point(int i) const;
 };
 
 //-----------------------------------------------------------------------------
-class CStaticDataSource : public CDataSource
+class CStaticDataSource : public CDataPlotSource
 {
+public:
+	CStaticDataSource() {}
+
+	void AddPoint(const QPointF& p) { m_data.push_back(p); }
+
+	int Points() const override { return (int)m_data.size(); }
+	QPointF Point(int i) const { return m_data[i]; }
+
+private:
+	vector<QPointF>	m_data;
 };
 
 //-----------------------------------------------------------------------------
@@ -49,14 +50,10 @@ class CDataPlot : public CPlotWidget
 public:
 	CDataPlot(QWidget* parent = 0);
 
-	void Update();
+	void AddData(CDataPlotSource* data, const QString& label);
 
-	void Reset();
-
-	void AddData(CDataSource* data, const QString& label);
-
-	void UpdatePlots(bool bclear = true);
+	void UpdatePlots();
 
 private:
-	vector<CDataSource*>	m_data;
+	vector<CDataPlotSource*>	m_data;
 };

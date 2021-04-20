@@ -47,6 +47,11 @@ FEBioParam::~FEBioParam()
 	delete im;
 }
 
+FEModel* FEBioParam::GetFEModel()
+{
+	return im->m_fem;
+}
+
 const std::string& FEBioParam::Name() const
 {
 	return im->m_paramName;

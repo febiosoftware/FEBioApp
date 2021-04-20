@@ -59,7 +59,7 @@ bool FENodeDataValuator::SetNodeData(const char* szdata, const char* szset)
 	return true;
 }
 
-double FENodeDataValuator::GetValue()
+void FENodeDataValuator::Update()
 {
 	FEMesh* mesh = im->m_set->GetMesh();
 	FENodeSet& ns = *im->m_set;
@@ -69,7 +69,7 @@ double FENodeDataValuator::GetValue()
 		double vi = im->m_data->value(ns[i]);
 		sum += vi;
 	}
-	return sum;
+	m_val.push_back(sum);
 }
 
 //===========================================================================
@@ -90,9 +90,10 @@ void FEParamValuator::SetParameter(FEBioParam& param)
 	im->m_param = param;
 }
 
-double FEParamValuator::GetValue()
+void FEParamValuator::Update()
 {
 	assert(im->m_param.IsValid());
 	assert(im->m_param.IsType(FEBioParam::TYPE_DOUBLE));
-	return im->m_param.GetDouble();
+	double v = im->m_param.GetDouble();
+	m_val.push_back(v);
 }

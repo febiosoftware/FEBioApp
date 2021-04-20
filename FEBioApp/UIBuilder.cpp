@@ -331,7 +331,24 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 							const char* sztype = tag.AttributeValue("type", true);
 							if (sztype == nullptr) sztype = "param";
 
-							if (strcmp(sztype, "param") == 0)
+							// TODO: this is a hack:
+							if (strstr(tag.szvalue(), "fem.element_data"))
+							{
+								char buf[256] = { 0 };
+								strcpy(buf, tag.szvalue());
+								char* sz = buf + 17;
+								char* c1 = strchr(sz, ',');
+								*c1++ = 0;
+
+								int eid = atoi(c1);
+
+								c1 = strrchr(sz, '\'');
+								if (sz[0] == '\'') sz++;
+								*c1 = 0;
+
+								val_x = m_data->CreateElemDataValuator(sz, eid);
+							}
+							else if (strcmp(sztype, "param") == 0)
 							{
 								val_x = m_data->CreateParamValuator(tag.szvalue());
 								if (val_x == nullptr)
@@ -345,7 +362,24 @@ void UIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 							const char* sztype = tag.AttributeValue("type", true);
 							if (sztype == nullptr) sztype = "param";
 
-							if (strcmp(sztype, "param") == 0)
+							// TODO: this is a hack:
+							if (strstr(tag.szvalue(), "fem.element_data"))
+							{
+								char buf[256] = { 0 };
+								strcpy(buf, tag.szvalue());
+								char* sz = buf + 17;
+								char* c1 = strchr(sz, ',');
+								*c1++ = 0;
+
+								int eid = atoi(c1);
+
+								c1 = strrchr(sz, '\'');
+								if (sz[0] == '\'') sz++;
+								*c1 = 0;
+
+								val_y = m_data->CreateElemDataValuator(sz, eid);
+							}
+							else if (strcmp(sztype, "param") == 0)
 							{
 								val_y = m_data->CreateParamValuator(tag.szvalue());
 								if (val_y == nullptr)

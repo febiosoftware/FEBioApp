@@ -4,8 +4,8 @@
 -->
 <febio_app version="0.1">
 	<Model 	id   = "fem"
-			file = "ex07_in.feb"
-			task = "optimize:ex07_opt.feb"/>
+			file = "oi04.feb"
+			task = "optimize:op04.feb"/>
 	
 	<GUI title="$(filename)">
 		<label 	id   = "title"
@@ -16,21 +16,21 @@
 		
 		<graph title="stress">
 			<data title="sx">
-				<x>fem.time</x>
-				<y>fem.data("sx").value[0]</y>
+				<x>fem.element_data('Ex', 1)</x>
+				<y>fem.element_data('sx', 1)</y>
 			</data>
 			<data title="target" type="static">
-				<point>0,	0</point>
-				<point>0.1,	0.259824</point>
-				<point>0.2,	0.350244</point>
-				<point>0.3,	0.485639</point>
-				<point>0.4,	0.789294</point>
-				<point>0.5,	0.956576</point>
-				<point>0.6,	1.2775</point>
-				<point>0.7,	1.48285</point>
-				<point>0.8,	1.39322</point>
-				<point>0.9,	1.60909</point>
-				<point>1,	2.13083</point>
+				<point>0.000, 0.10000</point>
+				<point>0.105, 1.18741</point>
+				<point>0.220, 3.28950</point>
+				<point>0.345, 1.74080</point>
+				<point>0.480, 8.14330</point>
+				<point>0.625, 15.140</point>
+				<point>0.780, 12.5790</point>
+				<point>0.945, 30.4890</point>
+				<point>1.120, 64.8690</point>
+				<point>1.305, 79.4900</point>
+				<point>1.500, 158.650</point>
 			</data>
 		</graph>
 		<button	text  ="Quit"

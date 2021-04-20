@@ -4,16 +4,16 @@
 //=============================================================================
 int CModelDataSource::Points() const
 {
-	int nx = m_x->Values();
-	int ny = m_y->Values();
+	int nx = (m_x ? m_x->Values() : 0);
+	int ny = (m_y ? m_y->Values() : 0);
 	int n = (nx < ny ? nx : ny);
 	return n;
 }
 //-----------------------------------------------------------------------------
 QPointF CModelDataSource::Point(int i) const
 {
-	double x = m_x->GetValue(i);
-	double y = m_y->GetValue(i);
+	double x = (m_x ? m_x->GetValue(i) : 0.0);
+	double y = (m_y ? m_y->GetValue(i) : 0.0);
 	return QPointF(x, y);
 }
 

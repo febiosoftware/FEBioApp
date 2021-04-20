@@ -9,6 +9,7 @@
 #include <FEBioLib/FEBioModel.h>
 #include <FECore/FECoreTask.h>
 #include <FEBioLib/febio.h>
+#include <FECore/ElementDataRecord.h>
 #include <FEBioLib/version.h>
 #include "GLMesh.h"
 #include "FEModelValuator.h"
@@ -44,6 +45,11 @@ public:
 		if (m_task) delete m_task; m_task = 0;
 	}
 
+	void ResetValuators()
+	{
+		for (int i = 0; i < m_val.size(); ++i) m_val[i]->Clear();
+	}
+
 	void UpdateValuators()
 	{
 		for (int i = 0; i < m_val.size(); ++i) m_val[i]->Update();
@@ -52,7 +58,7 @@ public:
 	bool InitModel()
 	{
 		// clear the model valuators
-		for (int i = 0; i < m_val.size(); ++i) m_val[i]->Clear();
+		ResetValuators();
 
 		if (m_task)
 		{
@@ -69,7 +75,7 @@ public:
 	bool Reset()
 	{
 		// clear the model valuators
-		for (int i = 0; i < m_val.size(); ++i) m_val[i]->Clear();
+		ResetValuators();
 
 		// reset the model
 		return m_fem.Reset();
@@ -248,7 +254,9 @@ void FEBioData::FEBioCallback(int modelIndex, unsigned int nwhen)
 	case CB_MAJOR_ITERS: 
 		im.m_modelList[modelIndex]->UpdateValuators();
 		emit timeStepDone(modelIndex); break;
-	case CB_RESET      : emit modelReset  (modelIndex); break;
+	case CB_RESET      : 
+		im.m_modelList[modelIndex]->ResetValuators();
+		emit modelReset  (modelIndex); break;
 	}
 }
 
@@ -277,6 +285,25 @@ FEModelValuator* FEBioData::CreateParamValuator(const std::string& paramName)
 
 	return val;
 }
+
+FEModelValuator* FEBioData::CreateElemDataValuator(const std::string& elemData, int elemId)
+{
+	FEModel* fem = &(im.m_modelList[0]->m_fem);
+
+	FELogElemData* pd = fecore_new<FELogElemData>(elemData.c_str(), fem);
+	if (pd == nullptr) { return nullptr; }
+
+	FEMesh& mesh = fem->GetMesh();
+	FEElement* pe = mesh.FindElementFromID(elemId);
+	if (pe == nullptr) { return nullptr; }
+
+	FEElemDataValuator* val = new FEElemDataValuator(this);
+	val->SetElementData(pd, pe);
+	im.m_modelList[0]->m_val.push_back(val);
+
+	return val;
+}
+
 
 FEBioParam FEBioData::GetFEBioParameter(const std::string& paramName)
 {

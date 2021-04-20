@@ -75,6 +75,7 @@ public:
 
 public:
 	FEModelValuator* CreateParamValuator(const std::string& paramName);
+	FEModelValuator* CreateElemDataValuator(const std::string& elemData, int elemId);
 
 public:
 	void FEBioCallback(int modelIndex, unsigned int nwhen);

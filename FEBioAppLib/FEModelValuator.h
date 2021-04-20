@@ -4,6 +4,8 @@
 
 class FEBioData;
 class FEBioParam;
+class FELogElemData;
+class FEElement;
 
 // Base class for retrieving (scalar) data from a FEModel
 class FEBIO_APP_API FEModelValuator
@@ -38,6 +40,22 @@ public:
 private:
 	Imp*	im;
 };
+
+class FEBIO_APP_API FEElemDataValuator : public FEModelValuator
+{
+	class Imp;
+
+public:
+	FEElemDataValuator(FEBioData* feb);
+
+	void SetElementData(FELogElemData* data, FEElement* el);
+
+	void Update() override;
+
+private:
+	Imp*	im;
+};
+
 
 class FEBIO_APP_API FEParamValuator : public FEModelValuator
 {

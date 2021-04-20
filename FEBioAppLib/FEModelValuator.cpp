@@ -4,6 +4,7 @@
 #include <FEBioLib/FEBioModel.h>
 #include <FECore/NodeDataRecord.h>
 #include <FECore/FECoreKernel.h>
+#include <FECore/ElementDataRecord.h>
 #include <assert.h>
 
 FEModelValuator::FEModelValuator()
@@ -70,6 +71,37 @@ void FENodeDataValuator::Update()
 		sum += vi;
 	}
 	m_val.push_back(sum);
+}
+
+//===========================================================================
+class FEElemDataValuator::Imp
+{
+public:
+	Imp() { m_data = nullptr; m_pe = nullptr; }
+
+public:
+	FEElement*	m_pe;
+	FELogElemData*	m_data;
+};
+
+FEElemDataValuator::FEElemDataValuator(FEBioData* feb) : im(new FEElemDataValuator::Imp)
+{
+
+}
+
+void FEElemDataValuator::SetElementData(FELogElemData* data, FEElement* pe)
+{
+	im->m_data = data;
+	im->m_pe = pe;
+}
+
+void FEElemDataValuator::Update()
+{
+	if (im->m_data && im->m_pe)
+	{
+		double v = im->m_data->value(*im->m_pe);
+		m_val.push_back(v);
+	}
 }
 
 //===========================================================================

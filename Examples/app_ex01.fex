@@ -6,21 +6,39 @@
 	<GUI title="$(filename)">
 		<label 	id   = "title"
 				text = "My First FEBio App"/>
-		
-		<input_list	text   = "Material parameters"
-					params = "fem.material('Mat1')"/>
+
+		<hgroup>
+			<input_list	text   = "Material parameters"
+						params = "fem.material('Mat1')"/>
+			<!-- <button	id ="test"
+					text="test"
+					onClick="
+						var E = fem.material[0].E;
+						print('E =', E);"/> -->
+			<stretch/>
+		</hgroup>
 				
-		<button	text    = "Solve"
-				onClick = "fem.solve()"/>
+		<button	id      = "solve"
+				text    = "Solve"
+				onClick = " 
+				function log(msg) {
+					ui.getElementById('log').setText(msg);
+				}
+				log('We did it!');
+				ui.getElementById('graph1').setText('stress-strain');
+				app.runModel();"/>
 		
-		<graph title="stress-strain">
-			<data title="sx">
-				<x>fem.data("Ex").value[0]</x>
-				<y>fem.data("sx").value[0]</y>
-			</data>
+		<graph	id="graph1" 
+				text="stress-strain">
+				<data text="sx">
+					<x var="Ex" elemId="1"/>
+					<y var="sx" elemId="1"/>
+				</data>
 		</graph>
-		<button	text  ="Quit"
-				onClick="app.quit()"/>
-		</button>
+
+		<output id="log"/>
+
+		<button	text   ="Quit"
+				onClick="app.quit();"/>
 	</GUI>
 </febio_app>

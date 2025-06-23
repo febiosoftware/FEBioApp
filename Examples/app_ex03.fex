@@ -5,41 +5,34 @@
 
 	<GUI title="$(filename)">
 		<label text="Beam Bending Example"/>
-		<hgroup>
-			<vgroup>
-				<group title="Material Parameters" align="vertical">
-					<input 	text="Young's Modulus"
-							param="fem.material[0].E"/>
+		<vgroup title="Material Parameters">
+			<input 	text="Young's Modulus"
+					param="fem.material[0].E"/>
 
-					<input	text="Poisson's ratio"
-							param="fem.material('Mat1').v"/>
+			<input	text="Poisson's ratio"
+					param="fem.material('Mat1').v"/>
 
-				</group>
-				<group title="Pressure Load" align="vertical">
-					<input	text="Pressure"
-							param="fem.surface_load('pressure').pressure"/>
+		</vgroup>
+		<vgroup title="Pressure Load">
+			<input	text="Pressure"
+					param="fem.load('PressureLoad1').pressure"/>
 					
-					<input	text="Linear"
-							param="fem.surface_load('pressure').linear"/>
+			<input	text="Linear"
+					param="fem.load('PressureLoad1').linear"/>
 					
-				</group>
-				<stretch/>
-				<button	text="Solve"
-						onClick="fem.solve()"/>
+		</vgroup>
+		<button	text="Solve"
+				onClick="app.runModel()"/>
 
-			</vgroup>
-			<plot3d title="view1">
-				<size>640, 480</size>
-				<model>fem</model>
-				<map type="displacement"/>
-			</plot3d>
-		</hgroup>
-		
+		<plot3d	text="view1"
+				size="640,480">
+				
+				<map data="z"/>
+		</plot3d>
 		<hgroup>
 			<stretch/>
 			<button text="Quit"
 					onClick="app.quit()"/>
 		</hgroup>
-
 	</GUI>
 </febio_app>

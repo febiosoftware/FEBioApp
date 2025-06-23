@@ -1,35 +1,39 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<!--
-	TODO: Add mechanism for changing both model's parameters via a single input field.
--->
 <febio_app version="0.1">
-	<Model 	id   = "cc"
-			file = "ex06_cc.feb"/>
-
-	<Model	id = "ucc"
-			file = "ex06_uc.feb"/>
+	<Model 	id   = "fem"
+			file = "ex06.feb"/>
 	
 	<GUI title="$(filename)">
 		<label 	id   = "title"
-				text = "Confined vs unconfined compression"/>
-		
-		<graph title="stress">
-			<data title="cc">
-				<x>cc.time</x>
-				<y>cc.data("sx").value[0]</y>
-			</data>
-			<data title="ucc">
-				<x>ucc.time</x>
-				<y>ucc.data("sx").value[0]</y>
-			</data>
-		</graph>
-		<hgroup>
-			<stretch/>
-			<button	text    = "Solve"
-					onClick = "cc.solve(); ucc.solve()"/>
+				text = "My First FEBio App"/>
 
-			<button	text    = "Quit"
-					onClick = "app.quit()"/>
-		</hgroup>
+		<vgroup title="params">
+			<input	text   = "E1"
+					param = "fem.material('Material1').E"/>
+
+			<input	text   = "v1"
+					param = "fem.material('Material1').v"/>
+
+			<input	text   = "E2"
+					param = "fem.material('Material2').E"/>
+
+			<input	text   = "v2"
+					param = "fem.material('Material2').v"/>
+
+		</vgroup>
+		<button	text    = "Solve"
+				onClick = "app.runModel()"/>
+
+		<tab_group>
+			<tab title="view1">
+				<plot3d	title="view1"
+						bg_color="white"/>
+			</tab>
+			<tab title="view2">
+				<plot3d	title="view2">
+					<map data="x"/>
+				</plot3d>
+			</tab>
+		</tab_group>
 	</GUI>
 </febio_app>

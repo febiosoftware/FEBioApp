@@ -11,48 +11,62 @@
 				
 					<input	text="Ambient temperature (C):"
 							align="topleft"
-							param="fem.surface_load('flux').Ta"/>
+							param="fem.load('flux').Ta"/>
 
 					<input 	text="Heat transfer coeff (W/(m^2.K)):"
 							align="topleft"
-							param="fem.surface_load('flux').hc"/>
+							param="fem.load('flux').hc"/>
 
 					<input 	text="Heat source (W/m^3):"
 							align="topleft"
-							param="fem.body_load('heatSource').Q"
+							param="fem.load('heatSource').Q"
 							range="0, 1000, 50"/>
 
 				</group>
 				<stretch/>
 				<hgroup>
 					<stretch/>
-					<button text="Run"
-							onClick="if (this.text=='Run') { this.text='Stop'; fem.solve(); } else { this.text='Run'; fem.stop(); }"/>
+					<!-- <button text="Run"
+							onClick="if (this.text=='Run') { this.text='Stop'; app.runModel(); } else { this.text='Run'; app.stopModel(); }"/> -->
 
-					<button text="Pause"
-							onClick="if (this.text=='Pause') { this.text='Continue'; fem.pause(); } else { this.text='Pause'; fem.continue(); }"/>
+					<button text="Run"
+							onClick="app.runModel()"/>
+
+					<button text="Stop"
+							onClick="app.stopModel()"/>
+
+					<!-- <button text="Pause"
+							onClick="if (this.text=='Pause') { this.text='Continue'; fem.pause(); } else { this.text='Pause'; fem.continue(); }"/> -->
 
 				</hgroup>
 			</vgroup>
-			<plot3d title="view1">
-				<size>800, 600</size>
-				<fg_color>1,1,1</fg_color>
-				<bg_color>0.1,0.1,0.1</bg_color>
-				<model>fem</model>
-				<map type="temperature"/>
-				<!--map type="temperature">
-					<range>34,39</range>
-				</map-->
-				<rotation>-90,0,0</rotation>
-				<smoothing_angle>180.0</smoothing_angle>
-				<time_format>1</time_format>
+			<plot3d title="view1"
+					size="800, 600"
+					bg_color="0.5,0.5,0.6"
+					rotation="-90,0,0">
+
+					<map	data    = "T"
+							rangeMin= "34"
+							rangeMax= "39"
+							colorMap="Hot-Cold"/>
+
+					<object file="chair.stl"
+							color="1,0,0"
+							position="-0.5,0.1,0"
+							rotation="0,0,45"/>
+
+					<object file="table.stl"
+							color="0.5,0.3,0.1"
+							position="1,0,0"
+							rotation="0,0,-90"/>
+
 			</plot3d>
 		</hgroup>
 		
-		<hgroup>
+		<!-- <hgroup>
 			<stretch/>
 			<button text="Quit"
 					onClick="app.quit()"/>
-		</hgroup>
+		</hgroup> -->
 	</GUI>
 </febio_app>

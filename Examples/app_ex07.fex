@@ -4,22 +4,23 @@
 -->
 <febio_app version="0.1">
 	<Model 	id   = "fem"
-			file = "oi04.feb"
-			task = "optimize:op04.feb"/>
+			file = "ex07_in.feb"
+			task = "optimize"
+			task_input="ex07_op.feb"/>
 	
 	<GUI title="$(filename)">
 		<label 	id   = "title"
 				text = "Optimization example"/>
 		
 		<button	text    = "Solve"
-				onClick = "fem.solve()"/>
+				onClick = "app.runModel()"/>
 		
-		<graph title="stress">
-			<data title="sx">
-				<x>fem.element_data('Ex', 1)</x>
-				<y>fem.element_data('sx', 1)</y>
+		<graph text="stress - strain">
+			<data text="sx">
+				<x var="Ex" elemId="1"/>
+				<y var="sx" elemId="1"/>
 			</data>
-			<data title="target" type="static">
+			<data text="target" type="static">
 				<point>0.000, 0.10000</point>
 				<point>0.105, 1.18741</point>
 				<point>0.220, 3.28950</point>
@@ -33,8 +34,8 @@
 				<point>1.500, 158.650</point>
 			</data>
 		</graph>
-		<button	text  ="Quit"
+		<!-- <button	text  ="Quit"
 				onClick="app.quit()"/>
-		</button>
+		</button> -->
 	</GUI>
 </febio_app>

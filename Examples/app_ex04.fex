@@ -5,39 +5,26 @@
 
 	<GUI title="$(filename)">
 		<label text="Beam Bending Example"/>
-		<hgroup>
-			<vgroup>
-				<group title="Pressure Load" align="vertical">
-					<input 	text="Pressure"
-							param="fem.surface_load('pressure').pressure"
-							range="-5, 5, 1"/>
-
-				</group>
+		<vgroup>
+			<group title="Pressure Load" align="vertical">
+				<input 	text="Pressure"
+						param="fem.load('PressureLoad1').pressure"
+						range="-5, 5, 1"/>
+			</group>
+			<hgroup>
 				<stretch/>
-				<hgroup>
-					<stretch/>
-					<button text="Run"
-							onClick="fem.solve()"/>
+				<button text="Run"
+						onClick="app.runModel()"/>
 
-					<button text="Stop"
-							onClick="fem.stop()"/>
-				</hgroup>
-			</vgroup>
-			<plot3d title="view1">
-				<size>640, 480</size>
-				<model>fem</model>
-				<bg_color>0.5, 0.5, 0.7</bg_color>
-				<map type="displacement">
-					<range>0, 10</range>
-				</map>
+				<button text="Stop"
+						onClick="app.stopModel()"/>
+			</hgroup>
+			<plot3d	title="view1"
+					size="640, 480"
+					bg_color="0.7, 0.9, 0.7">
+
+					<map data="z"/>
 			</plot3d>
-		</hgroup>
-		
-		<hgroup>
-			<stretch/>
-			<button text="Quit"
-					onClick="app.quit()"/>
-		</hgroup>
-
+		</vgroup>
 	</GUI>
 </febio_app>

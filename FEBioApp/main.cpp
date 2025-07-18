@@ -27,20 +27,37 @@ SOFTWARE.*/
 #include <QApplication>
 #include <QWidget>
 #include <QLabel>
+#include <QFile>
 #include <QMessageBox>
 #include "FEBioAppUIBuilder.h"
 #include "FEBioApp.h"
 #include "FEBioAppWidget.h"
 #include <FEBioLib/febio.h>
 #include <FSCore/ColorMapManager.h>
+#include <FEBioLib/febio.h>
 
 int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);
 
 	QString appPath = QString(argv[1]);
 
+	// initialize FEBio library
 	febio::InitLibrary();
 
+	// get the executables path
+	QString exePath = app.applicationDirPath();
+
+	// see if there is a config file in the executable path
+	QString configFile = exePath + "/febio.xml";
+	if (QFile::exists(configFile)) 
+	{
+		// load the config file
+		std::string configFileStr = configFile.toStdString();
+		FEBioConfig dummy;
+		febio::Configure(configFileStr.c_str(), dummy);
+	}
+
+	// initialize the color map manager
 	ColorMapManager::Initialize();
 
 	FEBioApp febioApp;

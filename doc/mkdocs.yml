@@ -1,0 +1,13 @@
+site_name: FEBioApp Documentation
+theme:
+  name: readthedocs
+
+markdown_extensions:
+ - codehilite:
+    use_pygments: false
+
+nav:
+ - Home: index.md
+ - Getting Started: getting-started.md
+ - Reference: reference.md
+ - TODO : todo.md

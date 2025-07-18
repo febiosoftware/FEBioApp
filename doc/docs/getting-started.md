@@ -11,20 +11,21 @@ An FEBio App is created from an xml-based input file. The file is divided into t
 
 ### The Model Section
 
-The Model section defines the FEBio model. In most cases, only an id and the file name needs to be defined.
+The **model** section defines the FEBio model. In most cases, only an id and the file name needs to be defined.
 
 ```text
-<Model id   = "fem"
+<model id   = "fem"
        file = "ex01.feb"/>
 ```
 
-### The GUI Section
-The GUI section constructs the GUI for the app. The GUI is constructed from sub-elements that can define widgets for labels, buttons, lists, layouts, visualization, and more. 
+### The UI Section
+The **ui** section constructs the GUI for the app. The GUI is constructed from sub-elements that can define widgets for labels, buttons, lists, layouts, visualization, and more. 
 
 ```text
-<GUI title="Hello, world!>
+<ui title="Hello, world!>
    <!-- UI elements here -->
-</GUI>
+</ui>
 ```
-
+### The Script Section
+The **script** section can be used to collect custom scripts. 
 

@@ -10,4 +10,5 @@ nav:
  - Home: index.md
  - Getting Started: getting-started.md
  - Reference: reference.md
+ - Scripting: script.md
  - TODO : todo.md

@@ -27,13 +27,13 @@ This shows a 2D graph.
 </graph>
 ```
 
-## GUI
-The GUI element defines the user interface of the app. Child elements define widgets and layout elements.
+## ui
+The **ui** element defines the user interface of the app. Child elements define widgets and layout elements.
 
 * **title** : The title shown of the app's window. (optional)
 
 ```text
-<GUI title="My First App"> ... </GUI>
+<ui title="My First App"> ... </ui>
 ```
 
 ## hgroup
@@ -76,13 +76,13 @@ This item shows a string on the UI.
 <label text="My First Demo"/>
 ```
 
-## Model
+## model
 Defines the FEBio model that will be used in the app.
 
 * **id** : the id of the model. 
 
 ```text
-<Model id="fem"
+<model id="fem"
        file="ex01.feb"/>
 ```
 
@@ -104,6 +104,15 @@ Displays a 3D view of the model.
         bg_color="0.7, 0.9, 0.7">
             <map data="z"/>
 </plot3d>
+```
+
+## script
+The section can be used to collect custom scripts. 
+
+```text
+<script>
+   ... write script code here ...
+</script>
 ```
 
 ## stretch

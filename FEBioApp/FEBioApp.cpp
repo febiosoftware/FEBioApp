@@ -29,6 +29,7 @@ SOFTWARE.*/
 #include "FEBioAppScript.h"	
 #include <FECore/FECoreTask.h>
 #include <FECore/FECoreKernel.h>
+#include "FEBioAppWidget.h"
 #include <QThread>
 
 class CFEBioAppThread : public QThread
@@ -236,4 +237,9 @@ void FEBioApp::runModel()
 void FEBioApp::stopModel()
 {
 	m_forceStop = true;
+}
+
+void FEBioApp::quit()
+{
+	if (m_ui) m_ui->close(); // close the main window
 }

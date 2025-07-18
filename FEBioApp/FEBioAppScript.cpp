@@ -96,6 +96,9 @@ void FEBioAppScript::initJSModules(JSInterpreter& interpreter)
 	app.m_functions["stopModel"] = [=](const std::list<JSObject>& args, JSObject& ret) {
 		m_app->stopModel();
 		};
+	app.m_functions["quit"] = [=](const std::list<JSObject>& args, JSObject& ret) {
+		m_app->quit();
+		};
 
 	// ui module
 	JSObject& ui = interpreter.addVar("ui");

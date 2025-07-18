@@ -74,6 +74,7 @@ public:
 public:
 	void runModel();
 	void stopModel();
+	void quit();
 
 public slots:
 	void runScript(const QString& script); // called by action buttons

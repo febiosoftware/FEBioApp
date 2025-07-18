@@ -7,7 +7,7 @@
 		<label text="Simple man"/>
 		<hgroup>
 			<vgroup>
-				<group title="Parameters" align="vertical">
+				<vgroup title="Parameters">
 				
 					<input	text="Ambient temperature (C):"
 							align="topleft"
@@ -22,7 +22,7 @@
 							param="fem.load('heatSource').Q"
 							range="0, 1000, 50"/>
 
-				</group>
+				</vgroup>
 				<stretch/>
 				<hgroup>
 					<stretch/>

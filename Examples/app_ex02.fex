@@ -5,8 +5,8 @@
 
 	<GUI title="$(filename)">
 		<label text="Viscoelastic Demo"/>
-		<group align="horizontal">
-			<group align="vertical">
+		<hgroup>
+			<vgroup>
 				<vgroup title="Visco params">
 					<input 	text="G1"
 							param="fem.material[0].g1"/>
@@ -24,7 +24,7 @@
 				<button text="Solve"
 						onClick="app.runModel()"/>
 
-			</group>
+			</vgroup>
 			<tab_group>
 				<tab title="Graph1">
 					<graph	text="stress-strain"
@@ -43,7 +43,7 @@
 					</graph>
 				</tab>
 			</tab_group>
-		</group>
+		</hgroup>
 		
 		<hgroup>
 			<stretch/>

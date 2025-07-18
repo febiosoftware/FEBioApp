@@ -6,11 +6,11 @@
 	<GUI title="$(filename)">
 		<label text="Beam Bending Example"/>
 		<vgroup>
-			<group title="Pressure Load" align="vertical">
+			<vgroup title="Pressure Load">
 				<input 	text="Pressure"
 						param="fem.load('PressureLoad1').pressure"
 						range="-5, 5, 1"/>
-			</group>
+			</vgroup>
 			<hgroup>
 				<stretch/>
 				<button text="Run"

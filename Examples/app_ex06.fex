@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <febio_app version="0.1">
-	<Model 	id   = "fem"
+	<model 	id   = "fem"
 			file = "ex06.feb"/>
 	
-	<GUI title="$(filename)">
+	<ui title="$(filename)">
 		<label 	id   = "title"
 				text = "My First FEBio App"/>
 
@@ -35,5 +35,5 @@
 				</plot3d>
 			</tab>
 		</tab_group>
-	</GUI>
+	</ui>
 </febio_app>

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <febio_app version="0.1">
-	<Model 	id  ="fem"
+	<model 	id  ="fem"
 			file="ex05.feb"/>
 
-	<GUI title="$(filename)">
+	<ui title="$(filename)">
 		<label text="Simple man"/>
 		<hgroup>
 			<vgroup>
@@ -68,5 +68,5 @@
 			<button text="Quit"
 					onClick="app.quit()"/>
 		</hgroup> -->
-	</GUI>
+	</ui>
 </febio_app>

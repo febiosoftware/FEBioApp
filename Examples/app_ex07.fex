@@ -3,12 +3,12 @@
 	TODO: Can I print the optimized parameter values?
 -->
 <febio_app version="0.1">
-	<Model 	id   = "fem"
+	<model 	id   = "fem"
 			file = "ex07_in.feb"
 			task = "optimize"
 			task_input="ex07_op.feb"/>
 	
-	<GUI title="$(filename)">
+	<ui title="$(filename)">
 		<label 	id   = "title"
 				text = "Optimization example"/>
 		
@@ -37,5 +37,5 @@
 		<!-- <button	text  ="Quit"
 				onClick="app.quit()"/>
 		</button> -->
-	</GUI>
+	</ui>
 </febio_app>

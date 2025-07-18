@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <febio_app version="0.1">
-	<Model 	id  ="fem"
+	<model 	id  ="fem"
 			file="ex04.feb"/>
 
-	<GUI title="$(filename)">
+	<ui title="$(filename)">
 		<label text="Beam Bending Example"/>
 		<vgroup>
 			<vgroup title="Pressure Load">
@@ -26,5 +26,5 @@
 					<map data="z"/>
 			</plot3d>
 		</vgroup>
-	</GUI>
+	</ui>
 </febio_app>

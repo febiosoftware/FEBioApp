@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <febio_app version="0.1">
-	<Model 	id  ="fem"
+	<model 	id  ="fem"
 			file="ex03.feb"/>
 
-	<GUI title="$(filename)">
+	<ui title="$(filename)">
 		<label text="Beam Bending Example"/>
 		<vgroup title="Material Parameters">
 			<input 	text="Young's Modulus"
@@ -34,5 +34,5 @@
 			<button text="Quit"
 					onClick="app.quit()"/>
 		</hgroup>
-	</GUI>
+	</ui>
 </febio_app>

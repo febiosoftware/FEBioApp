@@ -32,6 +32,7 @@ SOFTWARE.*/
 #include "FEBioApp.h"
 #include "FEBioAppWidget.h"
 #include <FEBioLib/febio.h>
+#include <FSCore/ColorMapManager.h>
 
 int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);
@@ -39,6 +40,8 @@ int main(int argc, char *argv[]) {
 	QString appPath = QString(argv[1]);
 
 	febio::InitLibrary();
+
+	ColorMapManager::Initialize();
 
 	FEBioApp febioApp;
 	FEBioAppUIBuilder uiBuilder;

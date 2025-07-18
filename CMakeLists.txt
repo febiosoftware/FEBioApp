@@ -142,7 +142,7 @@ else()
 endif()
 
 # Find FEBio Studio Libs
-set(FBS_LIB_NAMES febioapp fscore gllib cuilib glwlib ogllib imagelib)
+set(FBS_LIB_NAMES fscore gllib cuilib glwlib ogllib imagelib)
 
 if (WIN32)
     set(FBS_DEBUG_LIBS "")

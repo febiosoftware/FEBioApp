@@ -26,7 +26,6 @@ SOFTWARE.*/
 #include "FEBioApp.h"
 #include <QApplication>
 #include <QWidget>
-#include <QLabel>
 #include <QFile>
 #include <QMessageBox>
 #include "FEBioAppUIBuilder.h"
@@ -60,6 +59,7 @@ int main(int argc, char *argv[]) {
 	// initialize the color map manager
 	ColorMapManager::Initialize();
 
+	// build the UI from the FEBioApp file
 	FEBioApp febioApp;
 	FEBioAppUIBuilder uiBuilder;
 	FEBioAppWidget* w = uiBuilder.BuildUIFromFile(appPath, &febioApp);
@@ -74,5 +74,12 @@ int main(int argc, char *argv[]) {
 		w->show();
 	}
 
-	return app.exec();
+	// run the app
+	int returnCode = app.exec();
+
+	// make sure to delete the UI widget
+	delete w;
+
+	// all done
+	return returnCode;
 }

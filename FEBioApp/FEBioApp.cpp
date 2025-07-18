@@ -170,8 +170,15 @@ FEParamValue FEBioApp::GetFEBioParameter(const char* szparams)
 
 void FEBioApp::runScript(const QString& script)
 {
+	QString s;
+
+	if (!m_script.empty()) s = QString::fromStdString(m_script) + script;
+	else s = script;
+
+	if (s.isEmpty()) return;
+
 	FEBioAppScript appScript(this);
-	if (!appScript.run(script))
+	if (!appScript.run(s))
 	{
 		QMessageBox::critical(nullptr, "FEBioApp", QString("Failed to execute script.\n%1").arg(appScript.errorString()));
 	}

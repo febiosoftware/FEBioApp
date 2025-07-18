@@ -41,8 +41,9 @@ public:
 private:
 	FEBioAppWidget* error();
 
-	bool parseModel(XMLTag& tag);
-	bool parseGUI  (XMLTag& tag);
+	bool parseModel (XMLTag& tag);
+	bool parseGUI   (XMLTag& tag);
+	bool parseScript(XMLTag& tag);
 
 	bool parseGUITags  (XMLTag& tag, QBoxLayout* layout);
 	void parseLabel    (XMLTag& tag, QBoxLayout* layout);

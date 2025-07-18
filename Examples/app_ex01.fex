@@ -21,12 +21,9 @@
 		<button	id      = "solve"
 				text    = "Solve"
 				onClick = " 
-				function log(msg) {
-					ui.getElementById('log').setText(msg);
-				}
-				log('We did it!');
-				ui.getElementById('graph1').setText('stress-strain');
-				app.runModel();"/>
+					log('We did it!');
+					ui.getElementById('graph1').setText('stress-strain');
+					app.runModel();"/>
 		
 		<graph	id="graph1" 
 				text="stress-strain">
@@ -41,4 +38,9 @@
 		<button	text   ="Quit"
 				onClick="app.quit();"/>
 	</GUI>
+	<script>
+		function log(msg) {
+			ui.getElementById('log').setText(msg);
+		}
+	</script>
 </febio_app>

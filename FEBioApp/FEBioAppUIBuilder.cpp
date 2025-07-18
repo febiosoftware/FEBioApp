@@ -104,8 +104,9 @@ FEBioAppWidget* FEBioAppUIBuilder::BuildUIFromFile(QString filePath, FEBioApp* a
 		++tag;
 		do
 		{
-			if      (tag == "Model") { if (parseModel(tag) == false) return error(); }
-			else if (tag == "GUI"  ) { if (parseGUI(tag) == false) return error(); }
+			if      (tag == "Model" ) { if (parseModel(tag) == false) return error(); }
+			else if (tag == "GUI"   ) { if (parseGUI(tag) == false) return error(); }
+			else if (tag == "script") { if (parseScript(tag) == false) return error(); }
 			else tag.skip();
 
 			++tag;
@@ -149,6 +150,13 @@ bool FEBioAppUIBuilder::parseModel(XMLTag& tag)
 	}
 
 	return b;
+}
+
+bool FEBioAppUIBuilder::parseScript(XMLTag& tag)
+{
+	string script = tag.szvalue();
+	app->AddScript(script);
+	return true;
 }
 
 bool FEBioAppUIBuilder::parseGUI(XMLTag& tag)

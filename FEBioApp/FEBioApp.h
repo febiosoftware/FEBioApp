@@ -71,6 +71,9 @@ public:
 	void SetUI(FEBioAppWidget* w) { m_ui = w; }	
 	FEBioAppWidget* GetUI() { return m_ui; }
 
+	void AddScript(const std::string& script) { m_script += script + "\n"; }
+	std::string GetScript() const { return m_script; }
+
 public:
 	void runModel();
 	void stopModel();
@@ -102,6 +105,7 @@ private:
 
 	FEBioAppWidget* m_ui = nullptr;
 
+	std::string m_script;
 
 	friend class CFEBioAppThread;
 };

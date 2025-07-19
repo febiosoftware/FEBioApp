@@ -14,10 +14,10 @@
 			<hgroup>
 				<stretch/>
 				<button text="Run"
-						onClick="app.runModel()"/>
+						onclick="app.runModel()"/>
 
 				<button text="Stop"
-						onClick="app.stopModel()"/>
+						onclick="app.stopModel()"/>
 			</hgroup>
 			<plot3d	title="view1"
 					size="640, 480"

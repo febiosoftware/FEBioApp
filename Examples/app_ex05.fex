@@ -27,16 +27,16 @@
 				<hgroup>
 					<stretch/>
 					<!-- <button text="Run"
-							onClick="if (this.text=='Run') { this.text='Stop'; app.runModel(); } else { this.text='Run'; app.stopModel(); }"/> -->
+							onclick="if (this.text=='Run') { this.text='Stop'; app.runModel(); } else { this.text='Run'; app.stopModel(); }"/> -->
 
 					<button text="Run"
-							onClick="app.runModel()"/>
+							onclick="app.runModel()"/>
 
 					<button text="Stop"
-							onClick="app.stopModel()"/>
+							onclick="app.stopModel()"/>
 
 					<!-- <button text="Pause"
-							onClick="if (this.text=='Pause') { this.text='Continue'; fem.pause(); } else { this.text='Pause'; fem.continue(); }"/> -->
+							onclick="if (this.text=='Pause') { this.text='Continue'; fem.pause(); } else { this.text='Pause'; fem.continue(); }"/> -->
 
 				</hgroup>
 			</vgroup>

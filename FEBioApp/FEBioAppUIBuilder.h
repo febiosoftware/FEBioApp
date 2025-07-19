@@ -62,4 +62,5 @@ private:
 	FEBioAppWidget* ui;
 	FEBioApp* app;
 	QString	m_appFolder;
+	QString m_appFileTitle;
 };

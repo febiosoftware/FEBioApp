@@ -257,10 +257,13 @@ JSFunctionDeclaration* JSParser::parseFunctionDeclaration()
 	while (m_token != RP)
 	{
 		nextToken();
-		if (m_token != IDENTIFIER) throw IdentifierExpected();
-		params.push_back(m_token.stringValue);
-		nextToken();
-		if ((m_token != RP) && (m_token != COMMA)) throw SyntaxError();
+		if (m_token == IDENTIFIER)
+		{
+			params.push_back(m_token.stringValue);
+			nextToken();
+			if ((m_token != RP) && (m_token != COMMA)) throw SyntaxError();
+		}
+		else if (m_token != RP) throw SyntaxError();
 	}
 	eatToken(RP);
 	expectToken(LC);

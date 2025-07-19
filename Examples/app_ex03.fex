@@ -22,7 +22,7 @@
 					
 		</vgroup>
 		<button	text="Solve"
-				onClick="app.runModel()"/>
+				onclick="app.runModel()"/>
 
 		<plot3d	text="view1"
 				size="640,480">
@@ -32,7 +32,7 @@
 		<hgroup>
 			<stretch/>
 			<button text="Quit"
-					onClick="app.quit()"/>
+					onclick="app.quit()"/>
 		</hgroup>
 	</ui>
 </febio_app>

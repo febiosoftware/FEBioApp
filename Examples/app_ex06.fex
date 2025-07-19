@@ -22,7 +22,7 @@
 
 		</vgroup>
 		<button	text    = "Solve"
-				onClick = "app.runModel()"/>
+				onclick = "app.runModel()"/>
 
 		<tab_group>
 			<tab title="view1">

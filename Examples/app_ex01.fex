@@ -3,7 +3,7 @@
 	<model 	id   = "fem"
 			file = "ex01.feb"/>
 	
-	<ui title="$(filename)">
+	<ui title="$(filename) - FEBioApp">
 		<label 	id   = "title"
 				text = "My First FEBio App"/>
 
@@ -12,7 +12,7 @@
 						params = "fem.material('Mat1')"/>
 			<!-- <button	id ="test"
 					text="test"
-					onClick="
+					onclick="
 						var E = fem.material[0].E;
 						print('E =', E);"/> -->
 			<stretch/>
@@ -20,13 +20,10 @@
 				
 		<button	id      = "solve"
 				text    = "Solve"
-				onClick = " 
-					log('We did it!');
-					ui.getElementById('graph1').setText('stress-strain');
-					app.runModel();"/>
+				onclick = "runModel('hello', 'World!')"/>
 		
 		<graph	id="graph1" 
-				text="stress-strain">
+				text="(placeholder)">
 				<data text="sx">
 					<x var="Ex" elemId="1"/>
 					<y var="sx" elemId="1"/>
@@ -36,11 +33,13 @@
 		<output id="log"/>
 
 		<button	text   ="Quit"
-				onClick="app.quit();"/>
+				onclick="app.quit()"/>
 	</ui>
 	<script>
-		function log(msg) {
-			ui.getElementById('log').setText(msg);
-		}
+		function runModel(a, b) {
+				ui.getElementById('graph1').setText('stress-strain');
+				app.runModel();
+				print(a, b);
+			}
 	</script>
 </febio_app>

@@ -99,6 +99,7 @@ FEBioAppWidget* FEBioAppUIBuilder::BuildUIFromFile(QString filePath, FEBioApp* a
 
 	QFileInfo fi(filePath);
 	m_appFolder = fi.absolutePath();
+	m_appFileTitle = fi.baseName();
 
 	try {
 		++tag;
@@ -162,6 +163,15 @@ bool FEBioAppUIBuilder::parseScript(XMLTag& tag)
 bool FEBioAppUIBuilder::parseGUI(XMLTag& tag)
 {
 	ui = new FEBioAppWidget(app);
+
+	const char* sztitle = tag.AttributeValue("title", true);
+	if (sztitle)
+	{
+		QString title(sztitle);
+		title.replace("$(filename)", m_appFileTitle);
+		ui->setWindowTitle(title);
+	}
+
 	QVBoxLayout* layout = new QVBoxLayout(ui);
 	return parseGUITags(tag, layout);
 }
@@ -221,7 +231,7 @@ void FEBioAppUIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 
 	const char* szid     = tag.AttributeValue("id", true);
 	const char* sztxt    = tag.AttributeValue("text", true);
-	const char* szaction = tag.AttributeValue("onClick", true);
+	const char* szaction = tag.AttributeValue("onclick", true);
 
 	CActionButton* pb = new CActionButton(sztxt);
 	if (szid) pb->setObjectName(szid);

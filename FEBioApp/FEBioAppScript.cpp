@@ -159,6 +159,7 @@ bool FEBioAppScript::runScript()
 	if (!parser.parse(script))
 	{
 		m_error = QString::fromStdString(parser.errorString());
+		m_app->GetUI()->error(m_error);
 		return false;
 	}
 
@@ -170,7 +171,7 @@ bool FEBioAppScript::runScript()
 	try {
 		interpreter.run(parser.GetAST());
 	}
-	catch (std::runtime_error e)
+	catch (const std::runtime_error& e)
 	{
 		m_error = QString::fromStdString(e.what());
 		m_app->GetUI()->error(m_error);

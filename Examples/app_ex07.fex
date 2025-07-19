@@ -13,7 +13,7 @@
 				text = "Optimization example"/>
 		
 		<button	text    = "Solve"
-				onClick = "app.runModel()"/>
+				onclick = "app.runModel()"/>
 		
 		<graph text="stress - strain">
 			<data text="sx">
@@ -34,8 +34,8 @@
 				<point>1.500, 158.650</point>
 			</data>
 		</graph>
-		<!-- <button	text  ="Quit"
-				onClick="app.quit()"/>
-		</button> -->
+		<button	text  ="Quit"
+				onclick="app.quit()"/>
+		</button>
 	</ui>
 </febio_app>

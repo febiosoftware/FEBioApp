@@ -40,7 +40,7 @@ void UIElement::setText(const QString& txt) const
 	if (pl) pl->setText(txt);
 
 	QPlainTextEdit* pe = dynamic_cast<QPlainTextEdit*>(m_w);
-	if (pe) pe->appendPlainText(txt);
+	if (pe) pe->setPlainText(txt);
 
 	CPlotWidget* pp = dynamic_cast<CPlotWidget*>(m_w);
 	if (pp) pp->setTitle(txt);

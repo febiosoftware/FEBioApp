@@ -23,7 +23,9 @@
 					size="640, 480"
 					bg_color="0.7, 0.9, 0.7">
 
-					<map data="z"/>
+					<colormap
+						data_field = "z"
+						gradient   = "Parula"/>
 			</plot3d>
 		</vgroup>
 	</ui>

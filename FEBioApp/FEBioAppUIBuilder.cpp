@@ -597,6 +597,7 @@ void FEBioAppUIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 	int size[2] = { 400, 400 };
 	double bgc[3] = { 0.8, 0.8, 1.0 };
 	double rot[3] = { 0, 0, 0 };
+	bool showMesh = true;
 	for (XMLAtt& att : tag.m_att)
 	{
 		if      (att.m_name == "text"    ) sztxt = att.cvalue();
@@ -612,9 +613,16 @@ void FEBioAppUIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 				att.value(bgc, 3);
 		}
 		else if (att.m_name == "rotation") att.value(rot, 3);
+		else if (att.m_name == "show_mesh")
+		{
+			string s(att.cvalue());
+			if ((s == "1") || (s == "true")) showMesh = true;
+			if ((s == "0") || (s == "false")) showMesh = false;
+		}
 	}
 
 	GLFEBioScene* scene = new GLFEBioScene(*app->GetFEBioModel());
+	scene->ShowMeshLines(showMesh);
 
 	bool brange = false;
 	double rng[2];
@@ -625,13 +633,13 @@ void FEBioAppUIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 		++tag;
 		do
 		{
-			if (tag == "map")
+			if (tag == "colormap")
 			{
-				const char* szdata = tag.AttributeValue("data");
+				const char* szdata = tag.AttributeValue("data_field");
 				if (szdata) mapName = szdata;
 
-				const char* szmin = tag.AttributeValue("rangeMin", true);
-				const char* szmax = tag.AttributeValue("rangeMax", true);
+				const char* szmin = tag.AttributeValue("user_min", true);
+				const char* szmax = tag.AttributeValue("user_max", true);
 				if (szmin && szmax)
 				{
 					brange = true;
@@ -639,7 +647,7 @@ void FEBioAppUIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 					rng[1] = atof(szmax);
 				}
 
-				const char* szcol = tag.AttributeValue("colorMap", true);
+				const char* szcol = tag.AttributeValue("gradient", true);
 				if (szcol) colMap = szcol;
 
 				++tag;

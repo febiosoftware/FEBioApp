@@ -83,6 +83,8 @@ public:
 
 	void AddSceneObject(GLSceneObject* po);
 
+	void ShowMeshLines(bool b) { m_showMeshLines = b; }
+
 public: // overrides from CFEBioModelDataSource
 
 	void Clear() override;
@@ -105,6 +107,7 @@ private:
 	std::string	m_dataSource;
 	bool m_useUserRange;
 	double m_userRange[2];
+	bool m_showMeshLines = true;
 
 	BOX	m_box;
 	CColorTexture m_col;

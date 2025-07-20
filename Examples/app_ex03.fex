@@ -27,7 +27,7 @@
 		<plot3d	text="view1"
 				size="640,480">
 				
-				<map data="z"/>
+				<colormap data_field="z"/>
 		</plot3d>
 		<hgroup>
 			<stretch/>

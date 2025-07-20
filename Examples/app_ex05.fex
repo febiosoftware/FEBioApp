@@ -43,12 +43,14 @@
 			<plot3d title="view1"
 					size="800, 600"
 					bg_color="0.5,0.5,0.6"
-					rotation="-90,0,0">
+					rotation="-90,0,0"
+					show_mesh = "false">
 
-					<map	data    = "T"
-							rangeMin= "34"
-							rangeMax= "39"
-							colorMap="Hot-Cold"/>
+					<colormap
+							data_field = "T"
+							user_min = "34"
+							user_max = "39"
+							gradient ="Hot-Cold"/>
 
 					<object file="chair.stl"
 							color="1,0,0"

@@ -217,6 +217,7 @@ void GLFEBioScene::Render(GLRenderEngine& engine, GLContext& rc)
 	engine.renderGMesh(*m_renderMesh, false);
 
 	engine.setMaterial(GLMaterial::CONSTANT, GLColor::Black());
+	if (m_showMeshLines) engine.renderGMeshEdges(*m_renderMesh, false);
 	GLScene::Render(engine, rc);
 }
 
@@ -252,8 +253,29 @@ void GLFEBioScene::BuildRenderMesh()
 		if (el.Nodes() == 4) NF += 2;
 	}
 
+	vector<set<int>> nodeEdges(NN);
+	for (int i = 0; i < NE; ++i)
+	{
+		FESurfaceElement& el = surf->Element(i);
+		int n = el.Nodes();
+		for (int j = 0; j < n; ++j)
+		{
+			int n0 = el.m_lnode[j];
+			int n1 = el.m_lnode[(j + 1) % n];
+			if (n0 > n1) std::swap(n0, n1);
+			nodeEdges[n0].insert(n1);
+		}
+	}
+
+	// count edges
+	int nedges = 0;
+	for (int i = 0; i < NN; ++i)
+	{
+		nedges += nodeEdges[i].size();
+	}
+
 	GLMesh* mesh = new GLMesh;
-	mesh->Create(NN, NF);
+	mesh->Create(NN, NF, nedges);
 
 	for (int i = 0; i < NN; ++i)
 	{
@@ -291,6 +313,18 @@ void GLFEBioScene::BuildRenderMesh()
 			f2.c[0] = f2.c[1] = f2.c[2] = col;
 		}
 	}
+
+	nedges = 0;
+	for (int i = 0; i < NN; ++i)
+	{
+		for (int n : nodeEdges[i])
+		{
+			GLMesh::EDGE& edge = mesh->Edge(nedges++);
+			edge.n[0] = i;
+			edge.n[1] = n;
+		}
+	}
+
 	mesh->Update();
 	mesh->AutoSmooth(60.0);
 

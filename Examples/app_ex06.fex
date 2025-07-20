@@ -31,7 +31,7 @@
 			</tab>
 			<tab title="view2">
 				<plot3d	title="view2">
-					<map data="x"/>
+					<colormap data_field="x"/>
 				</plot3d>
 			</tab>
 		</tab_group>

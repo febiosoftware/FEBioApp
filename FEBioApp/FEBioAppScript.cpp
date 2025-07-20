@@ -31,6 +31,8 @@ SOFTWARE.*/
 #include "JSInterpreter.h"
 #include <FEBioLib/FEBioModel.h>
 #include <FECore/FEMaterial.h>
+#include <CUILib/GLSceneView.h>
+#include "GLFEBioScene.h"
 
 FEBioAppScript::FEBioAppScript(FEBioApp* app) : m_app(app)
 {
@@ -111,6 +113,45 @@ void FEBioAppScript::initJSModules(JSInterpreter& interpreter)
 		ob.m_functions["setText"] = [=](const std::list<JSObject>& args, JSObject& ret) {
 			w.setText(ObjectListToString(args));
 			};
+
+		ob.m_functions["text"] = [=](const std::list<JSObject>& args, JSObject& ret) {
+				QString t = w.text();
+				JSObject o(JSString(t.toStdString()));
+				ret = o;
+			};
+
+		if (w.type() == UIElement::UIType::PLOT3D)
+		{
+			ObjectValue* colmapValue = new ObjectValue;
+			colmapValue->addProperty("gradient", JSObject(""));
+			JSObject colmap; colmap.SetValue(colmapValue);
+
+			CGLManagedSceneView* gl = dynamic_cast<CGLManagedSceneView*>(w.widget());
+
+			colmap.m_functions["setGradient"] = [=](const std::list<JSObject>& args, JSObject& ret) {
+				if (gl)
+				{
+					if (args.size() == 1)
+					{
+						const JSObject& a = *args.begin();
+						if (a.isString())
+						{
+							JSString s = a.toString();
+							GLFEBioScene* fbs = dynamic_cast<GLFEBioScene*>(gl->GetActiveScene());
+							if (fbs)
+							{
+								fbs->SetColorMap(s);
+								gl->update();
+							}
+						}
+					}
+				}
+				};
+
+			ObjectValue* v = new ObjectValue;
+			v->addProperty("colormap", colmap);
+			ob.SetValue(v);
+		}
 
 		ret = ob;
 		};

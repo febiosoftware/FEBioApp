@@ -29,12 +29,17 @@ SOFTWARE.*/
 #include <QPushButton>
 #include <QLabel>
 #include <QPlainTextEdit>
+#include <QComboBox>
+#include <CUILib/GLSceneView.h>
 #include "FEBioApp.h"
 
 void UIElement::setText(const QString& txt) const
 {
 	QPushButton* pb = dynamic_cast<QPushButton*>(m_w);
 	if (pb) pb->setText(txt);
+
+	QComboBox* pc = dynamic_cast<QComboBox*>(m_w);
+	if (pc) pc->setEditText(txt);
 
 	QLabel* pl = dynamic_cast<QLabel*>(m_w);
 	if (pl) pl->setText(txt);
@@ -44,6 +49,49 @@ void UIElement::setText(const QString& txt) const
 
 	CPlotWidget* pp = dynamic_cast<CPlotWidget*>(m_w);
 	if (pp) pp->setTitle(txt);
+}
+
+QString UIElement::text() const
+{
+	QPushButton* pb = dynamic_cast<QPushButton*>(m_w);
+	if (pb) return pb->text();
+
+	QComboBox* pc = dynamic_cast<QComboBox*>(m_w);
+	if (pc) return pc->currentText();
+
+	QLabel* pl = dynamic_cast<QLabel*>(m_w);
+	if (pl) return pl->text();
+
+	QPlainTextEdit* pe = dynamic_cast<QPlainTextEdit*>(m_w);
+	if (pe) return pe->toPlainText();
+
+	CPlotWidget* pp = dynamic_cast<CPlotWidget*>(m_w);
+	if (pp) return pp->title();
+
+	return "";
+}
+
+UIElement::UIType UIElement::type() const
+{
+	QPushButton* pb = dynamic_cast<QPushButton*>(m_w);
+	if (pb) return UIType::PUSHBUTTON;
+
+	QComboBox* pc = dynamic_cast<QComboBox*>(m_w);
+	if (pc) return UIType::COMBOBOX;
+
+	QLabel* pl = dynamic_cast<QLabel*>(m_w);
+	if (pl) return UIType::LABEL;
+
+	QPlainTextEdit* pe = dynamic_cast<QPlainTextEdit*>(m_w);
+	if (pe) return UIType::TEXTEDIT;
+
+	CPlotWidget* pp = dynamic_cast<CPlotWidget*>(m_w);
+	if (pp) return UIType::GRAPH;
+
+	CGLManagedSceneView* pv = dynamic_cast<CGLManagedSceneView*>(m_w);
+	if (pv) return UIType::PLOT3D;
+
+	return UIType::INVALID;
 }
 
 FEBioAppWidget::FEBioAppWidget(FEBioApp* app) : m_app(app)

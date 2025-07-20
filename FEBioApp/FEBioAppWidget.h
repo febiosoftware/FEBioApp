@@ -75,9 +75,26 @@ private:
 class UIElement
 {
 public:
+	enum class UIType {
+		INVALID,
+		PUSHBUTTON,
+		COMBOBOX,
+		LABEL,
+		TEXTEDIT,
+		GRAPH,
+		PLOT3D
+	};
+
+public:
 	UIElement(QWidget* w) : m_w(w) {}
 
 	void setText(const QString& txt) const;
+
+	QString text() const;
+
+	UIType type() const;
+
+	QWidget* widget() { return m_w; }
 
 private:
 	QWidget* m_w;

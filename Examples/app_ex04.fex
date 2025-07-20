@@ -12,6 +12,10 @@
 						range="-5, 5, 1"/>
 			</vgroup>
 			<hgroup>
+				<combobox id = "grads"
+						  items = "Jet;Parula"
+						  onchange = "setColorGradient()"/>
+
 				<stretch/>
 				<button text="Run"
 						onclick="app.runModel()"/>
@@ -19,14 +23,25 @@
 				<button text="Stop"
 						onclick="app.stopModel()"/>
 			</hgroup>
-			<plot3d	title="view1"
+			<plot3d id = "plot"
+					title="view1"
 					size="640, 480"
 					bg_color="0.7, 0.9, 0.7">
 
 					<colormap
 						data_field = "z"
-						gradient   = "Parula"/>
+						gradient   = "Jet"/>
 			</plot3d>
+			<output id="log"/>
 		</vgroup>
 	</ui>
+	<script>
+		function setColorGradient() {
+			var w = ui.getElementById('grads');
+			var t = w.text();
+
+			var p = ui.getElementById('plot');
+			p.colormap.setGradient(t);
+		}
+	</script>
 </febio_app>

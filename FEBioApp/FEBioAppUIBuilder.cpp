@@ -34,12 +34,13 @@ SOFTWARE.*/
 #include <QTabWidget>
 #include <QFileInfo>
 #include <QPlainTextEdit>
+#include <QComboBox>
 #include <CUILib/GLSceneView.h>
 #include <CUILib/InputWidgets.h>
 #include <CUILib/PlotWidget.h>
 #include "FEBioAppWidget.h"
-#include "ActionButton.h"
 #include "GLFEBioScene.h"
+#include "ActionButton.h"
 #include <FECore/FEParam.h>
 #include <FECore/FECoreKernel.h>
 #include <FECore/ElementDataRecord.h>
@@ -188,6 +189,7 @@ bool FEBioAppUIBuilder::parseGUITags(XMLTag& tag, QBoxLayout* playout)
 		else if (tag == "tab_group" ) parseTabGroup (tag, playout);
 		else if (tag == "stretch"   ) parseStretch  (tag, playout);
 		else if (tag == "button"    ) parseButton   (tag, playout);
+		else if (tag == "combobox"  ) parseComboBox (tag, playout);
 		else if (tag == "input"     ) parseInput    (tag, playout);
 		else if (tag == "input_list") parseInputList(tag, playout);
 		else if (tag == "graph"     ) parseGraph    (tag, playout);
@@ -243,6 +245,35 @@ void FEBioAppUIBuilder::parseButton(XMLTag& tag, QBoxLayout* playout)
 	}
 
 	playout->addWidget(pb);
+}
+
+void FEBioAppUIBuilder::parseComboBox(XMLTag& tag, QBoxLayout* playout)
+{
+	assert(tag.isleaf());
+
+	const char* szid = tag.AttributeValue("id", true);
+	const char* sztxt = tag.AttributeValue("text", true);
+	const char* szitems = tag.AttributeValue("items", true);
+	const char* szaction = tag.AttributeValue("onchange", true);
+
+	QComboBox* pc = new QComboBox;
+	pc->setMinimumWidth(150);
+	if (szid) pc->setObjectName(szid);
+
+	QString items(szitems);
+	QStringList itemList = items.split(';', Qt::SkipEmptyParts);
+	pc->addItems(itemList);
+
+	if (szaction)
+	{
+		QString action(szaction);
+		QObject::connect(pc, &QComboBox::currentTextChanged, app, [=](QString s) {
+				app->runScript(action);
+			});
+	}
+
+
+	playout->addWidget(pc);
 }
 
 void FEBioAppUIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
@@ -594,13 +625,15 @@ void FEBioAppUIBuilder::parseTabGroup(XMLTag& tag, QBoxLayout* playout)
 void FEBioAppUIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 {
 	const char* sztxt = nullptr;
+	string idstring;
 	int size[2] = { 400, 400 };
 	double bgc[3] = { 0.8, 0.8, 1.0 };
 	double rot[3] = { 0, 0, 0 };
 	bool showMesh = true;
 	for (XMLAtt& att : tag.m_att)
 	{
-		if      (att.m_name == "text"    ) sztxt = att.cvalue();
+		if      (att.m_name == "id"      ) idstring = att.cvalue();
+		else if (att.m_name == "text"    ) sztxt = att.cvalue();
 		else if (att.m_name == "size"    ) att.value(size, 2);
 		else if (att.m_name == "bg_color")
 		{
@@ -715,6 +748,7 @@ void FEBioAppUIBuilder::parsePlot3d(XMLTag& tag, QBoxLayout* playout)
 	app->AddModelDataSource(scene);
 
 	CGLManagedSceneView* pgl = new CGLManagedSceneView(scene);
+	if (!idstring.empty()) pgl->setObjectName(QString::fromStdString(idstring));
 	ui->AddRepaintChild(pgl);
 	pgl->setMinimumSize(QSize(size[0], size[1]));
 	pgl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);

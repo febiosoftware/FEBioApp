@@ -6,12 +6,12 @@ This document describes the various xml elements that can be defined in the FEBi
 Defines a push button. Users can define what happens when the user clicks the button.
 
 * **text** : the text displayed on the button.
-* **onClick** : set what happens when the user clicks it. 
+* **onclick** : set what happens when the user clicks it.
 
 ```text
 <button 
     text    = "Solve"
-    onClick = "app.runModel()"/>
+    onclick = "app.runModel()"/>
 ```
 
 ## graph
@@ -25,15 +25,6 @@ This shows a 2D graph.
             <y var="sx" elemId="1"/>
         </data>
 </graph>
-```
-
-## ui
-The **ui** element defines the user interface of the app. Child elements define widgets and layout elements.
-
-* **title** : The title shown of the app's window. (optional)
-
-```text
-<ui title="My First App"> ... </ui>
 ```
 
 ## hgroup
@@ -80,6 +71,7 @@ This item shows a string on the UI.
 Defines the FEBio model that will be used in the app.
 
 * **id** : the id of the model. 
+* **file** : the filename to the FEBio model. This should be a standard FEBio input file.
 
 ```text
 <model id="fem"
@@ -100,9 +92,8 @@ Displays a 3D view of the model.
 
 ```text
 <plot3d	title="view1"
-        size="640, 480"
         bg_color="0.7, 0.9, 0.7">
-            <map data="z"/>
+            <colormap data_field="z"/>
 </plot3d>
 ```
 
@@ -116,7 +107,7 @@ The section can be used to collect custom scripts.
 ```
 
 ## stretch
-A stretch element will affect the layout of its parent group. If a stretch element is defined, an empty section is added that can grow when the window is resized. The effect is that when the window is resized, the widgets will stay together.
+A stretch element will affect the layout of its parent group. If a stretch element is defined, an empty section is added that can grow when the window is resized. The effect is that when the window is resized, the widgets above and below the stretch section will stay together. Without a stretch section, widgets will be distributed evenly in the parent layout. 
 
 ```text
 <stretch/>
@@ -147,8 +138,23 @@ This item is the parent group for tabs. Each tab should be defined as a child of
 </tab_group>
 ```
 
+## ui
+The **ui** element defines the user interface of the app. Child elements define widgets and layout elements.
+
+* **title** : The title shown of the app's window. (optional)
+
+```text
+<ui title="My First App"> ... </ui>
+```
+
+The macro `$(filename)` can be used to set the title to the app's filename.
+
+```text
+<ui title="$(filename)"> ... </ui>
+```
+
 ## vgroup
-This item collects child items and displays them in a vertical column
+This item collects child items and displays them in a vertical column.
 
 * **title** : sets the title (optional)
 

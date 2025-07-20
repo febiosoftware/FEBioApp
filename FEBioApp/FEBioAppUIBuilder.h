@@ -48,6 +48,7 @@ private:
 	bool parseGUITags  (XMLTag& tag, QBoxLayout* layout);
 	void parseLabel    (XMLTag& tag, QBoxLayout* layout);
 	void parseButton   (XMLTag& tag, QBoxLayout* layout);
+	void parseComboBox (XMLTag& tag, QBoxLayout* layout);
 	void parseGraph    (XMLTag& tag, QBoxLayout* layout);
 	void parseInputList(XMLTag& tag, QBoxLayout* layout);
 	void parseVGroup   (XMLTag& tag, QBoxLayout* playout);

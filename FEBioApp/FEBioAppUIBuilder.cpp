@@ -44,13 +44,14 @@ SOFTWARE.*/
 #include <FECore/FEParam.h>
 #include <FECore/FECoreKernel.h>
 #include <FECore/ElementDataRecord.h>
+#include <FECore/DomainDataRecord.h>
 #include <FEBioLib/FEBioModel.h>
 #include <algorithm>
 
-class CElementDataSource : public CFEBioModelDataSource
+class CDataSource : public CFEBioModelDataSource
 {
 public:
-	CElementDataSource(ElementDataRecord* x, ElementDataRecord* y, CPlotData* plotData) : m_xval(x), m_yval(y), m_data(plotData) {}
+	CDataSource(DataRecord* x, DataRecord* y, CPlotData* plotData) : m_xval(x), m_yval(y), m_data(plotData) {}
 
 	void Clear() override
 	{
@@ -65,8 +66,8 @@ public:
 	}
 
 private:
-	ElementDataRecord* m_xval;
-	ElementDataRecord* m_yval;
+	DataRecord* m_xval;
+	DataRecord* m_yval;
 
 	CPlotData* m_data;
 };
@@ -316,8 +317,8 @@ void FEBioAppUIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 				const char* sztype = tag.AttributeValue("type", true);
 				if (sztype == 0)
 				{
-					ElementDataRecord* val_x = nullptr;
-					ElementDataRecord* val_y = nullptr;
+					DataRecord* val_x = nullptr;
+					DataRecord* val_y = nullptr;
 
 					++tag;
 					do
@@ -335,18 +336,68 @@ void FEBioAppUIBuilder::parseGraph(XMLTag& tag, QBoxLayout* playout)
 						else if (tag == "y")
 						{
 							const char* szvar = tag.AttributeValue("var");
-							const char* szid = tag.AttributeValue("elemId");
-							int eid = atoi(szid);
 
-							val_y = new ElementDataRecord(fem);
-							val_y->SetData(szvar);
-							val_y->SetItemList({ eid });
+							if (strstr(szvar, "fem.domain_data") != nullptr)
+							{
+								int n = 0;
+								bool skipws = true;
+								char buf[256] = { 0 };
+								const char* c = szvar + 15;
+								while (c && *c)
+								{
+									if (*c == '\'')
+									{
+										if (skipws) skipws = false; else skipws = true;
+									}
+
+									if ((skipws == false) || (iswspace(*c) == 0)) buf[n++] = *c;
+									c++;
+								}
+								buf[n] = 0;
+
+								char* sz = buf;
+								int l = strlen(sz);
+								if (sz[0] != '(') { assert(false); return; } // { feLogErrorEx(fem, "Syntax error in parameter name %s", m_param.c_str()); return false; }
+								if (sz[l - 1] != ')') { assert(false); return; }// { feLogErrorEx(fem, "Syntax error in parameter name %s", m_param.c_str()); return false; }
+								sz[l - 1] = 0;
+								*sz++ = 0; // eat (
+								*sz++ = 0; // eat '
+
+								// separate string in data variable and domain name
+								char* c1 = strrchr(sz, ',');
+								*c1++ = 0;
+
+								// process part name
+								char* szdom = strchr(c1, '\'');
+								if (szdom == 0) { assert(false); return; }
+								szdom++;
+
+								c1 = strrchr(szdom, '\'');
+								*c1++ = 0;
+
+								c1 = strrchr(sz, '\'');
+								*c1++ = 0;
+
+								val_y = new FEDomainDataRecord(fem);
+								val_y->SetData(sz);
+								val_y->SetItemList({ 1 });
+							}
+							else
+							{
+
+								const char* szid = tag.AttributeValue("elemId");
+								int eid = atoi(szid);
+
+								val_y = new ElementDataRecord(fem);
+								val_y->SetData(szvar);
+								val_y->SetItemList({ eid });
+							}
 						}
 						++tag;
 					} while (!tag.isend());
 
 
-					CElementDataSource* src = new CElementDataSource(val_x, val_y, data);
+					CDataSource* src = new CDataSource(val_x, val_y, data);
 					app->AddModelDataSource(src);
 					++tag;
 				}

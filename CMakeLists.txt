@@ -142,7 +142,7 @@ else()
 endif()
 
 # Find FEBio Studio Libs
-set(FBS_LIB_NAMES fscore gllib cuilib glwlib ogllib imagelib)
+set(FBS_LIB_NAMES FSCore GLLib GLWLib OGLLib ImageLib CUILib) #
 
 if (WIN32)
     set(FBS_DEBUG_LIBS "")
@@ -257,14 +257,23 @@ endif()
 
 
 ##### Link Libraries #####
-# Linking the Qt libraries also pulls in the include files
-target_link_libraries(${FBA_BIN_NAME} Qt6::Core Qt6::Widgets Qt6::Gui Qt6::Network Qt6::OpenGL Qt6::OpenGLWidgets)
 
 if(WIN32)
 elseif(APPLE)
 else()
     target_link_libraries(${FBA_BIN_NAME} -static-libstdc++ -static-libgcc)
     target_link_libraries(${FBA_BIN_NAME} -Wl,--start-group)
+endif()
+
+# Linking the Qt libraries also pulls in the include files
+target_link_libraries(${FBA_BIN_NAME} Qt6::Core Qt6::Widgets Qt6::Gui Qt6::OpenGLWidgets Qt6::OpenGL)
+
+if(UNIX)
+    if(${USE_MKL_OMP})
+        target_link_libraries(${FBA_BIN_NAME} ${MKL_OMP})
+    else()
+        target_link_libraries(${FBA_BIN_NAME} ${OpenMP_C_LIBRARIES})
+    endif()
 endif()
 
 target_link_libraries(${FBA_BIN_NAME} ${OPENGL_LIBRARY})
@@ -301,4 +310,3 @@ elseif(APPLE)
 else()
     target_link_libraries(${FBA_BIN_NAME} -Wl,--end-group)
 endif()
-

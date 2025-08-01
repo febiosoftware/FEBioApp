@@ -2,6 +2,7 @@ call "%VS2019INSTALLDIR%\VC\Auxiliary\Build\vcvars64.bat"
 
 :: Clone and build FEBio Studio 
 git clone --depth 1 -b febiostudio3 https://github.com/febiosoftware/FEBioStudio.git
+mklink /D febio-sdk FEBioStudio\febio-sdk
 cd FEBioStudio
 ./ci/Windows/build.bat
 cd ..

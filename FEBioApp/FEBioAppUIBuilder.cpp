@@ -222,8 +222,6 @@ void FEBioAppUIBuilder::parseLabel(XMLTag& tag, QBoxLayout* playout)
 
 	QLabel* plabel = new QLabel(QString::fromStdString(name));
 	if (id.empty() == false) plabel->setObjectName(QString::fromStdString(id));
-	QFont f("Times", 14, QFont::Bold);
-	plabel->setFont(f);
 	plabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 	playout->addWidget(plabel);
 }

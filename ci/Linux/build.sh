@@ -6,13 +6,12 @@ set -e
 main() {
     # Clone and build FEBio Studio 
     git clone --depth 1 -b febiostudio3 https://github.com/febiosoftware/FEBioStudio.git
-    ln -s febio-sdk FEBioStudio/febio-sdk
 	pushd FEBioStudio
 
     QT_DIR="/opt/Qt/6.7.3/gcc_64"
     cmake -L . -B cmbuild \
         -DQt_Root=$QT_DIR \
-        -DFEBio_SDK=febio4-sdk \
+        -DFEBio_SDK=../febio4-sdk \
         -DUSE_FFMPEG=ON \
         -DUSE_TETGEN=ON \
         -DUSE_MMG=ON \

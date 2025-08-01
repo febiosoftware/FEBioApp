@@ -20,8 +20,8 @@ main() {
         -DCAD_FEATURES=ON \
         -DUSE_NETGEN=ON \
         -DUSE_ITK=ON \
-        -DUSE_PYTHON=ON \
-        -DBUILD_UPDATER=ON
+        -DUSE_PYTHON=OFF \
+        -DBUILD_UPDATER=OFF
 
     pushd cmbuild
     make FSCore GLLib GLWLib OGLLib ImageLib CUILib -j $(nproc) 

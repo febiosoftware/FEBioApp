@@ -7,6 +7,7 @@ set Qt_Root="c:/usr/local/Qt/6.7.3/msvc2019_64"
 for /l %%a in (1, 1, 6) do (
 cmake -L . -B cmbuild ^
   -DQt_Root=%Qt_Root% ^
+  -DQt6Widgets_DIR="%Qt_Root%\lib\cmake\Qt6Widgets" ^
   -DFEBio_SDK=..\febio4-sdk ^
   -DWINDEPLOYQT_EXECUTABLE="%Qt_Root%\bin\windeployqt.exe" ^
   -DUSE_FFMPEG=ON ^

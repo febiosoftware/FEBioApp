@@ -27,8 +27,8 @@ SOFTWARE.*/
 #include "FEBioApp.h"
 #include "FEBioAppWidget.h"
 #include <QMessageBox>
-#include "JSParser.h"
-#include "JSInterpreter.h"
+#include <JSLib/JSParser.h>
+#include <JSLib/JSInterpreter.h>
 #include <FEBioLib/FEBioModel.h>
 #include <FECore/FEMaterial.h>
 #include <CUILib/GLSceneView.h>

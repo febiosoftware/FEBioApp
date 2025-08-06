@@ -233,6 +233,16 @@ endmacro()
 
 findHdrSrc(FEBioApp)
 
+
+##### The JS library
+set(JSLIB_NAME "JSLib")
+
+findHdrSrc(${JSLIB_NAME})
+
+add_library(${JSLIB_NAME} STATIC ${HDR_${JSLIB_NAME}} ${SRC_${JSLIB_NAME}})
+
+target_include_directories(${JSLIB_NAME} PRIVATE ${FBS_INC})
+
 ##### Add binaries #####
 
 if(WIN32)
@@ -270,6 +280,8 @@ endif()
 target_link_libraries(${FBA_BIN_NAME} ${OPENGL_LIBRARY})
 
 target_link_libraries(${FBA_BIN_NAME} ${GLEW_LIBRARIES} GLEW::glew)
+
+target_link_libraries(${FBA_BIN_NAME} ${JSLIB_NAME})
 
 if (WIN32)
     foreach(name IN LISTS FEBio_RELEASE_LIBS)
